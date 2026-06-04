@@ -81,46 +81,6 @@ npm run dev:client
 
 ---
 
-## 🚀 Hostinger Deployment (via GitHub)
-
-### One-Time Setup
-
-1. **Push code to GitHub** (if not already done):
-   ```bash
-   git add .
-   git commit -m "Prepare for deployment"
-   git push origin main
-   ```
-
-2. **In Hostinger Panel** → Go to **Websites** → Your domain → **Node.js**:
-   - **Node.js version**: 18 or higher
-   - **Repository**: Connect your GitHub account → Select `naman2024a6r047/ERP`
-   - **Branch**: `main`
-   - **Root directory**: `/` (the project root)
-   - **Startup file**: `server/server.js`
-   - Click **Deploy**
-
-3. **Set Environment Variables** in Hostinger's Node.js panel:
-   - Copy all values from `server/.env.example` and fill in your production values
-   - The critical ones are: `NODE_ENV`, `PORT`, `DB_*`, `JWT_SECRET`, `EMAIL_*`
-
-4. **Create MySQL Database** in Hostinger:
-   - Go to **Databases** → **MySQL Databases**
-   - Create a database and user
-   - Update `DB_NAME`, `DB_USER`, `DB_PASS` in the environment variables
-
-### Updating (After Code Changes)
-
-Simply push to GitHub — Hostinger will auto-deploy:
-```bash
-git add .
-git commit -m "Your update message"
-git push origin main
-```
-
-If auto-deploy is not enabled, click **Pull & Deploy** in the Hostinger Node.js panel.
-
----
 
 ## 🔒 Security
 
