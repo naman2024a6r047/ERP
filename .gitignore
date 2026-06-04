@@ -8,18 +8,9 @@ node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
-**/.env
-**/.env.*
 
-# Build/Production outputs
-dist/
-build/
-client/build/
-out/
-.next/
-*.zip
-*.rar
-*.tar.gz
+# Keep .env.example files tracked
+!**/.env.example
 
 # Debug logs
 npm-debug.log*
@@ -37,3 +28,18 @@ pnpm-debug.log*
 *.sw?
 .DS_Store
 Thumbs.db
+
+# OS files
+desktop.ini
+ehthumbs.db
+
+# Build artifacts (generated on server via postinstall)
+client/build/
+dist/
+out/
+.next/
+
+# Archives
+*.zip
+*.rar
+*.tar.gz

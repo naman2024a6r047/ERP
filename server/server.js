@@ -66,15 +66,9 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 // ── Global Audit Logger (A2) ──────────────────────────────────────────────────
 app.use(auditLogger);
 
-// ── Root endpoint ─────────────────────────────────────────────────────────────
-app.get('/', (req, res) => {
-  res.json({
-    status: 'OK',
-    message: 'School ERP API running',
-    health: '/api/health',
-    dbCheck: '/api/db-check'
-  });
-});
+// ── Serve React static files (production) ────────────────────────────────────
+const clientBuildPath = path.join(__dirname, '..', 'client', 'build');
+app.use(express.static(clientBuildPath));
 
 // ── API Routes ────────────────────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
@@ -129,9 +123,11 @@ app.get('/api/db-check', async (req, res) => {
   }
 });
 
-// ── 404 handler ───────────────────────────────────────────────────────────────
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+// ── React SPA catch-all (must be AFTER all /api routes) ──────────────────────
+// Any request that doesn't match an API route gets the React app's index.html,
+// allowing React Router to handle client-side routing.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(clientBuildPath, 'index.html'));
 });
 
 // ── Dedicated Error Handler (L6, M10) ──────────────────────────────────────────
