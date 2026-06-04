@@ -7,7 +7,8 @@ const {
 } = require('./models');
 
 async function seed() {
-  await sequelize.sync({ force: true });
+  // Ensure models are synced without dropping tables created by schema.sql
+  await sequelize.sync();
   console.log('✅ Tables created');
 
   // ── Session ──────────────────────────────────────────────────────────────

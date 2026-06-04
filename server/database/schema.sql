@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS school_erp;
-USE school_erp;
+-- CREATE DATABASE IF NOT EXISTS school_erp;
+-- USE school_erp;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 1. SESSIONS
