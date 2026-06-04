@@ -1,0 +1,141 @@
+export default function Receipt({ receipt, onPrint, onClose }) {
+  if (!receipt) return null;
+
+  const breakdown = Object.entries(receipt.fee_breakdown || {}).filter(
+    ([, value]) => typeof value === 'number' || !Number.isNaN(Number(value))
+  );
+
+  return (
+    <div className="space-y-4 print:space-y-3">
+      <div className="flex items-start justify-between gap-3 print:hidden">
+        <div>
+          <h3 className="text-lg font-bold text-gray-800">Fee Receipt</h3>
+          <p className="text-sm text-gray-500">Printable receipt layout for fee collection.</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={onPrint}
+            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            Print
+          </button>
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border-2 border-gray-300 bg-white p-6 print:border print:rounded-none print:p-4">
+        <div className="border-b border-gray-200 pb-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-2xl font-bold tracking-wide text-gray-900">{receipt.school?.name || 'School ERP'}</p>
+              <p className="mt-1 text-sm text-gray-500">{receipt.school?.address}</p>
+              <p className="text-sm text-gray-500">
+                {receipt.school?.phone} {receipt.school?.email ? `| ${receipt.school.email}` : ''}
+              </p>
+            </div>
+            <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-right">
+              <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">Receipt No.</p>
+              <p className="text-sm font-bold text-blue-900">{receipt.receipt_number || 'Pending'}</p>
+              <p className="mt-1 text-xs text-blue-700">{receipt.date || receipt.receipt_date || '—'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-5 md:grid-cols-2">
+          <div className="rounded-xl border border-gray-200 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Student Details</p>
+            <div className="mt-3 space-y-2 text-sm">
+              <div className="flex justify-between gap-3">
+                <span className="text-gray-500">Name</span>
+                <span className="font-medium text-gray-800">{receipt.student_name || receipt.student?.name || '—'}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-gray-500">Class</span>
+                <span className="font-medium text-gray-800">
+                  {receipt.class && receipt.section ? `${receipt.class} - ${receipt.section}` : receipt.student?.class || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-gray-500">Parent</span>
+                <span className="font-medium text-gray-800">{receipt.student?.parent_name || '—'}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-gray-500">Phone</span>
+                <span className="font-medium text-gray-800">{receipt.student?.phone || '—'}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Payment Details</p>
+            <div className="mt-3 space-y-2 text-sm">
+              <div className="flex justify-between gap-3">
+                <span className="text-gray-500">Fee Type</span>
+                <span className="font-medium capitalize text-gray-800">{receipt.fee_type || receipt.payment?.fee_type || '—'}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-gray-500">Payment Mode</span>
+                <span className="font-medium uppercase text-gray-800">{receipt.payment_mode || receipt.payment?.payment_mode || '—'}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-gray-500">Collected By</span>
+                <span className="font-medium text-gray-800">{receipt.collected_by || '—'}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-gray-500">Status</span>
+                <span className="font-medium capitalize text-gray-800">{receipt.payment?.status || 'paid'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 overflow-hidden rounded-xl border border-gray-200">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-left text-xs uppercase tracking-wider text-gray-500">
+              <tr>
+                <th className="px-4 py-3">Particular</th>
+                <th className="px-4 py-3 text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {breakdown.length > 0 ? (
+                breakdown.map(([key, value]) => (
+                  <tr key={key} className="border-t border-gray-100">
+                    <td className="px-4 py-3 capitalize text-gray-700">{String(key).replace('_', ' ')}</td>
+                    <td className="px-4 py-3 text-right font-medium text-gray-900">
+                      Rs. {Number(value || 0).toLocaleString('en-IN')}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr className="border-t border-gray-100">
+                  <td className="px-4 py-3 text-gray-700 capitalize">{receipt.fee_type || receipt.payment?.fee_type || 'fee'}</td>
+                  <td className="px-4 py-3 text-right font-medium text-gray-900">
+                    Rs. {Number(receipt.total_amount || receipt.payment?.total_amount || 0).toLocaleString('en-IN')}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+            <tfoot className="bg-blue-50">
+              <tr>
+                <td className="px-4 py-3 font-semibold text-gray-800">Paid Amount</td>
+                <td className="px-4 py-3 text-right text-lg font-bold text-blue-900">
+                  Rs. {Number(receipt.paid_amount || receipt.payment?.paid_amount || 0).toLocaleString('en-IN')}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <p className="mt-5 text-center text-xs text-gray-500">
+          This is a computer-generated receipt. No signature required.
+        </p>
+      </div>
+    </div>
+  );
+}

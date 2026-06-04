@@ -1,0 +1,149 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/common/ProtectedRoute';
+
+import LoginPage from './pages/LoginPage';
+
+import AdminLayout from './pages/admin/AdminLayout';
+import Dashboard from './pages/admin/Dashboard';
+import Students from './pages/admin/Students';
+import StudentApprovals from './pages/admin/StudentApprovals';
+import Teachers from './pages/admin/Teachers';
+import Attendance from './pages/admin/Attendance';
+import Fees from './pages/admin/Fees';
+import Marks from './pages/admin/Marks';
+import Timetable from './pages/admin/Timetable';
+import Promotion from './pages/admin/Promotion';
+import Notifications from './pages/admin/Notifications';
+import ClassFees from './pages/admin/ClassFees';
+import AdminTeacherAttendance from './pages/admin/TeacherAttendance';
+
+import Admin2Layout from './pages/admin2/Admin2Layout';
+import Admin2Dashboard from './pages/admin2/Admin2Dashboard';
+import ResultApprovals from './pages/admin2/ResultApprovals';
+import ClassInchargeManager from './pages/admin2/ClassInchargeManager';
+import Admin2TeacherAttendance from './pages/admin2/TeacherAttendance';
+import FCAdmissions from './pages/feecollector/FCAdmissions';
+
+import TeacherLayout from './pages/teacher/TeacherLayout';
+import TeacherDashboard from './pages/teacher/TeacherDashboard';
+import MarkAttendance from './pages/teacher/MarkAttendance';
+import EnterMarks from './pages/teacher/EnterMarks';
+import TeacherOwnAttendance from './pages/teacher/TeacherOwnAttendance';
+import InchargeResults from './pages/teacher/InchargeResults';
+
+import ParentLayout from './pages/parent/ParentLayout';
+import ParentDashboard from './pages/parent/ParentDashboard';
+import MyProfile from './pages/parent/MyProfile';
+import MyAttendance from './pages/parent/MyAttendance';
+import ReportCard from './pages/parent/ReportCard';
+import FeeStatus from './pages/parent/FeeStatus';
+import MyNotifications from './pages/parent/MyNotifications';
+
+import FCLayout from './pages/feecollector/FCLayout';
+import FCDashboard from './pages/feecollector/FCDashboard';
+import FCCollect from './pages/feecollector/FCCollect';
+import FCAdmission from './pages/feecollector/FCAdmission';
+import CredentialManagement from './pages/CredentialManagement';
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Dashboard />} />
+            <Route path="students" element={<Students />} />
+            <Route path="student-approvals" element={<StudentApprovals />} />
+            <Route path="teachers" element={<Teachers />} />
+            <Route path="teacher-attendance" element={<AdminTeacherAttendance />} />
+            <Route path="attendance" element={<Attendance />} />
+            <Route path="fees" element={<Fees />} />
+            <Route path="class-fees" element={<ClassFees />} />
+            <Route path="fee-structure" element={<ClassFees />} />
+            <Route path="marks" element={<Marks />} />
+            <Route path="timetable" element={<Timetable />} />
+            <Route path="promotion" element={<Promotion />} />
+            <Route path="notifications" element={<Notifications />} />
+            <Route path="credentials" element={<CredentialManagement />} />
+          </Route>
+
+          <Route
+            path="/admin2"
+            element={
+              <ProtectedRoute allowedRoles={['admin2']}>
+                <Admin2Layout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Admin2Dashboard />} />
+            <Route path="results" element={<ResultApprovals />} />
+            <Route path="incharge" element={<ClassInchargeManager />} />
+            <Route path="teachers" element={<Admin2TeacherAttendance />} />
+            <Route path="admissions" element={<FCAdmissions />} />
+            <Route path="credentials" element={<CredentialManagement />} />
+          </Route>
+
+          <Route
+            path="/teacher"
+            element={
+              <ProtectedRoute allowedRoles={['teacher']}>
+                <TeacherLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<TeacherDashboard />} />
+            <Route path="attendance" element={<MarkAttendance />} />
+            <Route path="marks" element={<EnterMarks />} />
+            <Route path="incharge-results" element={<InchargeResults />} />
+            <Route path="my-attendance" element={<TeacherOwnAttendance />} />
+          </Route>
+
+          <Route
+            path="/parent"
+            element={
+              <ProtectedRoute allowedRoles={['parent', 'student']}>
+                <ParentLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<ParentDashboard />} />
+            <Route path="profile" element={<MyProfile />} />
+            <Route path="attendance" element={<MyAttendance />} />
+            <Route path="report-card" element={<ReportCard />} />
+            <Route path="fees" element={<FeeStatus />} />
+            <Route path="notifications" element={<MyNotifications />} />
+          </Route>
+
+          <Route
+            path="/fc"
+            element={
+              <ProtectedRoute allowedRoles={['fee_collector']}>
+                <FCLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<FCDashboard />} />
+            <Route path="collect" element={<FCCollect />} />
+            <Route path="search" element={<FCCollect />} />
+            <Route path="admission" element={<FCAdmission />} />
+            <Route path="admissions" element={<FCAdmissions />} />
+            <Route path="credentials" element={<CredentialManagement />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
