@@ -18,6 +18,7 @@ const titles = {
   '/admin/notifications': 'Notifications',
   '/admin/credentials':   'Credential Management',
   '/admin/profile':       'My Profile',
+  '/admin/bulk-upload':   'Bulk Student Admission',
 };
 
 export default function AdminLayout() {

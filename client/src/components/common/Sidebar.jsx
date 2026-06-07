@@ -10,6 +10,7 @@ const navConfig = {
         { icon: 'dashboard', label: 'Dashboard', to: '/admin' },
         { icon: 'student', label: 'Students', to: '/admin/students' },
         { icon: 'approval', label: 'Student Approvals', to: '/admin/student-approvals' },
+        { icon: 'bulk-upload', label: 'Bulk Admission', to: '/admin/bulk-upload' },
         { icon: 'teacher', label: 'Teachers', to: '/admin/teachers' },
         { icon: 'credentials', label: 'Credentials', to: '/admin/credentials' },
         { icon: 'attendance', label: 'Attendance', to: '/admin/attendance' },
@@ -53,6 +54,7 @@ const navConfig = {
         { icon: 'classroom', label: 'Class Incharge', to: '/admin2/incharge' },
         { icon: 'credentials', label: 'Credentials', to: '/admin2/credentials' },
         { icon: 'student', label: 'Admissions', to: '/admin2/admissions' },
+        { icon: 'bulk-upload', label: 'Bulk Admission', to: '/admin2/bulk-upload' },
         { icon: 'teacher-attendance', label: 'Teacher Attendance', to: '/admin2/teachers' },
         { icon: 'profile', label: 'My Profile', to: '/admin2/profile' },
       ],
@@ -110,6 +112,7 @@ const navConfig = {
         { icon: 'new-admission', label: 'New Admission', to: '/fc/admission' },
         { icon: 'credentials', label: 'Credentials', to: '/fc/credentials' },
         { icon: 'student', label: 'Admissions List', to: '/fc/admissions' },
+        { icon: 'bulk-upload', label: 'Bulk Admission', to: '/fc/bulk-upload' },
         { icon: 'profile', label: 'My Profile', to: '/fc/profile' },
       ],
     },
@@ -120,6 +123,12 @@ const navConfig = {
 const renderIcon = (iconName) => {
   const baseClass = "w-5 h-5 flex-shrink-0 transition-colors";
   switch (iconName) {
+    case 'bulk-upload':
+      return (
+        <svg className={baseClass} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        </svg>
+      );
     case 'dashboard':
       return (
         <svg className={baseClass} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

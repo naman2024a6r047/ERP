@@ -11,6 +11,7 @@ const titles = {
   '/admin2/teachers':   'Teacher Attendance',
   '/admin2/credentials': 'Credential Management',
   '/admin2/profile':     'My Profile',
+  '/admin2/bulk-upload': 'Bulk Student Admission',
 };
 
 export default function Admin2Layout() {

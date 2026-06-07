@@ -229,6 +229,248 @@ router.post('/', protect, authorize('admin', 'admin2', 'fee_collector'), validat
   }
 });
 
+// POST /api/students/bulk-upload - Bulk student upload via Excel/CSV
+const multer = require('multer');
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10 MB limit
+}).single('file');
+
+router.post('/bulk-upload', protect, authorize('admin', 'admin2', 'fee_collector'), (req, res) => {
+  upload(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ message: err.message || 'File upload failed.' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded.' });
+    }
+
+    const txn = await require('../models').sequelize.transaction();
+    try {
+      const XLSX = require('xlsx');
+      
+      // Read the excel/csv file from buffer
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const rawData = XLSX.utils.sheet_to_json(sheet);
+
+      if (!rawData || rawData.length === 0) {
+        await txn.rollback();
+        return res.status(400).json({ message: 'The uploaded file is empty.' });
+      }
+
+      // Check active session
+      const activeSession = await Session.findOne({ where: { is_active: true }, transaction: txn });
+      if (!activeSession) {
+        await txn.rollback();
+        return res.status(400).json({ message: 'No active academic session found. Please create/activate one first.' });
+      }
+
+      const isApproved = ['admin', 'admin2'].includes(req.user.role);
+      const results = [];
+      const errors = [];
+      const credentials = [];
+
+      for (let i = 0; i < rawData.length; i++) {
+        const row = rawData[i];
+        const rowNum = i + 2; // Row number in Excel sheet (including header)
+
+        // Standardize column names (case-insensitive and non-alphanumeric stripped)
+        const getField = (keys) => {
+          for (const key of Object.keys(row)) {
+            const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (keys.includes(normalizedKey)) {
+              return typeof row[key] === 'string' ? row[key].trim() : row[key];
+            }
+          }
+          return undefined;
+        };
+
+        const firstName = getField(['firstname', 'name', 'studentname']);
+        let lastName = getField(['lastname']) || '';
+        const applyingClass = getField(['class', 'applyingclass', 'grade', 'standard']);
+        const section = getField(['section', 'sec']) || 'A';
+        const rollNumber = getField(['roll', 'rollno', 'rollnumber']);
+        const gender = getField(['gender', 'sex']);
+        const dob = getField(['dob', 'dateofbirth', 'birthdate']);
+        const parentName = getField(['parentname', 'fathername', 'guardianname', 'mothername', 'fathersname', 'mothersname']);
+        const parentPhone = getField(['parentphone', 'phone', 'mobileno', 'mobilenumber', 'mobile', 'parentsphone', 'fatherphone', 'fathersphone']);
+        const parentEmail = getField(['parentemail', 'emailid', 'parentsemail']);
+        const parentAddress = getField(['parentaddress', 'address', 'parentsaddress', 'location']);
+        
+        const customEmail = getField(['email', 'loginemail', 'username', 'login']);
+        const customPassword = getField(['password', 'loginpassword', 'pass']);
+
+        // Validations
+        if (!firstName) {
+          errors.push({ row: rowNum, message: 'Missing first name/name.' });
+          continue;
+        }
+        if (!applyingClass) {
+          errors.push({ row: rowNum, message: `Missing class for student "${firstName}".` });
+          continue;
+        }
+        if (!parentName) {
+          errors.push({ row: rowNum, message: `Missing parent/guardian name for student "${firstName}".` });
+          continue;
+        }
+        if (!parentPhone) {
+          errors.push({ row: rowNum, message: `Missing parent/guardian phone for student "${firstName}".` });
+          continue;
+        }
+
+        // Split name if first_name / name contains spaces and lastName is empty
+        let finalFirstName = String(firstName).trim();
+        let finalLastName = String(lastName).trim();
+        if (!finalLastName && finalFirstName.includes(' ')) {
+          const parts = finalFirstName.split(' ');
+          finalFirstName = parts[0];
+          finalLastName = parts.slice(1).join(' ');
+        }
+
+        // Validate phone regex
+        const phoneStr = String(parentPhone).trim();
+        const validPhone = /^[6-9]\d{9}$/.test(phoneStr);
+        if (!validPhone) {
+          errors.push({ row: rowNum, message: `Invalid parent phone "${phoneStr}" (Must be a 10-digit number starting with 6-9).` });
+          continue;
+        }
+
+        // Validate unique email if custom email is provided
+        if (customEmail) {
+          const emailStr = String(customEmail).trim();
+          const existingUser = await User.findOne({ where: { email: emailStr }, transaction: txn });
+          if (existingUser) {
+            errors.push({ row: rowNum, message: `Email "${emailStr}" is already registered.` });
+            continue;
+          }
+        }
+
+        try {
+          // Parse DOB if present
+          let parsedDob = null;
+          if (dob) {
+            // Check if Excel parsed date as serial number (Excel dates are sometimes numbers)
+            if (typeof dob === 'number') {
+              const excelEpoch = new Date(1899, 11, 30);
+              const dateMs = excelEpoch.getTime() + dob * 24 * 60 * 60 * 1000;
+              parsedDob = new Date(dateMs).toISOString().split('T')[0];
+            } else {
+              const dateObj = new Date(dob);
+              if (!isNaN(dateObj.getTime())) {
+                parsedDob = dateObj.toISOString().split('T')[0];
+              }
+            }
+          }
+
+          // Format gender
+          let formattedGender = null;
+          if (gender) {
+            const g = String(gender).trim().toLowerCase();
+            if (g === 'male' || g === 'm') formattedGender = 'Male';
+            else if (g === 'female' || g === 'f') formattedGender = 'Female';
+            else formattedGender = 'Other';
+          }
+
+          // Create Student
+          const student = await Student.create({
+            first_name:     finalFirstName,
+            last_name:      finalLastName,
+            class:          String(applyingClass).trim(),
+            section:        String(section).trim(),
+            roll_number:    rollNumber ? parseInt(rollNumber, 10) : null,
+            gender:         formattedGender,
+            date_of_birth:  parsedDob,
+            session_id:     activeSession.id,
+            parent_name:    String(parentName).trim(),
+            parent_phone:   phoneStr,
+            parent_email:   parentEmail ? String(parentEmail).trim() : null,
+            parent_address: parentAddress ? String(parentAddress).trim() : null,
+            student_id:     'PENDING',
+            is_active:      isApproved,
+            student_status: isApproved ? 'active' : 'inactive',
+            source:         isApproved ? 'admin_created' : 'admission_approved',
+            created_by:     req.user.id,
+            approval_status: isApproved ? 'approved' : 'pending',
+            approved_by:    isApproved ? req.user.id : null,
+            approved_at:    isApproved ? new Date() : null,
+          }, { transaction: txn });
+
+          const studentId = makeStudentId(student.id);
+          await student.update({ student_id: studentId }, { transaction: txn });
+
+          // Credentials
+          const userEmail = customEmail ? String(customEmail).trim() : makeStudentEmail(studentId);
+          const rawPassword = customPassword ? String(customPassword).trim() : makeTemporaryPassword();
+
+          await User.create({
+            name: `${student.first_name} ${student.last_name}`,
+            email: userEmail,
+            password: rawPassword,
+            role: 'student',
+            linked_student_id: student.id,
+            is_active: isApproved,
+            phone: student.parent_phone,
+          }, { transaction: txn });
+
+          // Fees if approved
+          if (isApproved) {
+            const { getOrCreateFeeRecord, MONTHS } = require('../services/feeService');
+            const now = new Date();
+            const month = MONTHS[now.getMonth()];
+            const year = now.getFullYear();
+            await getOrCreateFeeRecord(student, month, year, 'monthly', txn);
+            await createAdmissionFee(student, txn);
+          }
+
+          results.push({
+            id: student.id,
+            student_id: studentId,
+            name: `${student.first_name} ${student.last_name}`,
+            class: student.class,
+            section: student.section,
+          });
+
+          credentials.push({
+            student_id: studentId,
+            name: `${student.first_name} ${student.last_name}`,
+            email: userEmail,
+            password: customPassword ? '[MANUALLY_SET]' : rawPassword,
+            status: isApproved ? 'Active' : 'Pending Approval',
+          });
+
+        } catch (rowErr) {
+          console.error(`[bulk-upload] Error at row ${rowNum}:`, rowErr);
+          errors.push({ row: rowNum, message: rowErr.message || 'Database creation failed.' });
+        }
+      }
+
+      if (results.length === 0) {
+        await txn.rollback();
+        return res.status(400).json({
+          message: 'No students were uploaded due to validation errors.',
+          errors,
+        });
+      }
+
+      await txn.commit();
+      res.status(201).json({
+        message: `Successfully processed ${results.length} students.`,
+        successCount: results.length,
+        failedCount: errors.length,
+        errors,
+        credentials,
+      });
+
+    } catch (err) {
+      console.error('[students][POST /bulk-upload]', err);
+      await txn.rollback();
+      res.status(500).json({ message: 'Internal server error during processing.' });
+    }
+  });
+});
+
 // PUT /api/students/:id — (C3 fix) only whitelisted fields
 router.put('/:id', protect, hasPermission('MANAGE_STUDENTS'), validateStudentUpdate, async (req, res) => {
   try {

@@ -41,6 +41,7 @@ import FeeStatus from './pages/parent/FeeStatus';
 import MyNotifications from './pages/parent/MyNotifications';
 
 import MyProfilePage from './pages/common/MyProfilePage';
+import BulkUploadStudents from './pages/common/BulkUploadStudents';
 
 import FCLayout from './pages/feecollector/FCLayout';
 import FCDashboard from './pages/feecollector/FCDashboard';
@@ -80,6 +81,7 @@ export default function App() {
             <Route path="notifications" element={<Notifications />} />
             <Route path="credentials" element={<CredentialManagement />} />
             <Route path="profile" element={<MyProfilePage />} />
+            <Route path="bulk-upload" element={<BulkUploadStudents />} />
           </Route>
 
           <Route
@@ -97,6 +99,7 @@ export default function App() {
             <Route path="admissions" element={<FCAdmissions />} />
             <Route path="credentials" element={<CredentialManagement />} />
             <Route path="profile" element={<MyProfilePage />} />
+            <Route path="bulk-upload" element={<BulkUploadStudents />} />
           </Route>
 
           <Route
@@ -146,6 +149,7 @@ export default function App() {
             <Route path="admissions" element={<FCAdmissions />} />
             <Route path="credentials" element={<CredentialManagement />} />
             <Route path="profile" element={<MyProfilePage />} />
+            <Route path="bulk-upload" element={<BulkUploadStudents />} />
           </Route>
         </Routes>
       </BrowserRouter>
