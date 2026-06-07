@@ -17,16 +17,17 @@ export default function FCAdmission() {
         last_name: data.last_name,
         date_of_birth: data.date_of_birth,
         gender: data.gender,
-        class: data.applying_class,
-        section: data.section || 'A',
+        applying_class: data.applying_class,
         parent_name: data.parent_name,
         parent_phone: data.parent_phone,
         parent_email: data.parent_email,
         parent_address: data.parent_address,
+        previous_school: data.previous_school,
+        admission_fee_paid: parseFloat(data.admission_fee_paid || 0),
       };
-      const res = await API.post('/students', payload);
-      setCredentials(res.data.credentials);
-      toast.success('Student created pending admin approval.');
+      await API.post('/fc/admission-request', payload);
+      setCredentials(null);
+      toast.success('Admission request submitted successfully!');
       reset();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to submit.');

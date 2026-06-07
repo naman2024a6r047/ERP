@@ -214,7 +214,16 @@ const buildReceiptData = (fee, student, collectedByUser) => {
 /**
  * Create admission fee record for a newly approved student.
  */
-const createAdmissionFee = async (student, txn = null) => {
+const createAdmissionFee = async (student, paidAmountOrTxn = 0, txnObj = null) => {
+  let paidAmount = 0;
+  let txn = null;
+  if (paidAmountOrTxn && typeof paidAmountOrTxn === 'object') {
+    txn = paidAmountOrTxn;
+  } else {
+    paidAmount = parseFloat(paidAmountOrTxn || 0);
+    txn = txnObj;
+  }
+
   const options = txn ? { transaction: txn } : {};
   const now     = new Date();
   const month   = MONTHS[now.getMonth()];
@@ -225,14 +234,16 @@ const createAdmissionFee = async (student, txn = null) => {
 
   if (amount <= 0) return null;
 
+  const status = paidAmount >= amount ? 'paid' : paidAmount > 0 ? 'partial' : 'unpaid';
+
   return await Fee.create({
     student_id:    student.id,
     month,
     year,
     fee_type:      'admission',
     total_amount:  amount,
-    paid_amount:   0,
-    status:        'unpaid',
+    paid_amount:   paidAmount,
+    status:        status,
     session_id:    student.session_id,
     fee_breakdown: { admission: amount },
   }, options);

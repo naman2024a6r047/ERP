@@ -11,6 +11,7 @@ const navConfig = {
         { icon: 'student', label: 'Students', to: '/admin/students' },
         { icon: 'approval', label: 'Student Approvals', to: '/admin/student-approvals' },
         { icon: 'bulk-upload', label: 'Bulk Admission', to: '/admin/bulk-upload' },
+        { icon: 'new-admission', label: 'Admission Requests', to: '/admin/admissions' },
         { icon: 'teacher', label: 'Teachers', to: '/admin/teachers' },
         { icon: 'credentials', label: 'Credentials', to: '/admin/credentials' },
         { icon: 'attendance', label: 'Attendance', to: '/admin/attendance' },

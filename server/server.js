@@ -185,8 +185,14 @@ app.listen(port, host, () => {
         return sequelize.sync({ alter: true });
       }
     })
-    .then(() => {
+    .then(async () => {
       console.log('[DB] ✅ Database tables verified and synced');
+      try {
+        const { migratePendingStudents } = require('./utils/dbMigrator');
+        await migratePendingStudents();
+      } catch (migrationErr) {
+        console.error('[DB] ❌ Automatic migration of pending students failed:', migrationErr.message);
+      }
     })
     .catch((err) => {
       console.error('════════════════════════════════════════════════════════');

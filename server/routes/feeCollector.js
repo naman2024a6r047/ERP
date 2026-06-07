@@ -13,8 +13,9 @@ const FC_ROLES = ['admin', 'admin2', 'fee_collector'];
 const ADMISSION_REQUEST_FIELDS = [
   'first_name', 'last_name', 'date_of_birth', 'gender',
   'applying_class', 'parent_name', 'parent_phone', 'parent_email',
-  'parent_address', 'previous_school', 'remarks',
+  'parent_address', 'previous_school', 'remarks', 'admission_fee_paid',
 ];
+
 
 const pick = (obj, keys) => {
   const result = {};
@@ -377,7 +378,7 @@ router.put('/admission-requests/:id', protect, authorize('admin', 'admin2'), asy
       const year = now.getFullYear();
 
       await getOrCreateFeeRecord(newStudent, month, year, 'monthly', txn);
-      await createAdmissionFee(newStudent, txn);
+      await createAdmissionFee(newStudent, parseFloat(request.admission_fee_paid || 0), txn);
     }
 
     await txn.commit();
