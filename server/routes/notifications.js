@@ -143,12 +143,22 @@ router.post('/subscribe', protect, async (req, res) => {
     }
 
     const { PushSubscription } = require('../models');
-    await PushSubscription.upsert({
-      user_id: req.user.id,
-      endpoint,
-      p256dh: keys.p256dh,
-      auth: keys.auth,
-    });
+    
+    // Use robust findOne and update/create instead of upsert
+    let sub = await PushSubscription.findOne({ where: { endpoint } });
+    if (sub) {
+      sub.user_id = req.user.id;
+      sub.p256dh = keys.p256dh;
+      sub.auth = keys.auth;
+      await sub.save();
+    } else {
+      await PushSubscription.create({
+        user_id: req.user.id,
+        endpoint,
+        p256dh: keys.p256dh,
+        auth: keys.auth,
+      });
+    }
 
     res.status(201).json({ message: 'Push subscription saved successfully.' });
   } catch (err) {

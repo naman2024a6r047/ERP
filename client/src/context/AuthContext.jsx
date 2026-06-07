@@ -50,12 +50,10 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      // 1. Register Service Worker
-      let registration = await navigator.serviceWorker.getRegistration();
-      if (!registration) {
-        registration = await navigator.serviceWorker.register('/service-worker.js');
-        console.log('[SW] Service Worker registered.');
-      }
+      // 1. Register Service Worker directly to bypass existing registration conflicts
+      console.log('[Push] Registering Service Worker...');
+      const registration = await navigator.serviceWorker.register('/service-worker.js');
+      console.log('[SW] Service Worker registered:', registration);
 
       await navigator.serviceWorker.ready;
 
@@ -73,12 +71,40 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      // 4. Get or create subscription
+      // 4. Get or create subscription, verifying VAPID key freshness
       let subscription = await registration.pushManager.getSubscription();
+      const currentServerKey = urlBase64ToUint8Array(data.publicKey);
+
+      if (subscription) {
+        const existingKey = subscription.options.applicationServerKey;
+        let keyMatches = false;
+        if (existingKey) {
+          const existingUint8 = new Uint8Array(existingKey);
+          if (existingUint8.length === currentServerKey.length) {
+            keyMatches = true;
+            for (let i = 0; i < existingUint8.length; i++) {
+              if (existingUint8[i] !== currentServerKey[i]) {
+                keyMatches = false;
+                break;
+              }
+            }
+          }
+        } else {
+          keyMatches = true; // Fallback if browser doesn't expose it
+        }
+
+        if (!keyMatches) {
+          console.log('[Push] VAPID key mismatch detected. Unsubscribing to force renewal...');
+          await subscription.unsubscribe().catch(e => console.warn('[Push] Error unsubscribing:', e));
+          subscription = null;
+        }
+      }
+
       if (!subscription) {
+        console.log('[Push] Subscribing with new VAPID key...');
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(data.publicKey),
+          applicationServerKey: currentServerKey,
         });
       }
 
