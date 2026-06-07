@@ -64,6 +64,8 @@ router.post('/login', loginLimiter, validateLogin, async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        phone: user.phone,
+        profile_photo: user.profile_photo,
         linkedStudent: user.linkedStudent,
         linkedTeacher: user.linkedTeacher
       }

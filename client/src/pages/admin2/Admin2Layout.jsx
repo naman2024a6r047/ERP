@@ -10,6 +10,7 @@ const titles = {
   '/admin2/admissions': 'Admission Requests',
   '/admin2/teachers':   'Teacher Attendance',
   '/admin2/credentials': 'Credential Management',
+  '/admin2/profile':     'My Profile',
 };
 
 export default function Admin2Layout() {

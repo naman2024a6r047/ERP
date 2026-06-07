@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 // Dynamic navigation item configuration with custom icons
@@ -37,6 +37,12 @@ const navConfig = {
         { icon: 'notices', label: 'Notifications', to: '/admin/notifications' }
       ],
     },
+    {
+      section: 'ACCOUNT',
+      items: [
+        { icon: 'profile', label: 'My Profile', to: '/admin/profile' },
+      ],
+    },
   ],
   admin2: [
     {
@@ -48,6 +54,7 @@ const navConfig = {
         { icon: 'credentials', label: 'Credentials', to: '/admin2/credentials' },
         { icon: 'student', label: 'Admissions', to: '/admin2/admissions' },
         { icon: 'teacher-attendance', label: 'Teacher Attendance', to: '/admin2/teachers' },
+        { icon: 'profile', label: 'My Profile', to: '/admin2/profile' },
       ],
     },
   ],
@@ -60,6 +67,7 @@ const navConfig = {
         { icon: 'results', label: 'Enter Marks', to: '/teacher/marks' },
         { icon: 'results', label: 'Incharge Results', to: '/teacher/incharge-results' },
         { icon: 'teacher-attendance', label: 'My Attendance', to: '/teacher/my-attendance' },
+        { icon: 'profile', label: 'My Profile', to: '/teacher/profile' },
       ],
     },
   ],
@@ -102,6 +110,7 @@ const navConfig = {
         { icon: 'new-admission', label: 'New Admission', to: '/fc/admission' },
         { icon: 'credentials', label: 'Credentials', to: '/fc/credentials' },
         { icon: 'student', label: 'Admissions List', to: '/fc/admissions' },
+        { icon: 'profile', label: 'My Profile', to: '/fc/profile' },
       ],
     },
   ],
@@ -228,6 +237,7 @@ const renderIcon = (iconName) => {
 
 export default function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const nav = navConfig[user?.role] || [];
 
   // Determine school branding name and logo
@@ -324,9 +334,19 @@ export default function Sidebar({ isOpen, onClose }) {
 
         {/* User Account Info Footer */}
         <div className="flex-shrink-0 border-t border-white/5 p-4 bg-[#070b1d]/40">
-          <div className="mb-4 flex items-center gap-3 px-1">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600/30 to-indigo-500/30 text-blue-300 text-sm font-extrabold shadow-inner border border-blue-500/10">
-              {user?.name?.[0]?.toUpperCase()}
+          <div className="mb-4 flex items-center gap-3 px-1 cursor-pointer" onClick={() => {
+            const base = user?.role === 'parent' || user?.role === 'student' ? '/parent' : user?.role === 'fee_collector' ? '/fc' : `/${user?.role}`;
+            navigate(`${base}/profile`);
+            if (window.innerWidth < 1024) onClose?.();
+          }}>
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl overflow-hidden shadow-inner border border-blue-500/10">
+              {user?.profile_photo ? (
+                <img src={`${process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace('/api', '') : ''}${user.profile_photo}`} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-tr from-blue-600/30 to-indigo-500/30 text-blue-300 text-sm font-extrabold flex items-center justify-center">
+                  {user?.name?.[0]?.toUpperCase()}
+                </div>
+              )}
             </div>
             <div className="min-w-0">
               <div className="truncate text-xs font-bold text-slate-100">{user?.name}</div>

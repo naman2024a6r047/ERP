@@ -10,6 +10,7 @@ const titles = {
   '/fc/admission':   'New Admission',
   '/fc/admissions':  'Admission Requests',
   '/fc/credentials': 'Credential Management',
+  '/fc/profile':     'My Profile',
 };
 
 export default function FCLayout() {

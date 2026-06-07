@@ -35,11 +35,12 @@ import InchargeResults from './pages/teacher/InchargeResults';
 
 import ParentLayout from './pages/parent/ParentLayout';
 import ParentDashboard from './pages/parent/ParentDashboard';
-import MyProfile from './pages/parent/MyProfile';
 import MyAttendance from './pages/parent/MyAttendance';
 import ReportCard from './pages/parent/ReportCard';
 import FeeStatus from './pages/parent/FeeStatus';
 import MyNotifications from './pages/parent/MyNotifications';
+
+import MyProfilePage from './pages/common/MyProfilePage';
 
 import FCLayout from './pages/feecollector/FCLayout';
 import FCDashboard from './pages/feecollector/FCDashboard';
@@ -78,6 +79,7 @@ export default function App() {
             <Route path="promotion" element={<Promotion />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="credentials" element={<CredentialManagement />} />
+            <Route path="profile" element={<MyProfilePage />} />
           </Route>
 
           <Route
@@ -94,6 +96,7 @@ export default function App() {
             <Route path="teachers" element={<Admin2TeacherAttendance />} />
             <Route path="admissions" element={<FCAdmissions />} />
             <Route path="credentials" element={<CredentialManagement />} />
+            <Route path="profile" element={<MyProfilePage />} />
           </Route>
 
           <Route
@@ -109,6 +112,7 @@ export default function App() {
             <Route path="marks" element={<EnterMarks />} />
             <Route path="incharge-results" element={<InchargeResults />} />
             <Route path="my-attendance" element={<TeacherOwnAttendance />} />
+            <Route path="profile" element={<MyProfilePage />} />
           </Route>
 
           <Route
@@ -120,7 +124,7 @@ export default function App() {
             }
           >
             <Route index element={<ParentDashboard />} />
-            <Route path="profile" element={<MyProfile />} />
+            <Route path="profile" element={<MyProfilePage />} />
             <Route path="attendance" element={<MyAttendance />} />
             <Route path="report-card" element={<ReportCard />} />
             <Route path="fees" element={<FeeStatus />} />
@@ -141,6 +145,7 @@ export default function App() {
             <Route path="admission" element={<FCAdmission />} />
             <Route path="admissions" element={<FCAdmissions />} />
             <Route path="credentials" element={<CredentialManagement />} />
+            <Route path="profile" element={<MyProfilePage />} />
           </Route>
         </Routes>
       </BrowserRouter>

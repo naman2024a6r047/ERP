@@ -17,6 +17,7 @@ const titles = {
   '/admin/promotion':     'Session & Promotion',
   '/admin/notifications': 'Notifications',
   '/admin/credentials':   'Credential Management',
+  '/admin/profile':       'My Profile',
 };
 
 export default function AdminLayout() {

@@ -70,6 +70,9 @@ app.use(auditLogger);
 const clientBuildPath = path.join(__dirname, '..', 'client', 'build');
 app.use(express.static(clientBuildPath));
 
+// ── Serve uploaded files (avatars, documents) ─────────────────────────────────
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+
 // ── API Routes ────────────────────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/students', require('./routes/students'));
@@ -86,6 +89,7 @@ app.use('/api/teacher-attendance', require('./routes/teacherAttendance'));
 app.use('/api/class-incharge', require('./routes/classIncharge'));
 app.use('/api/class-fees', require('./routes/classFees'));
 app.use('/api/credentials', require('./routes/credentials'));
+app.use('/api/profile', require('./routes/profile'));
 
 // ── Database status (shared between health and db-check) ──────────────────────
 let dbStatus = { connected: false, error: null, checkedAt: null };

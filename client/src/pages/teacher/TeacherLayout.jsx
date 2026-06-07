@@ -9,6 +9,7 @@ const titles = {
   '/teacher/marks':      'Enter Marks',
   '/teacher/incharge-results': 'Incharge Results',
   '/teacher/my-attendance': 'My Attendance',
+  '/teacher/profile':      'My Profile',
 };
 
 export default function TeacherLayout() {

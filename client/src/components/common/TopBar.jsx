@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import API from '../../utils/api';
 import toast from 'react-hot-toast';
 
@@ -39,11 +39,16 @@ const routeBreadcrumbs = {
   '/fc/collect': ['Dashboard', 'Search & Collect Fees'],
   '/fc/admission': ['Dashboard', 'New Student Admission'],
   '/fc/admissions': ['Dashboard', 'Admissions Log'],
+  '/fc/profile': ['Dashboard', 'My Profile'],
+  '/admin/profile': ['Dashboard', 'My Profile'],
+  '/admin2/profile': ['Dashboard', 'My Profile'],
+  '/teacher/profile': ['Dashboard', 'My Profile'],
 };
 
 export default function TopBar({ title, onMenuClick }) {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const canChangePassword = PASSWORD_ROLES.includes(user?.role);
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -51,13 +56,17 @@ export default function TopBar({ title, onMenuClick }) {
   const [session, setSession] = useState('2024-25');
 
   const breadcrumb = routeBreadcrumbs[location.pathname] || ['Portal', title];
+  // Fallbacks for display
   const isStudentPortal = ['parent', 'student'].includes(user?.role);
-
-  // Fallbacks to closely match Aarav Sharma inside student portal
-  const profileName = isStudentPortal ? "Aarav Sharma" : user?.name || "Admin User";
-  const profileSub  = isStudentPortal ? "Class 5-A" : user?.role === 'admin' ? "Super Admin" : "Staff User";
+  const profileName = user?.name || 'User';
+  const profileSub  = isStudentPortal
+    ? (user?.linkedStudent ? `Class ${user.linkedStudent.class}-${user.linkedStudent.section}` : 'Student')
+    : user?.role === 'admin' ? 'Super Admin'
+    : user?.role?.replace('_', ' ') || 'Staff';
   const notificationCount = isStudentPortal ? 3 : 8;
   const messageCount = isStudentPortal ? 0 : 5;
+
+  const profileBasePath = user?.role === 'parent' || user?.role === 'student' ? '/parent' : user?.role === 'fee_collector' ? '/fc' : `/${user?.role}`;
 
   return (
     <header className="h-16 bg-white border-b border-slate-100 px-6 flex items-center justify-between flex-shrink-0 sticky top-0 z-20 shadow-sm shadow-slate-100/50">
@@ -146,21 +155,18 @@ export default function TopBar({ title, onMenuClick }) {
 
         {/* User Account Info Dropdown */}
         <div className="flex items-center gap-3 pl-3 border-l border-slate-100">
-          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-inner flex-shrink-0 relative group">
-            {isStudentPortal ? (
-              // Student Avatar Placeholder (Aarav Sharma representation)
+          <div
+            className="w-10 h-10 rounded-xl overflow-hidden shadow-inner flex-shrink-0 relative group cursor-pointer"
+            onClick={() => navigate(`${profileBasePath}/profile`)}
+          >
+            {user?.profile_photo ? (
               <img
-                src="https://images.unsplash.com/photo-1503919545889-aef636e10ad4?w=100&auto=format&fit=crop&q=80"
-                alt="Student Profile"
+                src={`${process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace('/api', '') : ''}${user.profile_photo}`}
+                alt="Profile"
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "https://images.unsplash.com/photo-1544717305-2782549b5136?w=100&auto=format&fit=crop&q=80";
-                }}
               />
             ) : (
-              // Staff Avatar representation
-              <div className="w-full h-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-extrabold text-sm flex items-center justify-center group-hover:scale-115 transition-transform duration-300">
+              <div className="w-full h-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-extrabold text-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 {user?.name?.[0]?.toUpperCase()}
               </div>
             )}
