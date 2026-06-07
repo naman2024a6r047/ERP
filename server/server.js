@@ -31,7 +31,23 @@ process.on('uncaughtException', (err) => {
 app.set('trust proxy', 1);
 
 // ── Security Headers (L5) ─────────────────────────────────────────────────────
-app.use(helmet());
+// Configure Helmet to allow service worker registration for push notifications.
+// Default helmet() sets worker-src 'none' which blocks SW registration entirely.
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "blob:"],
+      connectSrc: ["'self'", "https://fcm.googleapis.com", "https://*.push.services.mozilla.com"],
+      workerSrc: ["'self'"],
+      childSrc: ["'self'", "blob:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
 
 // ── Global Rate Limiter ────────────────────────────────────────────────────────
 app.use(rateLimit({

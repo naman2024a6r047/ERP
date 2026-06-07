@@ -12,9 +12,8 @@ const PushSubscription = sequelize.define('PushSubscription', {
     allowNull: false,
   },
   endpoint: {
-    type: DataTypes.STRING(500),
+    type: DataTypes.TEXT,
     allowNull: false,
-    unique: true,
   },
   p256dh: {
     type: DataTypes.STRING(255),
