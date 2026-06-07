@@ -76,15 +76,20 @@ export default function Teachers() {
   const columns = [
     {
       key: 'name', label: 'Teacher',
-      render: (val, row) => (
-        <div className="flex items-center gap-2.5">
-          <Avatar name={val} size="sm" />
-          <div>
-            <p className="font-medium text-gray-800 text-sm">{val}</p>
-            <p className="text-xs text-gray-400 font-mono">{row.teacher_id}</p>
+      render: (val, row) => {
+        const photoUrl = row.teacherUser?.profile_photo
+          ? `${process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace('/api', '') : ''}${row.teacherUser.profile_photo}`
+          : undefined;
+        return (
+          <div className="flex items-center gap-2.5">
+            <Avatar name={val} size="sm" src={photoUrl} />
+            <div>
+              <p className="font-medium text-gray-800 text-sm">{val}</p>
+              <p className="text-xs text-gray-400 font-mono">{row.teacher_id}</p>
+            </div>
           </div>
-        </div>
-      )
+        );
+      }
     },
     {
       key: 'subject', label: 'Subject',
@@ -93,10 +98,17 @@ export default function Teachers() {
       )
     },
     {
+      key: 'email', label: 'Email',
+      render: val => <span className="text-xs text-gray-500 font-medium">{val || '—'}</span>
+    },
+    {
       key: 'assigned_classes', label: 'Classes',
       render: val => <span className="text-xs text-gray-500">{val || '—'}</span>
     },
-    { key: 'phone', label: 'Phone' },
+    {
+      key: 'phone', label: 'Phone',
+      render: val => <span className="text-xs text-gray-500 font-medium">{val || '—'}</span>
+    },
     {
       key: 'status', label: 'Status',
       render: val => (

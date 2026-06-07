@@ -18,25 +18,7 @@ const mainChartData = [
   { label: '29 May', attendance: 92.6, fees: 75, exams: 78.4 }
 ];
 
-const eventsData = [
-  { title: 'Parents Meeting', date: '17 May 2025, 10:00 AM', color: 'text-blue-500 bg-blue-50 border-blue-100' },
-  { title: 'Annual Sports Day', date: '24 May 2025, 08:00 AM', color: 'text-amber-500 bg-amber-50 border-amber-100' },
-  { title: 'Science Exhibition', date: '31 May 2025, 11:00 AM', color: 'text-emerald-500 bg-emerald-50 border-emerald-100' },
-  { title: 'PTM (Grade 6-10)', date: '07 June 2025, 10:00 AM', color: 'text-purple-500 bg-purple-50 border-purple-100' },
-];
 
-const calendarDays = [
-  { day: 27, currentMonth: false }, { day: 28, currentMonth: false }, { day: 29, currentMonth: false }, { day: 30, currentMonth: false },
-  { day: 1, currentMonth: true }, { day: 2, currentMonth: true }, { day: 3, currentMonth: true },
-  { day: 4, currentMonth: true }, { day: 5, currentMonth: true }, { day: 6, currentMonth: true }, { day: 7, currentMonth: true },
-  { day: 8, currentMonth: true }, { day: 9, currentMonth: true }, { day: 10, currentMonth: true },
-  { day: 11, currentMonth: true }, { day: 12, currentMonth: true }, { day: 13, currentMonth: true }, { day: 14, currentMonth: true },
-  { day: 15, currentMonth: true, isToday: true }, { day: 16, currentMonth: true }, { day: 17, currentMonth: true },
-  { day: 18, currentMonth: true }, { day: 19, currentMonth: true }, { day: 20, currentMonth: true }, { day: 21, currentMonth: true },
-  { day: 22, currentMonth: true }, { day: 23, currentMonth: true }, { day: 24, currentMonth: true },
-  { day: 25, currentMonth: true }, { day: 26, currentMonth: true }, { day: 27, currentMonth: true }, { day: 28, currentMonth: true },
-  { day: 29, currentMonth: true }, { day: 30, currentMonth: true }, { day: 31, currentMonth: true }
-];
 
 export default function Dashboard() {
   const [students, setStudents] = useState([]);
@@ -58,9 +40,78 @@ export default function Dashboard() {
 
   if (loading) return <LoadingSpinner />;
 
+  // Get current date details
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth(); // 0-indexed
+  const todayDate = currentDate.getDate();
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const monthYearString = `${monthNames[currentMonth]} ${currentYear}`;
+
+  // Calculate days for the calendar matrix
+  const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+  const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const totalDaysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+  const dynamicCalendarDays = [];
+
+  // 1. Fill previous month's padding days
+  for (let i = firstDayIndex - 1; i >= 0; i--) {
+    dynamicCalendarDays.push({
+      day: totalDaysInPrevMonth - i,
+      currentMonth: false,
+      isToday: false
+    });
+  }
+
+  // 2. Fill current month's days
+  for (let i = 1; i <= totalDaysInMonth; i++) {
+    dynamicCalendarDays.push({
+      day: i,
+      currentMonth: true,
+      isToday: i === todayDate
+    });
+  }
+
+  // 3. Fill next month's padding days to make it a perfect grid (42 cells)
+  const remainingCells = 42 - dynamicCalendarDays.length;
+  for (let i = 1; i <= remainingCells; i++) {
+    dynamicCalendarDays.push({
+      day: i,
+      currentMonth: false,
+      isToday: false
+    });
+  }
+
+  // Dynamic Events list: extract real holiday notifications from API
+  const holidayEvents = notifs
+    .filter(n => n.type === 'holiday')
+    .map(n => ({
+      title: n.title,
+      date: new Date(n.created_at).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }),
+      color: 'text-emerald-500 bg-emerald-50 border-emerald-100'
+    }));
+
+  const fallbackEvents = [
+    { title: 'Parents Meeting', date: '17 Jun 2026, 10:00 AM', color: 'text-blue-500 bg-blue-50 border-blue-100' },
+    { title: 'Annual Sports Day', date: '24 Jun 2026, 08:00 AM', color: 'text-amber-500 bg-amber-50 border-amber-100' },
+    { title: 'Science Exhibition', date: '01 Jul 2026, 11:00 AM', color: 'text-emerald-500 bg-emerald-50 border-emerald-100' },
+    { title: 'PTM (Grade 6-10)', date: '07 Jul 2026, 10:00 AM', color: 'text-purple-500 bg-purple-50 border-purple-100' },
+  ];
+
+  const displayEvents = holidayEvents.length > 0 ? [...holidayEvents, ...fallbackEvents].slice(0, 4) : fallbackEvents;
+
   // Dynamic values binding real API stats with fallback layout requirements
-  const studentCount = stats.total_students || 1248;
-  const teacherCount = stats.active_teachers || 145;
+  const studentCount = stats.total_students !== undefined ? stats.total_students : 1248;
+  const teacherCount = stats.active_teachers !== undefined ? stats.active_teachers : 145;
   const classCount   = 48; // Standard dynamic mock representation
   const feeAmount    = stats.fee_collected ? `₹ ${Number(stats.fee_collected).toLocaleString('en-IN')}` : "₹ 28,75,000";
 
@@ -287,7 +338,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card lg:col-span-4 flex flex-col justify-between">
           <div className="pb-4 border-b border-slate-100 flex items-center justify-between mb-4">
             <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Calendar</h3>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">May 2025</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{monthYearString}</span>
           </div>
 
           {/* Mini Calendar grid */}
@@ -298,7 +349,7 @@ export default function Dashboard() {
             ))}
             
             {/* Days matrix */}
-            {calendarDays.map((item, i) => {
+            {dynamicCalendarDays.map((item, i) => {
               let cellClass = "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all ";
               if (!item.currentMonth) {
                 cellClass += "text-slate-300 opacity-20 pointer-events-none select-none";
@@ -450,7 +501,7 @@ export default function Dashboard() {
           </div>
 
           <div className="space-y-3.5 flex-1">
-            {eventsData.map((item, i) => (
+            {displayEvents.map((item, i) => (
               <div key={i} className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-2xl">
                 <div>
                   <h4 className="text-xs font-extrabold text-slate-800">{item.title}</h4>
@@ -472,38 +523,44 @@ export default function Dashboard() {
           </div>
 
           <div className="space-y-4 flex-1">
-            <div className="flex gap-3 px-1 py-1 hover:bg-slate-50/50 rounded-xl transition-colors">
-              <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-bold flex-shrink-0 mt-0.5">📣</div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <h4 className="text-xs font-extrabold text-slate-800 truncate">Summer Holidays</h4>
-                  <span className="text-[9px] font-bold text-slate-400 flex-shrink-0">12 May 2025</span>
-                </div>
-                <p className="text-[10px] font-bold text-slate-500 mt-1 leading-normal">School will remain closed from 25 May to 10 June 2025.</p>
-              </div>
-            </div>
-
-            <div className="flex gap-3 px-1 py-1 hover:bg-slate-50/50 rounded-xl transition-colors">
-              <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-bold flex-shrink-0 mt-0.5">👕</div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <h4 className="text-xs font-extrabold text-slate-800 truncate">Uniform Update</h4>
-                  <span className="text-[9px] font-bold text-slate-400 flex-shrink-0">10 May 2025</span>
-                </div>
-                <p className="text-[10px] font-bold text-slate-500 mt-1 leading-normal">New school uniform pattern will be applicable starting from June 2025.</p>
-              </div>
-            </div>
-
-            <div className="flex gap-3 px-1 py-1 hover:bg-slate-50/50 rounded-xl transition-colors">
-              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold flex-shrink-0 mt-0.5">📝</div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <h4 className="text-xs font-extrabold text-slate-800 truncate">Exam Schedule</h4>
-                  <span className="text-[9px] font-bold text-slate-400 flex-shrink-0">09 May 2025</span>
-                </div>
-                <p className="text-[10px] font-bold text-slate-500 mt-1 leading-normal">Final examination schedule for Grade 6-12 is now available in portals.</p>
-              </div>
-            </div>
+            {notifs.length === 0 ? (
+              <p className="text-center text-gray-400 text-xs py-8">No recent announcements</p>
+            ) : (
+              notifs.map((item) => {
+                const dateStr = new Date(item.created_at).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                });
+                let icon = '📣';
+                let bg = 'bg-purple-50 text-purple-600';
+                if (item.type === 'holiday') {
+                  icon = '🌴';
+                  bg = 'bg-emerald-50 text-emerald-600';
+                } else if (item.type === 'fee_reminder') {
+                  icon = '💰';
+                  bg = 'bg-amber-50 text-amber-600';
+                } else if (item.type === 'attendance_alert') {
+                  icon = '⏰';
+                  bg = 'bg-red-50 text-red-600';
+                } else if (item.type === 'result') {
+                  icon = '📝';
+                  bg = 'bg-blue-50 text-blue-600';
+                }
+                return (
+                  <div key={item.id} className="flex gap-3 px-1 py-1 hover:bg-slate-50/50 rounded-xl transition-colors">
+                    <div className={`w-8 h-8 rounded-xl ${bg} flex items-center justify-center text-lg font-bold flex-shrink-0 mt-0.5`}>{icon}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="text-xs font-extrabold text-slate-800 truncate">{item.title}</h4>
+                        <span className="text-[9px] font-bold text-slate-400 flex-shrink-0">{dateStr}</span>
+                      </div>
+                      <p className="text-[10px] font-bold text-slate-500 mt-1 leading-normal">{item.message}</p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 

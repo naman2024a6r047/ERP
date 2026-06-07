@@ -328,7 +328,7 @@ export default function MyProfilePage() {
             </div>
 
             {/* Account Info */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-y-3 gap-x-6 pt-4 border-t border-slate-100">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-y-3 gap-x-6 pt-4 border-t border-slate-100">
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">User ID</p>
                 <p className="text-xs font-extrabold text-slate-700 mt-1.5">#{profile.id}</p>
@@ -341,12 +341,6 @@ export default function MyProfilePage() {
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</p>
                 <p className={`text-xs font-extrabold mt-1.5 ${profile.is_active ? 'text-emerald-600' : 'text-red-600'}`}>
                   {profile.is_active ? '🟢 Active' : '🔴 Inactive'}
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Member Since</p>
-                <p className="text-xs font-extrabold text-slate-700 mt-1.5">
-                  📅 {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
                 </p>
               </div>
             </div>

@@ -8,7 +8,7 @@ const { validateTeacherCreate, validateTeacherUpdate } = require('../middleware/
 
 // (C3 fix) — whitelisted fields for teacher operations
 const TEACHER_CREATE_FIELDS = ['name', 'subject', 'phone', 'status', 'assigned_classes', 'qualification', 'experience', 'date_of_joining', 'email', 'password'];
-const TEACHER_UPDATE_FIELDS = ['name', 'subject', 'phone', 'status', 'assigned_classes', 'qualification', 'experience'];
+const TEACHER_UPDATE_FIELDS = ['name', 'subject', 'phone', 'status', 'assigned_classes', 'qualification', 'experience', 'email'];
 
 const pick = (obj, keys) => {
   const result = {};
@@ -36,6 +36,13 @@ router.get('/', protect, hasPermission('VIEW_TEACHERS'), async (req, res) => {
 
     const teachers = await Teacher.findAll({
       where,
+      include: [
+        {
+          model: User,
+          as: 'teacherUser',
+          attributes: ['profile_photo']
+        }
+      ],
       order: [['name', 'ASC']],
     });
 
@@ -49,7 +56,15 @@ router.get('/', protect, hasPermission('VIEW_TEACHERS'), async (req, res) => {
 // ✅ admin, admin2, and the teacher themselves can view
 router.get('/:id', protect, hasPermission('VIEW_TEACHERS'), async (req, res) => {
   try {
-    const teacher = await Teacher.findByPk(req.params.id);
+    const teacher = await Teacher.findByPk(req.params.id, {
+      include: [
+        {
+          model: User,
+          as: 'teacherUser',
+          attributes: ['profile_photo']
+        }
+      ]
+    });
     if (!teacher) return res.status(404).json({ message: 'Teacher not found.' });
     res.json(teacher);
   } catch (err) {
@@ -121,15 +136,45 @@ router.post('/', protect, authorize('admin', 'admin2'), validateTeacherCreate, a
 // PUT /api/teachers/:id
 // ✅ Both admin and admin2 can EDIT teachers — (C3 fix) whitelisted fields
 router.put('/:id', protect, authorize('admin', 'admin2'), validateTeacherUpdate, async (req, res) => {
+  const txn = await require('../models').sequelize.transaction();
   try {
     const safeData = pick(req.body, TEACHER_UPDATE_FIELDS);
-    const [updated] = await Teacher.update(safeData, {
-      where: { id: req.params.id },
+    const teacher = await Teacher.findByPk(req.params.id, { transaction: txn });
+    if (!teacher) {
+      await txn.rollback();
+      return res.status(404).json({ message: 'Teacher not found.' });
+    }
+
+    if (safeData.email && safeData.email !== teacher.email) {
+      const existingUser = await User.findOne({ where: { email: safeData.email }, transaction: txn });
+      if (existingUser && existingUser.linked_teacher_id !== teacher.id) {
+        await txn.rollback();
+        return res.status(400).json({ message: 'Email address (User ID) is already registered.' });
+      }
+    }
+
+    await teacher.update(safeData, { transaction: txn });
+
+    // Update corresponding User record if it exists
+    const userToUpdate = await User.findOne({ where: { linked_teacher_id: teacher.id }, transaction: txn });
+    if (userToUpdate) {
+      const userUpdates = {};
+      if (safeData.name !== undefined) userUpdates.name = safeData.name;
+      if (safeData.phone !== undefined) userUpdates.phone = safeData.phone;
+      if (safeData.email !== undefined) userUpdates.email = safeData.email;
+      if (safeData.status === 'inactive') userUpdates.is_active = false;
+      if (safeData.status === 'active' || safeData.status === 'leave') userUpdates.is_active = true;
+      await userToUpdate.update(userUpdates, { transaction: txn });
+    }
+
+    await txn.commit();
+    
+    const updatedTeacher = await Teacher.findByPk(req.params.id, {
+      include: [{ model: User, as: 'teacherUser', attributes: ['profile_photo'] }]
     });
-    if (!updated) return res.status(404).json({ message: 'Teacher not found.' });
-    const teacher = await Teacher.findByPk(req.params.id);
-    res.json(teacher);
+    res.json(updatedTeacher);
   } catch (err) {
+    await txn.rollback();
     res.status(400).json({ message: err.message });
   }
 });

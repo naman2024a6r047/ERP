@@ -1,19 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line } from 'recharts';
+import API from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
+import Modal from '../../components/common/Modal';
 
 // Data sets to mock Aarav Sharma's student portal details
 const sparklineData = [
   { value: 75 }, { value: 78 }, { value: 80 }, { value: 85 }, { value: 82 }, { value: 88 }, { value: 89.4 }
 ];
 
-const timetable = [
+const fallbackTimetable = [
   { time: '08:00 AM', subject: 'English', teacher: 'Ms. Neha Sharma', room: 'R-101', color: 'bg-blue-100 text-blue-600' },
   { time: '09:00 AM', subject: 'Mathematics', teacher: 'Mr. Rajesh Verma', room: 'R-105', color: 'bg-emerald-100 text-emerald-600' },
   { time: '10:00 AM', subject: 'Science', teacher: 'Ms. Pooja Singh', room: 'Lab-2', color: 'bg-purple-100 text-purple-600' },
   { time: '11:00 AM', subject: 'Social Studies', teacher: 'Mr. Amit Patel', room: 'R-103', color: 'bg-amber-100 text-amber-600' },
   { time: '12:00 PM', subject: 'Hindi', teacher: 'Ms. Kavita Joshi', room: 'R-104', color: 'bg-pink-100 text-pink-600' },
 ];
+
+const DAYS    = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const PERIODS = [
+  { num: 1, time: '8:00 – 9:00' },  { num: 2, time: '9:00 – 10:00' },
+  { num: 3, time: '10:00 – 11:00' },{ num: 4, time: '11:00 – 12:00' },
+  { num: 5, time: '12:00 – 1:00' }, { num: 6, time: '1:00 – 2:00' },
+  { num: 7, time: '2:00 – 3:00' },
+];
+
+const subjectColors = {
+  Mathematics:     'bg-blue-100 text-blue-700',
+  Science:         'bg-green-100 text-green-700',
+  English:         'bg-yellow-100 text-yellow-700',
+  Hindi:           'bg-pink-100 text-pink-700',
+  'Social Studies':'bg-purple-100 text-purple-700',
+  Computer:        'bg-orange-100 text-orange-700',
+  Art:             'bg-teal-100 text-teal-700',
+  Free:            'bg-gray-100 text-gray-400',
+};
 
 const examData = [
   { name: 'Math Unit Test', date: '15 May 2025, Thursday', left: '2 Days Left', color: 'bg-blue-50 text-blue-600 border-blue-100' },
@@ -55,7 +77,51 @@ const calendarDays = [
 
 export default function ParentDashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('May 2025');
+
+  // Timetable integration
+  const [timetableData, setTimetableData] = useState([]);
+  const [loadingTimetable, setLoadingTimetable] = useState(false);
+  const [showTimetableModal, setShowTimetableModal] = useState(false);
+
+  const studentClass = user?.linkedStudent?.class;
+  const studentSection = user?.linkedStudent?.section;
+
+  useEffect(() => {
+    if (studentClass && studentSection) {
+      setLoadingTimetable(true);
+      API.get(`/timetable?class=${studentClass}&section=${studentSection}`)
+        .then(r => setTimetableData(r.data || []))
+        .catch(err => console.error('Failed to load student timetable', err))
+        .finally(() => setLoadingTimetable(false));
+    }
+  }, [studentClass, studentSection]);
+
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const todayDayName = daysOfWeek[new Date().getDay()];
+
+  // Filter and format today's slots
+  const todaySlotsRaw = timetableData.filter(s => s.day === todayDayName);
+  const periodTimes = {
+    1: '08:00 AM', 2: '09:00 AM', 3: '10:00 AM', 4: '11:00 AM',
+    5: '12:00 PM', 6: '01:00 PM', 7: '02:00 PM'
+  };
+
+  const todaySlots = todaySlotsRaw.map(slot => ({
+    time: periodTimes[slot.period_number] || `${slot.period_number} Period`,
+    subject: slot.subject,
+    teacher: slot.teacher?.name || 'Assigned Teacher',
+    room: `Room ${user?.linkedStudent?.roll_number ? 100 + user.linkedStudent.roll_number : 101}`,
+    color: subjectColors[slot.subject] || 'bg-slate-100 text-slate-600',
+  }));
+
+  const displayTodayTimetable = todaySlots.length > 0 ? todaySlots : fallbackTimetable;
+
+  // Build weekly timetable grid day → period → slot
+  const fullGrid = {};
+  DAYS.forEach(d => { fullGrid[d] = {}; });
+  timetableData.forEach(slot => { fullGrid[slot.day][slot.period_number] = slot; });
 
   // Fees Donut Chart config (₹62,000 Total, ₹56,800 Paid, ₹5,200 Pending)
   const feesChartData = [
@@ -234,25 +300,34 @@ export default function ParentDashboard() {
               <span className="text-xl">🏫</span>
               <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Today's Timetable</h3>
             </div>
-            <button className="text-[10px] font-bold text-blue-500 hover:underline uppercase tracking-wider">View Full Timetable</button>
+            <button
+              onClick={() => setShowTimetableModal(true)}
+              className="text-[10px] font-bold text-blue-500 hover:underline uppercase tracking-wider"
+            >
+              View Full Timetable
+            </button>
           </div>
 
           <div className="space-y-3 flex-1">
-            {timetable.map((item, index) => (
-              <div key={index} className="flex items-center gap-3.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-100/70 p-3 rounded-2xl transition-colors">
-                <div className={`w-8 h-8 rounded-xl ${item.color} flex items-center justify-center font-extrabold text-sm flex-shrink-0`}>
-                  {index + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs font-extrabold text-slate-800 truncate">{item.subject}</p>
-                    <span className="text-[9px] bg-slate-200/50 text-slate-500 px-2 py-0.5 rounded font-bold">{item.room}</span>
+            {loadingTimetable ? (
+              <p className="text-center text-gray-400 text-xs py-8">Loading...</p>
+            ) : (
+              displayTodayTimetable.map((item, index) => (
+                <div key={index} className="flex items-center gap-3.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-100/70 p-3 rounded-2xl transition-colors">
+                  <div className={`w-8 h-8 rounded-xl ${item.color} flex items-center justify-center font-extrabold text-sm flex-shrink-0`}>
+                    {index + 1}
                   </div>
-                  <p className="text-[10px] font-bold text-slate-400 mt-1">{item.teacher}</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-extrabold text-slate-800 truncate">{item.subject}</p>
+                      <span className="text-[9px] bg-slate-200/50 text-slate-500 px-2 py-0.5 rounded font-bold">{item.room}</span>
+                    </div>
+                    <p className="text-[10px] font-bold text-slate-400 mt-1">{item.teacher}</p>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400 flex-shrink-0">{item.time}</span>
                 </div>
-                <span className="text-[10px] font-bold text-slate-400 flex-shrink-0">{item.time}</span>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -507,6 +582,58 @@ export default function ParentDashboard() {
           <span className="absolute text-3xl z-20 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 select-none pointer-events-none">🏆</span>
         </div>
       </div>
+
+      {/* Full Timetable Modal Viewer */}
+      <Modal
+        isOpen={showTimetableModal}
+        onClose={() => setShowTimetableModal(false)}
+        title={`Academic Timetable — Class ${studentClass || ''} Section ${studentSection || ''}`}
+        size="lg"
+      >
+        <div className="overflow-x-auto p-1">
+          <table className="w-full border-collapse text-xs" style={{ minWidth: 600 }}>
+            <thead>
+              <tr>
+                <th className="border border-gray-200 bg-gray-50 px-3 py-2 text-left font-semibold text-gray-600 w-20">Day</th>
+                {PERIODS.map(p => (
+                  <th key={p.num} className="border border-gray-200 bg-gray-50 px-2 py-2 text-center font-semibold text-gray-600">
+                    <div className="font-semibold">P{p.num}</div>
+                    <div className="text-[9px] text-gray-400 font-normal">{p.time}</div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {DAYS.map(day => (
+                <tr key={day}>
+                  <td className="border border-gray-200 px-3 py-2 font-semibold text-gray-700 bg-gray-50/50">{day}</td>
+                  {PERIODS.map(p => {
+                    const slot = fullGrid[day][p.num];
+                    const subj = slot?.subject || (day === 'Saturday' && p.num > 3 ? 'Free' : null);
+                    const colorClass = subjectColors[subj] || 'bg-gray-50 text-gray-300';
+                    return (
+                      <td key={p.num} className="border border-gray-200 px-2 py-2 text-center">
+                        {subj ? (
+                          <div className={`${colorClass} rounded-md px-1 py-1 font-medium text-[10px]`}>
+                            <div>{subj}</div>
+                            {slot?.teacher && (
+                              <div className="text-[9px] opacity-75 mt-0.5">
+                                {slot.teacher.name?.split(' ').slice(-1)[0]}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-200">—</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Modal>
 
     </div>
   );
