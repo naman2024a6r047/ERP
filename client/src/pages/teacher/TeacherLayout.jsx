@@ -10,6 +10,7 @@ const titles = {
   '/teacher/incharge-results': 'Incharge Results',
   '/teacher/my-attendance': 'My Attendance',
   '/teacher/profile':      'My Profile',
+  '/teacher/notifications': 'Notifications',
 };
 
 export default function TeacherLayout() {

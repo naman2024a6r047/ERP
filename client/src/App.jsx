@@ -100,6 +100,7 @@ export default function App() {
             <Route path="credentials" element={<CredentialManagement />} />
             <Route path="profile" element={<MyProfilePage />} />
             <Route path="bulk-upload" element={<BulkUploadStudents />} />
+            <Route path="notifications" element={<MyNotifications />} />
           </Route>
 
           <Route
@@ -116,6 +117,7 @@ export default function App() {
             <Route path="incharge-results" element={<InchargeResults />} />
             <Route path="my-attendance" element={<TeacherOwnAttendance />} />
             <Route path="profile" element={<MyProfilePage />} />
+            <Route path="notifications" element={<MyNotifications />} />
           </Route>
 
           <Route
@@ -150,6 +152,7 @@ export default function App() {
             <Route path="credentials" element={<CredentialManagement />} />
             <Route path="profile" element={<MyProfilePage />} />
             <Route path="bulk-upload" element={<BulkUploadStudents />} />
+            <Route path="notifications" element={<MyNotifications />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -12,6 +12,7 @@ const titles = {
   '/fc/credentials': 'Credential Management',
   '/fc/profile':     'My Profile',
   '/fc/bulk-upload':  'Bulk Student Admission',
+  '/fc/notifications': 'Notifications',
 };
 
 export default function FCLayout() {
