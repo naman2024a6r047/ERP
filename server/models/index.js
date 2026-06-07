@@ -17,11 +17,15 @@ const TeacherAttendance= require('./TeacherAttendance');
 const ClassIncharge    = require('./ClassIncharge');
 const ClassFeeStructure= require('./ClassFeeStructure');
 const AuditLog          = require('./AuditLog');
+const PushSubscription  = require('./PushSubscription');
 
 // ── Associations ──────────────────────────────────────────────────────────────
 
 User.hasMany(AuditLog, { foreignKey: 'user_id', as: 'auditLogs' });
 AuditLog.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+User.hasMany(PushSubscription, { foreignKey: 'user_id', as: 'pushSubscriptions' });
+PushSubscription.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
 Session.hasMany(Student, { foreignKey: 'session_id', as: 'students' });
 Student.belongsTo(Session, { foreignKey: 'session_id', as: 'session' });
@@ -108,5 +112,5 @@ module.exports = {
   Timetable, PromotionHistory,
   AdmissionRequest, TeacherAttendance,
   ClassIncharge, ClassFeeStructure,
-  AuditLog,
+  AuditLog, PushSubscription,
 };

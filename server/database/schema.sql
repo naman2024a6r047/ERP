@@ -419,3 +419,20 @@ CREATE TABLE audit_logs (
 CREATE INDEX idx_audit_user_action ON audit_logs(user_id, action);
 CREATE INDEX idx_audit_target ON audit_logs(target_type, target_id);
 CREATE INDEX idx_audit_time ON audit_logs(created_at);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 18. PUSH SUBSCRIPTIONS (Web Push Notifications Integration)
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE push_subscriptions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  endpoint VARCHAR(500) NOT NULL UNIQUE,
+  p256dh VARCHAR(255) NOT NULL,
+  auth VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_push_user ON push_subscriptions(user_id);
+

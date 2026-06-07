@@ -74,6 +74,17 @@ router.post('/', protect, hasPermission('SEND_NOTIFICATIONS'), async (req, res) 
       sent_by:           req.user.id,
     });
 
+    // Send native system push notifications asynchronously
+    const { sendPushToUser, sendPushToRole } = require('../services/pushNotificationService');
+    if (recipient_type === 'individual') {
+      sendPushToUser(recipient_user_id, title, message).catch(err => console.error('[PushRoute] Error:', err));
+    } else if (recipient_type === 'role') {
+      const targetRole = recipient_role === 'parents' ? 'parent' : recipient_role === 'teachers' ? 'teacher' : recipient_role;
+      sendPushToRole(targetRole, title, message).catch(err => console.error('[PushRoute] Error:', err));
+    } else {
+      sendPushToRole('all', title, message).catch(err => console.error('[PushRoute] Error:', err));
+    }
+
     res.status(201).json(notification);
   } catch (err) { res.status(400).json({ message: err.message }); }
 });
@@ -114,6 +125,59 @@ router.delete('/:id', protect, hasPermission('SEND_NOTIFICATIONS'), async (req, 
     await Notification.update({ is_active: false }, { where: { id: req.params.id } });
     res.json({ message: 'Deleted.' });
   } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// ── Web Push Notifications Endpoints ──────────────────────────────────────────
+
+// GET /api/notifications/vapid-key - Get public VAPID key for service worker subscription
+router.get('/vapid-key', protect, (req, res) => {
+  res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
+});
+
+// POST /api/notifications/subscribe - Save push subscription details
+router.post('/subscribe', protect, async (req, res) => {
+  try {
+    const { endpoint, keys } = req.body;
+    if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
+      return res.status(400).json({ message: 'Invalid push subscription details.' });
+    }
+
+    const { PushSubscription } = require('../models');
+    await PushSubscription.upsert({
+      user_id: req.user.id,
+      endpoint,
+      p256dh: keys.p256dh,
+      auth: keys.auth,
+    });
+
+    res.status(201).json({ message: 'Push subscription saved successfully.' });
+  } catch (err) {
+    console.error('[PushRoute] Subscribe error:', err);
+    res.status(500).json({ message: 'Failed to save push subscription.' });
+  }
+});
+
+// POST /api/notifications/unsubscribe - Delete push subscription details
+router.post('/unsubscribe', protect, async (req, res) => {
+  try {
+    const { endpoint } = req.body;
+    if (!endpoint) {
+      return res.status(400).json({ message: 'Endpoint is required to unsubscribe.' });
+    }
+
+    const { PushSubscription } = require('../models');
+    await PushSubscription.destroy({
+      where: {
+        user_id: req.user.id,
+        endpoint,
+      },
+    });
+
+    res.json({ message: 'Push subscription removed successfully.' });
+  } catch (err) {
+    console.error('[PushRoute] Unsubscribe error:', err);
+    res.status(500).json({ message: 'Failed to remove push subscription.' });
+  }
 });
 
 module.exports = router;
