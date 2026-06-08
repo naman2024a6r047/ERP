@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSettings } from '../../context/SettingsContext';
 
 // Dynamic navigation item configuration with custom icons
 const navConfig = {
@@ -253,7 +254,6 @@ const renderIcon = (iconName) => {
   }
 };
 
-import { useSettings } from '../../context/SettingsContext';
 
 export default function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useAuth();
