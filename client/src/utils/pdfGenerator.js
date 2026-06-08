@@ -119,74 +119,157 @@ export const generateReportCard = (student, result) => {
 };
 
 // ── Fee Receipt PDF ───────────────────────────────────────────────────────────
-export const generateFeeReceipt = (fee, student, settings = {}) => {
+export const generateFeeReceipt = async (fee, student, settings = {}) => {
   const doc = new jsPDF({ unit: 'mm', format: [148, 210] }); // A5
   const w = doc.internal.pageSize.width;
 
   const schoolName = settings.school_name || 'EduSmart Public School';
+  const schoolSub = settings.school_subtitle || '';
+  const schoolAddress = settings.school_address || '';
+  const schoolContact = [settings.school_phone, settings.school_email].filter(Boolean).join(' | ');
   const footerNote = settings.receipt_footer || 'This is a computer-generated receipt. No signature required.';
 
-  // Header
-  doc.setFillColor(30, 41, 59);
-  doc.rect(0, 0, w, 32, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(14);
+  // Attempt to load the logo if provided
+  let logoBase64 = null;
+  if (settings.school_logo_url) {
+    logoBase64 = await new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => resolve(null);
+      img.src = settings.school_logo_url.startsWith('/') 
+        ? `${window.location.origin}${settings.school_logo_url}` 
+        : settings.school_logo_url;
+    });
+  }
+
+  let startY = 15;
+  if (logoBase64) {
+    // Draw Logo and left-aligned text
+    doc.addImage(logoBase64, 'PNG', 14, startY - 5, 18, 18);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 41, 59);
+    doc.text(schoolName, 36, startY);
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    if (schoolSub) {
+      startY += 5;
+      doc.text(schoolSub, 36, startY);
+    }
+    if (schoolAddress) {
+      startY += 4;
+      doc.setFontSize(8);
+      doc.text(schoolAddress, 36, startY);
+    }
+    if (schoolContact) {
+      startY += 4;
+      doc.setFontSize(8);
+      doc.text(schoolContact, 36, startY);
+    }
+    startY += 8;
+  } else {
+    // Centered text when no logo
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 41, 59);
+    doc.text(schoolName, w / 2, startY, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    if (schoolSub) {
+      startY += 5;
+      doc.text(schoolSub, w / 2, startY, { align: 'center' });
+    }
+    if (schoolAddress) {
+      startY += 5;
+      doc.setFontSize(8);
+      doc.text(schoolAddress, w / 2, startY, { align: 'center' });
+    }
+    if (schoolContact) {
+      startY += 4;
+      doc.setFontSize(8);
+      doc.text(schoolContact, w / 2, startY, { align: 'center' });
+    }
+    startY += 8;
+  }
+
+  // Separator Line
+  doc.setDrawColor(226, 232, 240);
+  doc.line(14, startY, w - 14, startY);
+  
+  startY += 10;
+  // FEE RECEIPT Title
+  doc.setFontSize(13);
   doc.setFont('helvetica', 'bold');
-  doc.text(schoolName, w / 2, 13, { align: 'center' });
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.text('FEE RECEIPT', w / 2, 22, { align: 'center' });
-
-  // Receipt number badge
-  doc.setFillColor(79, 126, 248);
-  doc.roundedRect(w / 2 - 24, 26, 48, 9, 2, 2, 'F');
-  doc.setFontSize(8);
-  doc.text(`Receipt: ${fee?.receipt_number || 'PENDING'}`, w / 2, 32, { align: 'center' });
-
-  // Student details
   doc.setTextColor(30, 41, 59);
+  doc.text('FEE RECEIPT', w / 2, startY, { align: 'center' });
+  
+  // Receipt info
+  startY += 8;
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Receipt No: ${fee?.receipt_number || 'PENDING'}`, 14, startY);
+  doc.text(`Date: ${formatDate(fee?.paid_date || fee?.created_at || new Date())}`, w - 14, startY, { align: 'right' });
 
+  startY += 6;
+  doc.setDrawColor(226, 232, 240);
+  doc.line(14, startY, w - 14, startY);
+
+  // Student Details
+  startY += 8;
   const rows = [
-    ['Student Name', `${student?.first_name || ''} ${student?.last_name || ''}`],
+    ['Student Name', `${student?.first_name || ''} ${student?.last_name || ''}`.trim() || '—'],
     ['Student ID',   student?.student_id || '—'],
     ['Class',        `${student?.class || '—'} - ${student?.section || '—'}`],
     ['Parent Name',  student?.parent_name || '—'],
     ['Month',        fee?.month || '—'],
     ['Fee Type',     fee?.fee_type || 'Monthly'],
     ['Payment Mode', fee?.payment_mode || '—'],
-    ['Date',         formatDate(fee?.paid_date)],
   ];
 
-  let y = 46;
+  let y = startY;
   rows.forEach(([label, val]) => {
     doc.setTextColor(100, 116, 139);
+    doc.setFontSize(9);
     doc.text(label, 14, y);
     doc.setTextColor(30, 41, 59);
     doc.setFont('helvetica', 'bold');
-    doc.text(String(val), 70, y);
+    doc.text(String(val), 60, y);
     doc.setFont('helvetica', 'normal');
     y += 8;
   });
 
-  // Amount box
+  // Amount Box
+  y += 4;
   doc.setFillColor(239, 246, 255);
-  doc.roundedRect(14, y + 2, w - 28, 26, 3, 3, 'F');
+  doc.roundedRect(14, y, w - 28, 26, 3, 3, 'F');
   doc.setFontSize(10);
   doc.setTextColor(100, 116, 139);
-  doc.text('Amount Paid', w / 2, y + 12, { align: 'center' });
-  doc.setFontSize(20);
+  doc.text('Amount Paid', w / 2, y + 9, { align: 'center' });
+  doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(22, 163, 74);
-  doc.text(`₹${Number(fee?.paid_amount || 0).toLocaleString('en-IN')}`, w / 2, y + 24, { align: 'center' });
+  doc.text(`Rs. ${Number(fee?.paid_amount || 0).toLocaleString('en-IN')}`, w / 2, y + 20, { align: 'center' });
 
-  // Footer
-  const fy = doc.internal.pageSize.height - 14;
-  doc.setFontSize(7);
+  // Footer Note
+  const fy = doc.internal.pageSize.height - 15;
+  doc.setFontSize(8);
   doc.setTextColor(148, 163, 184);
   doc.setFont('helvetica', 'normal');
-  doc.text(footerNote, w / 2, fy, { align: 'center' });
+  const splitFooter = doc.splitTextToSize(footerNote, w - 28);
+  doc.text(splitFooter, w / 2, fy, { align: 'center' });
 
   doc.save(`Receipt_${fee?.receipt_number || 'fee'}.pdf`);
 };
