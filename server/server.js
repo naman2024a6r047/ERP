@@ -76,8 +76,8 @@ app.use(cors({
 }));
 
 // ── Body Parsers with size limits (M9) ─────────────────────────────────────────
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ── Global Audit Logger (A2) ──────────────────────────────────────────────────
 app.use(auditLogger);
