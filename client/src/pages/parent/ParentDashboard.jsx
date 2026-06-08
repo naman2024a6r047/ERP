@@ -5,19 +5,6 @@ import API from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import Modal from '../../components/common/Modal';
 
-// Data sets to mock Aarav Sharma's student portal details
-const sparklineData = [
-  { value: 75 }, { value: 78 }, { value: 80 }, { value: 85 }, { value: 82 }, { value: 88 }, { value: 89.4 }
-];
-
-const fallbackTimetable = [
-  { time: '08:00 AM', subject: 'English', teacher: 'Ms. Neha Sharma', room: 'R-101', color: 'bg-blue-100 text-blue-600' },
-  { time: '09:00 AM', subject: 'Mathematics', teacher: 'Mr. Rajesh Verma', room: 'R-105', color: 'bg-emerald-100 text-emerald-600' },
-  { time: '10:00 AM', subject: 'Science', teacher: 'Ms. Pooja Singh', room: 'Lab-2', color: 'bg-purple-100 text-purple-600' },
-  { time: '11:00 AM', subject: 'Social Studies', teacher: 'Mr. Amit Patel', room: 'R-103', color: 'bg-amber-100 text-amber-600' },
-  { time: '12:00 PM', subject: 'Hindi', teacher: 'Ms. Kavita Joshi', room: 'R-104', color: 'bg-pink-100 text-pink-600' },
-];
-
 const DAYS    = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const PERIODS = [
   { num: 1, time: '8:00 – 9:00' },  { num: 2, time: '9:00 – 10:00' },
@@ -91,7 +78,7 @@ export default function ParentDashboard() {
     color: subjectColors[slot.subject] || 'bg-slate-100 text-slate-600',
   }));
 
-  const displayTodayTimetable = todaySlots.length > 0 ? todaySlots : fallbackTimetable;
+  const displayTodayTimetable = todaySlots;
 
   // Build weekly timetable grid day → period → slot
   const fullGrid = {};
@@ -144,6 +131,9 @@ export default function ParentDashboard() {
 
   const latestResult = results.length > 0 ? results[0] : null;
   const overallGrade = latestResult?.grade || '—';
+  const dynamicSparklineData = results.length > 0 
+    ? results.slice().reverse().map(r => ({ value: r.percentage || 0 }))
+    : [];
 
   return (
     <div className="space-y-6">
@@ -208,13 +198,14 @@ export default function ParentDashboard() {
               <h3 className="text-2xl font-extrabold text-slate-800 tracking-tight">{overallGrade}</h3>
               <p className="text-[10px] font-semibold text-slate-400 mt-1 uppercase tracking-wider">Latest Grade</p>
             </div>
-            {/* Sparkline line graph */}
             <div className="w-16 h-10">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={sparklineData}>
-                  <Line type="monotone" dataKey="value" stroke="#8b5cf6" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
+              {dynamicSparklineData.length > 0 && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={dynamicSparklineData}>
+                    <Line type="monotone" dataKey="value" stroke="#8b5cf6" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
         </div>
@@ -226,8 +217,8 @@ export default function ParentDashboard() {
             <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold border border-blue-100"></div>
           </div>
           <div className="mt-4">
-            <h3 className="text-2xl font-extrabold text-slate-800 tracking-tight">2</h3>
-            <p className="text-[10px] font-semibold text-blue-500 mt-1 uppercase tracking-wider">Next: Math Unit Test (15 May)</p>
+            <h3 className="text-2xl font-extrabold text-slate-800 tracking-tight">0</h3>
+            <p className="text-[10px] font-semibold text-slate-400 mt-1 uppercase tracking-wider">No Upcoming Exams</p>
           </div>
         </div>
 
@@ -254,8 +245,10 @@ export default function ParentDashboard() {
             <div className="flex items-center gap-2.5">
               <span className="text-xl"></span>
               <div>
-                <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Attendance Summary (May 2025)</h3>
-                <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mt-0.5">92.6% Present</p>
+                <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">
+                  Attendance Summary ({new Date().toLocaleString('default', { month: 'long' })} {new Date().getFullYear()})
+                </h3>
+                <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mt-0.5">{attendancePercentage}% Present</p>
               </div>
             </div>
             
@@ -354,20 +347,22 @@ export default function ParentDashboard() {
           <div className="space-y-3 flex-1">
             {loadingTimetable ? (
               <p className="text-center text-gray-400 text-xs py-8">Loading...</p>
+            ) : displayTodayTimetable.length === 0 ? (
+              <p className="text-center text-gray-400 text-xs py-8">No classes scheduled today.</p>
             ) : (
               displayTodayTimetable.map((item, index) => (
                 <div key={index} className="flex items-center gap-3.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-100/70 p-3 rounded-2xl transition-colors">
-                  <div className={`w-8 h-8 rounded-xl ${item.color} flex items-center justify-center font-extrabold text-sm flex-shrink-0`}>
+                  <div className={`w-8 h-8 rounded-xl ${item.color || 'bg-slate-100'} flex items-center justify-center font-extrabold text-sm flex-shrink-0`}>
                     {index + 1}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-xs font-extrabold text-slate-800 truncate">{item.subject}</p>
-                      <span className="text-[9px] bg-slate-200/50 text-slate-500 px-2 py-0.5 rounded font-bold">{item.room}</span>
+                      <span className="text-[9px] bg-slate-200/50 text-slate-500 px-2 py-0.5 rounded font-bold">{item.room || '-'}</span>
                     </div>
-                    <p className="text-[10px] font-bold text-slate-400 mt-1">{item.teacher}</p>
+                    <p className="text-[10px] font-bold text-slate-400 mt-1">{item.teacher || '-'}</p>
                   </div>
-                  <span className="text-[10px] font-bold text-slate-400 flex-shrink-0">{item.time}</span>
+                  <span className="text-[10px] font-bold text-slate-400 flex-shrink-0">{item.time || `${item.start_time} - ${item.end_time}`}</span>
                 </div>
               ))
             )}
