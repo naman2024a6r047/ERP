@@ -65,15 +65,7 @@ const quickLinks = [
   { label: 'Calendar', icon: '', color: 'bg-emerald-50 border-emerald-100 hover:bg-emerald-100/40 text-emerald-600', path: '/parent/attendance' },
 ];
 
-// May 2025 Calendar Grid Config for Attendance (Image 3)
-const calendarDays = [
-  { day: 28, status: 'empty' }, { day: 29, status: 'empty' }, { day: 30, status: 'empty' },
-  { day: 1, status: 'present' }, { day: 2, status: 'present' }, { day: 3, status: 'present' }, { day: 4, status: 'holiday' },
-  { day: 5, status: 'present' }, { day: 6, status: 'present' }, { day: 7, status: 'present' }, { day: 8, status: 'present' }, { day: 9, status: 'present' }, { day: 10, status: 'absent' }, { day: 11, status: 'holiday' },
-  { day: 12, status: 'present' }, { day: 13, status: 'present' }, { day: 14, status: 'present' }, { day: 15, status: 'present' }, { day: 16, status: 'present' }, { day: 17, status: 'present' }, { day: 18, status: 'holiday' },
-  { day: 19, status: 'present' }, { day: 20, status: 'present' }, { day: 21, status: 'present' }, { day: 22, status: 'present' }, { day: 23, status: 'present' }, { day: 24, status: 'present' }, { day: 25, status: 'holiday' },
-  { day: 26, status: 'present' }, { day: 27, status: 'present' }, { day: 28, status: 'present' }, { day: 29, status: 'absent' }, { day: 30, status: 'present' }, { day: 31, status: 'present' }, { day: 1, status: 'empty' }
-];
+// Calendar grid will be generated dynamically inside the component
 
 export default function ParentDashboard() {
   const navigate = useNavigate();
@@ -123,11 +115,43 @@ export default function ParentDashboard() {
   DAYS.forEach(d => { fullGrid[d] = {}; });
   timetableData.forEach(slot => { fullGrid[slot.day][slot.period_number] = slot; });
 
-  // Fees Donut Chart config (₹62,000 Total, ₹56,800 Paid, ₹5,200 Pending)
+  // Integration states
+  const [fees, setFees] = useState([]);
+  const [attendance, setAttendance] = useState([]);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+
+  useEffect(() => {
+    const studentId = user?.linkedStudent?.id;
+    if (!studentId) return;
+
+    Promise.all([
+      API.get(`/fees/student/${studentId}`).catch(() => ({ data: [] })),
+      API.get(`/attendance/student/${studentId}`).catch(() => ({ data: [] }))
+    ]).then(([feesRes, attRes]) => {
+      setFees(feesRes.data || []);
+      setAttendance(attRes.data || []);
+      setDashboardLoading(false);
+    });
+  }, [user?.linkedStudent?.id]);
+
+  const studentName = user?.linkedStudent 
+    ? `${user.linkedStudent.first_name || ''} ${user.linkedStudent.last_name || ''}`.trim() 
+    : 'Student';
+
+  // Compute Fees
+  const totalFeesAmount = fees.reduce((acc, f) => acc + parseFloat(f.total_amount || 0), 0);
+  const paidFeesAmount = fees.reduce((acc, f) => acc + parseFloat(f.paid_amount || 0), 0);
+  const pendingFeesAmount = totalFeesAmount - paidFeesAmount;
   const feesChartData = [
-    { name: 'Paid', value: 56800, color: '#22c55e' },
-    { name: 'Pending', value: 5200, color: '#ef4444' }
+    { name: 'Paid', value: paidFeesAmount || 1, color: '#22c55e' }, // || 1 prevents recharts error on 0
+    { name: 'Pending', value: pendingFeesAmount, color: '#ef4444' }
   ];
+
+  // Compute Attendance
+  const totalDays = attendance.length;
+  const presentDays = attendance.filter(a => a.status === 'present').length;
+  const attendancePercentage = totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(1) : 0;
+
 
   return (
     <div className="space-y-6">
@@ -142,9 +166,9 @@ export default function ParentDashboard() {
         {/* Banner Grid */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 relative z-10">
           <div>
-            <span className="bg-white/10 text-white/90 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">Aarav Sharma</span>
+            <span className="bg-white/10 text-white/90 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">{studentName}</span>
             <h2 className="text-2xl sm:text-3xl font-extrabold mt-3.5 tracking-tight flex items-center gap-2.5">
-              Welcome, Aarav Sharma! <span className="animate-bounce"></span>
+              Welcome, {studentName}!
             </h2>
             <p className="text-blue-100 text-xs sm:text-sm mt-1.5 font-medium">Keep up the great work and stay consistent!</p>
           </div>
@@ -172,12 +196,12 @@ export default function ParentDashboard() {
             <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold border border-emerald-100"></div>
           </div>
           <div className="mt-4">
-            <h3 className="text-2xl font-extrabold text-slate-800 tracking-tight">92.6%</h3>
-            <p className="text-[10px] font-semibold text-slate-400 mt-1 uppercase tracking-wider">This Month</p>
+            <h3 className="text-2xl font-extrabold text-slate-800 tracking-tight">{attendancePercentage}%</h3>
+            <p className="text-[10px] font-semibold text-slate-400 mt-1 uppercase tracking-wider">Overall</p>
           </div>
           {/* Green Progress Bar */}
           <div className="mt-4 w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-            <div className="bg-emerald-500 h-full rounded-full" style={{ width: '92.6%' }} />
+            <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${attendancePercentage}%` }} />
           </div>
         </div>
 
@@ -222,8 +246,8 @@ export default function ParentDashboard() {
             <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold border border-amber-100"></div>
           </div>
           <div className="mt-4">
-            <h3 className="text-2xl font-extrabold text-slate-800 tracking-tight">₹ 5,200</h3>
-            <p className="text-[10px] font-semibold text-red-500 mt-1 uppercase tracking-wider">Due Date: 10 Jun 2025</p>
+            <h3 className="text-2xl font-extrabold text-slate-800 tracking-tight">₹ {pendingFeesAmount.toLocaleString('en-IN')}</h3>
+            <p className="text-[10px] font-semibold text-red-500 mt-1 uppercase tracking-wider">Total Pending</p>
           </div>
         </div>
 
@@ -258,7 +282,34 @@ export default function ParentDashboard() {
 
           {/* Calendar Days Matrix */}
           <div className="grid grid-cols-7 gap-2 flex-1 justify-items-center">
-            {calendarDays.map((item, i) => {
+            {(() => {
+              const todayDate = new Date();
+              const currentMonth = todayDate.getMonth();
+              const currentYear = todayDate.getFullYear();
+              const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+              const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+              const adjustedFirstDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; // 0=Mon, 6=Sun
+
+              const dynamicCalendarDays = [];
+              for (let i = 0; i < adjustedFirstDay; i++) {
+                dynamicCalendarDays.push({ day: '', status: 'empty' });
+              }
+
+              for (let i = 1; i <= daysInMonth; i++) {
+                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                const attRecord = attendance.find(a => a.date && a.date.startsWith(dateStr));
+                let status = 'holiday';
+                if (attRecord) {
+                  status = attRecord.status;
+                }
+                dynamicCalendarDays.push({ day: i, status });
+              }
+
+              while (dynamicCalendarDays.length % 7 !== 0) {
+                dynamicCalendarDays.push({ day: '', status: 'empty' });
+              }
+
+              return dynamicCalendarDays.map((item, i) => {
               let cellClass = "w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-xs font-bold ";
               let dotClass = "w-1.5 h-1.5 rounded-full absolute bottom-1 ";
 
@@ -289,7 +340,7 @@ export default function ParentDashboard() {
                   {item.status !== 'empty' && <span className={dotClass} />}
                 </div>
               );
-            })}
+            })()}
           </div>
         </div>
 
@@ -477,7 +528,7 @@ export default function ParentDashboard() {
             {/* Absolute Centered details */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Total Fees</p>
-              <p className="text-base font-extrabold text-slate-800 mt-1.5">₹ 62,000</p>
+              <p className="text-base font-extrabold text-slate-800 mt-1.5">₹ {totalFeesAmount.toLocaleString('en-IN')}</p>
             </div>
           </div>
 
@@ -487,14 +538,14 @@ export default function ParentDashboard() {
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" />
               <div>
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Paid</p>
-                <p className="font-extrabold text-slate-700 mt-0.5">₹ 56,800</p>
+                <p className="font-extrabold text-slate-700 mt-0.5">₹ {paidFeesAmount.toLocaleString('en-IN')}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0" />
               <div>
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Pending</p>
-                <p className="font-extrabold text-red-500 mt-0.5">₹ 5,200</p>
+                <p className="font-extrabold text-red-500 mt-0.5">₹ {pendingFeesAmount.toLocaleString('en-IN')}</p>
               </div>
             </div>
           </div>

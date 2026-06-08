@@ -4,12 +4,17 @@ import { useAuth } from '../../context/AuthContext';
 export default function MyProfile() {
   const { user } = useAuth();
   
+  const student = user?.linkedStudent;
+  const studentName = student 
+    ? `${student.first_name || ''} ${student.last_name || ''}`.trim() 
+    : 'Student';
+
   // Custom states to handle mock edits if needed
   const [isEditing, setIsEditing] = useState(false);
   const [personalDetails, setPersonalDetails] = useState({
-    email: 'aarav.sharma@sunrise.edu.in',
-    phone: '+91 98765 43210',
-    address: '23, Green Park, New Delhi - 110016'
+    email: user?.email || '',
+    phone: user?.phone || '',
+    address: student?.address || ''
   });
 
   return (
@@ -27,8 +32,8 @@ export default function MyProfile() {
           <div className="flex flex-col items-center flex-shrink-0 self-center lg:self-start">
             <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-premium border-4 border-slate-50 relative group">
               <img
-                src="https://images.unsplash.com/photo-1503919545889-aef636e10ad4?w=200&auto=format&fit=crop&q=80"
-                alt="Aarav Sharma Profile"
+                src={student?.profile_photo || "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?w=200&auto=format&fit=crop&q=80"}
+                alt={`${studentName} Profile`}
                 className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
               />
               <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-all duration-300">
@@ -47,15 +52,15 @@ export default function MyProfile() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">Aarav Sharma</h2>
+                  <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">{studentName}</h2>
                   <span className="bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-100 tracking-wider uppercase">Active</span>
                 </div>
                 <p className="text-xs font-semibold text-slate-400 mt-1.5 flex flex-wrap gap-x-2 gap-y-1 items-center">
-                  <span>Class 5-A</span>
+                  <span>Class {student?.class || '—'}-{student?.section || '—'}</span>
                   <span className="text-slate-200">•</span>
-                  <span>Roll No. 12</span>
+                  <span>Roll No. {student?.roll_number || '—'}</span>
                   <span className="text-slate-200">•</span>
-                  <span>Student ID: SIS/2024/5123</span>
+                  <span>Student ID: {student?.id || '—'}</span>
                 </p>
               </div>
               
@@ -75,19 +80,19 @@ export default function MyProfile() {
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date of Birth</p>
                 <p className="text-xs font-extrabold text-slate-700 mt-1.5 flex items-center gap-1.5">
-                  <span className="text-blue-500"></span> 12 May 2014
+                  <span className="text-blue-500"></span> {student?.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString('en-GB') : '—'}
                 </p>
               </div>
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Blood Group</p>
                 <p className="text-xs font-extrabold text-slate-700 mt-1.5 flex items-center gap-1.5">
-                  <span className="text-red-500"></span> B+
+                  <span className="text-red-500"></span> {student?.blood_group || '—'}
                 </p>
               </div>
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gender</p>
                 <p className="text-xs font-extrabold text-slate-700 mt-1.5 flex items-center gap-1.5">
-                  <span className="text-indigo-500"></span> Male
+                  <span className="text-indigo-500"></span> {student?.gender || '—'}
                 </p>
               </div>
               <div>
@@ -176,7 +181,9 @@ export default function MyProfile() {
             <div className="grid grid-cols-2 gap-2 flex-shrink-0">
               <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-center">
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Age</p>
-                <p className="text-xs font-extrabold text-slate-700 mt-1">10 Years</p>
+                <p className="text-xs font-extrabold text-slate-700 mt-1">
+                  {student?.date_of_birth ? Math.floor((new Date() - new Date(student.date_of_birth)) / 31557600000) + ' Years' : '—'}
+                </p>
               </div>
               <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-center">
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">House</p>
@@ -184,11 +191,11 @@ export default function MyProfile() {
               </div>
               <div className="bg-slate-50 border border-slate-100 rounded-xl p-2.5 text-center">
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Admission No.</p>
-                <p className="text-[10px] font-extrabold text-slate-700 mt-1">SIS/2024/1234</p>
+                <p className="text-[10px] font-extrabold text-slate-700 mt-1">{student?.id || '—'}</p>
               </div>
               <div className="bg-slate-50 border border-slate-100 rounded-xl p-2.5 text-center">
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Joined On</p>
-                <p className="text-[10px] font-extrabold text-slate-700 mt-1">01 Apr 2024</p>
+                <p className="text-[10px] font-extrabold text-slate-700 mt-1">{student?.createdAt ? new Date(student.createdAt).toLocaleDateString('en-GB') : '—'}</p>
               </div>
             </div>
           </div>
@@ -208,43 +215,18 @@ export default function MyProfile() {
           </div>
           
           <div className="space-y-5 flex-1">
-            {/* Father */}
             <div className="flex items-start gap-3.5 bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
               <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
                 
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-extrabold text-slate-800">Rahul Sharma <span className="text-[10px] font-bold text-blue-500 ml-1.5">(Father)</span></p>
-                <p className="text-[11px] font-semibold text-slate-400 mt-1"> 9876543210</p>
-                <p className="text-[11px] font-semibold text-slate-400 mt-0.5 truncate"> rahul.sharma@email.com</p>
-                <p className="text-[10px] font-bold text-slate-500 mt-1.5 uppercase tracking-wider flex items-center gap-1"><span className="text-xs"></span> Software Engineer</p>
+                <p className="text-xs font-extrabold text-slate-800">{user?.name || student?.parent_name || 'Parent'} <span className="text-[10px] font-bold text-blue-500 ml-1.5">(Parent)</span></p>
+                <p className="text-[11px] font-semibold text-slate-400 mt-1"> {user?.phone || student?.parent_phone || '—'}</p>
+                <p className="text-[11px] font-semibold text-slate-400 mt-0.5 truncate"> {user?.email || '—'}</p>
               </div>
             </div>
 
-            {/* Mother */}
-            <div className="flex items-start gap-3.5 bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
-              <div className="w-10 h-10 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
-                
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-extrabold text-slate-800">Priya Sharma <span className="text-[10px] font-bold text-pink-500 ml-1.5">(Mother)</span></p>
-                <p className="text-[11px] font-semibold text-slate-400 mt-1"> 9876543211</p>
-                <p className="text-[11px] font-semibold text-slate-400 mt-0.5 truncate"> priya.sharma@email.com</p>
-                <p className="text-[10px] font-bold text-slate-500 mt-1.5 uppercase tracking-wider flex items-center gap-1"><span className="text-xs"></span> School Teacher</p>
-              </div>
-            </div>
 
-            {/* Emergency Contact */}
-            <div className="pt-4 border-t border-slate-100">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Emergency Contact</p>
-              <div className="mt-2.5 flex items-center justify-between bg-red-50/50 border border-red-100/60 p-3 rounded-xl">
-                <div>
-                  <p className="text-xs font-extrabold text-slate-800">Neha Sharma <span className="text-[10px] text-red-500 font-bold ml-1">(Aunt)</span></p>
-                  <p className="text-[11px] font-semibold text-slate-500 mt-0.5"> 9876543212</p>
-                </div>
-                <span className="text-[10px] bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-md uppercase">Paternal Aunt</span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -258,19 +240,19 @@ export default function MyProfile() {
           <div className="divide-y divide-slate-100">
             <div className="py-2.5 flex justify-between items-center text-xs">
               <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Class</span>
-              <span className="font-extrabold text-slate-700">5-A</span>
+              <span className="font-extrabold text-slate-700">{student?.class || '—'}</span>
             </div>
             <div className="py-2.5 flex justify-between items-center text-xs">
               <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Section</span>
-              <span className="font-extrabold text-slate-700">A</span>
+              <span className="font-extrabold text-slate-700">{student?.section || '—'}</span>
             </div>
             <div className="py-2.5 flex justify-between items-center text-xs">
               <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Roll Number</span>
-              <span className="font-extrabold text-slate-700">12</span>
+              <span className="font-extrabold text-slate-700">{student?.roll_number || '—'}</span>
             </div>
             <div className="py-2.5 flex justify-between items-center text-xs">
               <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Student ID</span>
-              <span className="font-extrabold text-slate-700">SIS/2024/5123</span>
+              <span className="font-extrabold text-slate-700">{student?.id || '—'}</span>
             </div>
             <div className="py-2.5 flex justify-between items-center text-xs">
               <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Academic Session</span>
@@ -278,11 +260,7 @@ export default function MyProfile() {
             </div>
             <div className="py-2.5 flex justify-between items-center text-xs">
               <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Admission Date</span>
-              <span className="font-extrabold text-slate-700">01 Apr 2024</span>
-            </div>
-            <div className="py-2.5 flex justify-between items-center text-xs">
-              <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Promoted From</span>
-              <span className="font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg">Class 4-B (2023-24)</span>
+              <span className="font-extrabold text-slate-700">{student?.createdAt ? new Date(student.createdAt).toLocaleDateString('en-GB') : '—'}</span>
             </div>
           </div>
         </div>
