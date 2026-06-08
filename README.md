@@ -52,7 +52,7 @@ ERP/
 ### Quick Start
 ```bash
 # Clone the repository
-git clone https://github.com/naman2024a6r047/ERP.git
+git clone https://github.com/your-username/ERP.git
 cd ERP
 
 # Install all dependencies (client + server)
@@ -61,7 +61,7 @@ npm run build
 # Create environment files
 cp server/.env.example server/.env
 cp client/.env.example client/.env
-# Edit both .env files with your actual values
+# Edit both .env files with your actual database credentials and secrets
 
 # Seed the database (first time only)
 npm run seed
@@ -81,14 +81,22 @@ npm run dev:client
 
 ---
 
+## 🔒 Security Features & Best Practices
 
-## 🔒 Security
+The application is built with security as a primary concern:
 
-- `.env` files are **never committed** to Git (contains DB passwords, JWT secrets, etc.)
-- `.env.example` files are tracked as safe templates
-- All API routes are protected with JWT authentication and role-based access control (RBAC)
-- Rate limiting is enabled globally (200 requests per 15 minutes per IP)
-- Helmet.js is used for HTTP security headers
+- **Environment Variables**: `.env` files are **never committed** to Git. Safe templates (`.env.example`) are provided.
+- **Authentication**: All API routes are protected with JWT (JSON Web Tokens) with secure expiration policies.
+- **Authorization**: Role-Based Access Control (RBAC) ensures users (Admin, Teacher, Student, Parent, Fee Collector) can only access appropriate endpoints.
+- **Data Protection**: 
+  - Passwords are cryptographically hashed using `bcrypt` before storage.
+  - SQL Injection prevention is handled natively by the Sequelize ORM using parameterized queries.
+  - Cross-Site Scripting (XSS) is mitigated by React's automatic string escaping.
+- **Network Security**:
+  - `Helmet.js` enforces strict HTTP security headers (CSP, HSTS, X-Frame-Options).
+  - Strict CORS policies are implemented to restrict API access to trusted origins.
+  - Global Rate Limiting is active (e.g., 200 requests per 15 minutes per IP) to prevent brute-force and DDoS attacks.
+- **Error Handling**: Production mode suppresses stack traces to prevent leaking sensitive infrastructure details.
 
 ---
 
