@@ -296,7 +296,6 @@ router.post('/admission-request', protect, authorize(...FC_ROLES), async (req, r
 router.get('/admission-requests', protect, authorize('admin', 'admin2', 'fee_collector'), async (req, res) => {
   try {
     const where = {};
-    if (req.user.role === 'fee_collector') where.submitted_by = req.user.id;
     if (req.query.status) where.status = req.query.status;
 
     const requests = await AdmissionRequest.findAll({
