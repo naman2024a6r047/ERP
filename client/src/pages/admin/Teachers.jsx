@@ -18,9 +18,9 @@ export default function Teachers() {
   const [editing, setEditing]     = useState(null);
   const [saving, setSaving]       = useState(false);
 
-  // ✅ Both admin and admin2 can view teachers
+  //  Both admin and admin2 can view teachers
   const canView    = can(user, 'VIEW_TEACHERS');
-  // ✅ Only super admin can edit/delete
+  //  Only super admin can edit/delete
   const canManage  = isSuperAdmin(user);
 
   const load = (q = '') => {
@@ -129,7 +129,7 @@ export default function Teachers() {
           onChange={q => { setSearch(q); load(q); }}
           className="flex-1"
         />
-        {/* ✅ Only super admin sees Add button */}
+        {/*  Only super admin sees Add button */}
         {canManage && (
           <button
             onClick={openAdd}
@@ -147,7 +147,7 @@ export default function Teachers() {
         emptyText="No teachers found."
         actions={(row) => (
           <div className="flex gap-3">
-            {/* ✅ Only super admin gets Edit/Remove */}
+            {/*  Only super admin gets Edit/Remove */}
             {canManage ? (
               <>
                 <button onClick={() => openEdit(row)} className="text-xs text-blue-500 hover:text-blue-700 font-medium">Edit</button>

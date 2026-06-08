@@ -141,7 +141,7 @@ export default function FCAdmission() {
 
           <button type="submit" disabled={saving}
             className="w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl text-sm transition-colors">
-            {saving ? 'Submitting...' : '📋 Submit Admission Request'}
+            {saving ? 'Submitting...' : ' Submit Admission Request'}
           </button>
         </form>
       </div>

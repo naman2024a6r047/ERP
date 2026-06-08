@@ -54,7 +54,7 @@ export default function ResultApprovals() {
           <p className="text-center py-10 text-gray-400 text-sm">Loading...</p>
         ) : results.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-3xl mb-2">✅</p>
+            <p className="text-3xl mb-2"></p>
             <p className="text-gray-500 font-medium">No pending approvals</p>
             <p className="text-gray-400 text-sm mt-1">All results have been reviewed</p>
           </div>

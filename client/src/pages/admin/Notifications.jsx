@@ -5,13 +5,13 @@ import { can } from '../../utils/roleUtils';
 import toast from 'react-hot-toast';
 
 const typeStyle = {
-  fee_reminder:     { icon: '💰', badge: 'bg-yellow-100 text-yellow-700' },
-  attendance_alert: { icon: '📅', badge: 'bg-red-100 text-red-700' },
-  result:           { icon: '📝', badge: 'bg-blue-100 text-blue-700' },
-  holiday:          { icon: '🎉', badge: 'bg-green-100 text-green-700' },
+  fee_reminder:     { icon: '', badge: 'bg-yellow-100 text-yellow-700' },
+  attendance_alert: { icon: '', badge: 'bg-red-100 text-red-700' },
+  result:           { icon: '', badge: 'bg-blue-100 text-blue-700' },
+  holiday:          { icon: '', badge: 'bg-green-100 text-green-700' },
   general:          { icon: 'ℹ️', badge: 'bg-gray-100 text-gray-600' },
-  admission:        { icon: '🎓', badge: 'bg-purple-100 text-purple-700' },
-  promotion:        { icon: '🔁', badge: 'bg-orange-100 text-orange-700' },
+  admission:        { icon: '', badge: 'bg-purple-100 text-purple-700' },
+  promotion:        { icon: '', badge: 'bg-orange-100 text-orange-700' },
 };
 
 export default function Notifications() {
@@ -94,7 +94,7 @@ export default function Notifications() {
       {/* Send form */}
       {canSend && (
         <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-          <h3 className="text-sm font-semibold text-gray-700">📢 Send Notification</h3>
+          <h3 className="text-sm font-semibold text-gray-700"> Send Notification</h3>
 
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1.5">Title *</label>
@@ -189,7 +189,7 @@ export default function Notifications() {
             disabled={sending}
             className="w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl text-sm transition-colors"
           >
-            {sending ? 'Sending...' : '📢 Send Notification'}
+            {sending ? 'Sending...' : ' Send Notification'}
           </button>
         </div>
       )}
@@ -220,9 +220,9 @@ export default function Notifications() {
                       </span>
                       {/* Recipient badge */}
                       <span className="text-[11px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-medium">
-                        {n.recipient_type === 'individual' ? '👤 Individual'
-                          : n.recipient_type === 'role' ? `👥 ${n.recipient_role}`
-                          : '📡 All'}
+                        {n.recipient_type === 'individual' ? ' Individual'
+                          : n.recipient_type === 'role' ? ` ${n.recipient_role}`
+                          : ' All'}
                       </span>
                       <span className="text-xs text-gray-400 ml-auto">
                         {new Date(n.created_at).toLocaleDateString('en-IN', { day:'2-digit', month:'short' })}

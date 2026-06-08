@@ -75,25 +75,25 @@ export default function MyProfile() {
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date of Birth</p>
                 <p className="text-xs font-extrabold text-slate-700 mt-1.5 flex items-center gap-1.5">
-                  <span className="text-blue-500">📅</span> 12 May 2014
+                  <span className="text-blue-500"></span> 12 May 2014
                 </p>
               </div>
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Blood Group</p>
                 <p className="text-xs font-extrabold text-slate-700 mt-1.5 flex items-center gap-1.5">
-                  <span className="text-red-500">🩸</span> B+
+                  <span className="text-red-500"></span> B+
                 </p>
               </div>
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gender</p>
                 <p className="text-xs font-extrabold text-slate-700 mt-1.5 flex items-center gap-1.5">
-                  <span className="text-indigo-500">🧬</span> Male
+                  <span className="text-indigo-500"></span> Male
                 </p>
               </div>
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nationality</p>
                 <p className="text-xs font-extrabold text-slate-700 mt-1.5 flex items-center gap-1.5">
-                  <span className="text-amber-500">🌍</span> Indian
+                  <span className="text-amber-500"></span> Indian
                 </p>
               </div>
               <div>
@@ -105,7 +105,7 @@ export default function MyProfile() {
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Category</p>
                 <p className="text-xs font-extrabold text-slate-700 mt-1.5 flex items-center gap-1.5">
-                  <span className="text-emerald-500">👥</span> General
+                  <span className="text-emerald-500"></span> General
                 </p>
               </div>
             </div>
@@ -123,7 +123,7 @@ export default function MyProfile() {
                   />
                 ) : (
                   <p className="text-xs font-extrabold text-blue-600 mt-1.5 truncate">
-                    📧 {personalDetails.email}
+                     {personalDetails.email}
                   </p>
                 )}
               </div>
@@ -138,7 +138,7 @@ export default function MyProfile() {
                   />
                 ) : (
                   <p className="text-xs font-extrabold text-slate-700 mt-1.5 whitespace-nowrap">
-                    📞 {personalDetails.phone}
+                     {personalDetails.phone}
                   </p>
                 )}
               </div>
@@ -153,7 +153,7 @@ export default function MyProfile() {
                   />
                 ) : (
                   <p className="text-xs font-extrabold text-slate-700 mt-1.5 leading-relaxed">
-                    📍 {personalDetails.address}
+                     {personalDetails.address}
                   </p>
                 )}
               </div>
@@ -203,7 +203,7 @@ export default function MyProfile() {
         {/* Parent / Guardian Details Card */}
         <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card flex flex-col">
           <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-5">
-            <span className="text-xl">👨‍👩‍👦</span>
+            <span className="text-xl"></span>
             <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Parent / Guardian Details</h3>
           </div>
           
@@ -211,26 +211,26 @@ export default function MyProfile() {
             {/* Father */}
             <div className="flex items-start gap-3.5 bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
               <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
-                👨
+                
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-extrabold text-slate-800">Rahul Sharma <span className="text-[10px] font-bold text-blue-500 ml-1.5">(Father)</span></p>
-                <p className="text-[11px] font-semibold text-slate-400 mt-1">📞 9876543210</p>
-                <p className="text-[11px] font-semibold text-slate-400 mt-0.5 truncate">📧 rahul.sharma@email.com</p>
-                <p className="text-[10px] font-bold text-slate-500 mt-1.5 uppercase tracking-wider flex items-center gap-1"><span className="text-xs">💼</span> Software Engineer</p>
+                <p className="text-[11px] font-semibold text-slate-400 mt-1"> 9876543210</p>
+                <p className="text-[11px] font-semibold text-slate-400 mt-0.5 truncate"> rahul.sharma@email.com</p>
+                <p className="text-[10px] font-bold text-slate-500 mt-1.5 uppercase tracking-wider flex items-center gap-1"><span className="text-xs"></span> Software Engineer</p>
               </div>
             </div>
 
             {/* Mother */}
             <div className="flex items-start gap-3.5 bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
               <div className="w-10 h-10 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
-                👩
+                
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-extrabold text-slate-800">Priya Sharma <span className="text-[10px] font-bold text-pink-500 ml-1.5">(Mother)</span></p>
-                <p className="text-[11px] font-semibold text-slate-400 mt-1">📞 9876543211</p>
-                <p className="text-[11px] font-semibold text-slate-400 mt-0.5 truncate">📧 priya.sharma@email.com</p>
-                <p className="text-[10px] font-bold text-slate-500 mt-1.5 uppercase tracking-wider flex items-center gap-1"><span className="text-xs">💼</span> School Teacher</p>
+                <p className="text-[11px] font-semibold text-slate-400 mt-1"> 9876543211</p>
+                <p className="text-[11px] font-semibold text-slate-400 mt-0.5 truncate"> priya.sharma@email.com</p>
+                <p className="text-[10px] font-bold text-slate-500 mt-1.5 uppercase tracking-wider flex items-center gap-1"><span className="text-xs"></span> School Teacher</p>
               </div>
             </div>
 
@@ -240,7 +240,7 @@ export default function MyProfile() {
               <div className="mt-2.5 flex items-center justify-between bg-red-50/50 border border-red-100/60 p-3 rounded-xl">
                 <div>
                   <p className="text-xs font-extrabold text-slate-800">Neha Sharma <span className="text-[10px] text-red-500 font-bold ml-1">(Aunt)</span></p>
-                  <p className="text-[11px] font-semibold text-slate-500 mt-0.5">📞 9876543212</p>
+                  <p className="text-[11px] font-semibold text-slate-500 mt-0.5"> 9876543212</p>
                 </div>
                 <span className="text-[10px] bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-md uppercase">Paternal Aunt</span>
               </div>
@@ -251,7 +251,7 @@ export default function MyProfile() {
         {/* Academic Information Card */}
         <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card">
           <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-5">
-            <span className="text-xl">📖</span>
+            <span className="text-xl"></span>
             <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Academic Information</h3>
           </div>
 
@@ -290,7 +290,7 @@ export default function MyProfile() {
         {/* Subjects & Teachers Card */}
         <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card overflow-hidden">
           <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-4">
-            <span className="text-xl">🎓</span>
+            <span className="text-xl"></span>
             <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Active Subjects</h3>
           </div>
 
@@ -344,7 +344,7 @@ export default function MyProfile() {
         {/* Transport Details Card */}
         <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card">
           <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-5">
-            <span className="text-xl">🚌</span>
+            <span className="text-xl"></span>
             <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Transport Details</h3>
           </div>
 
@@ -371,32 +371,32 @@ export default function MyProfile() {
         {/* Co-Curricular Activities Card */}
         <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card">
           <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-5">
-            <span className="text-xl">⚽</span>
+            <span className="text-xl"></span>
             <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Co-Curricular Activities</h3>
           </div>
 
           <div className="space-y-3.5">
             <div className="flex items-center justify-between bg-slate-50/50 p-2 rounded-xl border border-slate-100">
               <div className="flex items-center gap-2 text-xs font-extrabold text-slate-700">
-                <span className="text-lg">⚽</span> Football
+                <span className="text-lg"></span> Football
               </div>
               <span className="text-[10px] bg-blue-50 border border-blue-100 text-blue-600 font-bold px-2 py-0.5 rounded-md uppercase">Team Player</span>
             </div>
             <div className="flex items-center justify-between bg-slate-50/50 p-2 rounded-xl border border-slate-100">
               <div className="flex items-center gap-2 text-xs font-extrabold text-slate-700">
-                <span className="text-lg">🎨</span> Drawing
+                <span className="text-lg"></span> Drawing
               </div>
               <span className="text-[10px] bg-purple-50 border border-purple-100 text-purple-600 font-bold px-2 py-0.5 rounded-md uppercase">Member</span>
             </div>
             <div className="flex items-center justify-between bg-slate-50/50 p-2 rounded-xl border border-slate-100">
               <div className="flex items-center gap-2 text-xs font-extrabold text-slate-700">
-                <span className="text-lg">🎵</span> Music
+                <span className="text-lg"></span> Music
               </div>
               <span className="text-[10px] bg-amber-50 border border-amber-100 text-amber-600 font-bold px-2 py-0.5 rounded-md uppercase">Learner</span>
             </div>
             <div className="flex items-center justify-between bg-slate-50/50 p-2 rounded-xl border border-slate-100">
               <div className="flex items-center gap-2 text-xs font-extrabold text-slate-700">
-                <span className="text-lg">💡</span> Quiz Club
+                <span className="text-lg"></span> Quiz Club
               </div>
               <span className="text-[10px] bg-emerald-50 border border-emerald-100 text-emerald-600 font-bold px-2 py-0.5 rounded-md uppercase">Member</span>
             </div>
@@ -406,7 +406,7 @@ export default function MyProfile() {
         {/* Additional Information Card */}
         <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card">
           <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-5">
-            <span className="text-xl">🩺</span>
+            <span className="text-xl"></span>
             <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Additional Information</h3>
           </div>
 
@@ -443,48 +443,48 @@ export default function MyProfile() {
       {/* 4. Documents Section */}
       <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card">
         <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-5">
-          <span className="text-xl">📁</span>
+          <span className="text-xl"></span>
           <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Documents</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-2xl group hover:border-blue-200 hover:bg-blue-50/10 transition-all cursor-pointer">
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-xl flex-shrink-0">📜</span>
+              <span className="text-xl flex-shrink-0"></span>
               <p className="text-xs font-extrabold text-slate-700 truncate">Birth Certificate</p>
             </div>
             <button className="p-2 bg-white text-slate-500 group-hover:text-blue-600 rounded-xl shadow-sm border border-slate-100">
-              📥
+              
             </button>
           </div>
 
           <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-2xl group hover:border-blue-200 hover:bg-blue-50/10 transition-all cursor-pointer">
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-xl flex-shrink-0">🪪</span>
+              <span className="text-xl flex-shrink-0"></span>
               <p className="text-xs font-extrabold text-slate-700 truncate">Aadhaar Card</p>
             </div>
             <button className="p-2 bg-white text-slate-500 group-hover:text-blue-600 rounded-xl shadow-sm border border-slate-100">
-              📥
+              
             </button>
           </div>
 
           <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-2xl group hover:border-blue-200 hover:bg-blue-50/10 transition-all cursor-pointer">
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-xl flex-shrink-0">📝</span>
+              <span className="text-xl flex-shrink-0"></span>
               <p className="text-xs font-extrabold text-slate-700 truncate">Previous Report Card</p>
             </div>
             <button className="p-2 bg-white text-slate-500 group-hover:text-blue-600 rounded-xl shadow-sm border border-slate-100">
-              📥
+              
             </button>
           </div>
 
           <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-2xl group hover:border-blue-200 hover:bg-blue-50/10 transition-all cursor-pointer">
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-xl flex-shrink-0">📸</span>
+              <span className="text-xl flex-shrink-0"></span>
               <p className="text-xs font-extrabold text-slate-700 truncate">Passport Size Photo</p>
             </div>
             <button className="p-2 bg-white text-slate-500 group-hover:text-blue-600 rounded-xl shadow-sm border border-slate-100">
-              📥
+              
             </button>
           </div>
         </div>
@@ -494,7 +494,7 @@ export default function MyProfile() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card">
           <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-4">
-            <span className="text-xl">👤</span>
+            <span className="text-xl"></span>
             <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">About Me</h3>
           </div>
           <p className="text-xs font-bold text-slate-500 leading-relaxed">
@@ -504,7 +504,7 @@ export default function MyProfile() {
 
         <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card">
           <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-4">
-            <span className="text-xl">🎯</span>
+            <span className="text-xl"></span>
             <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">My Goals</h3>
           </div>
           <p className="text-xs font-bold text-slate-500 leading-relaxed">

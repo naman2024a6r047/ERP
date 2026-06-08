@@ -51,25 +51,10 @@ router.put('/', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// Configure multer for logo uploads
+// Configure multer for logo uploads (memory storage for base64)
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const dir = path.join(__dirname, '..', 'public', 'uploads');
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    cb(null, dir);
-  },
-  filename: function (req, file, cb) {
-    // Save as school-logo.ext or similar
-    const ext = path.extname(file.originalname);
-    cb(null, `school-logo-${Date.now()}${ext}`);
-  }
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ 
   storage: storage,
@@ -94,16 +79,16 @@ router.post('/upload-logo', protect, authorize('admin'), (req, res) => {
     }
 
     try {
-      // The file is accessible via /uploads/filename
-      const fileUrl = `/uploads/${req.file.filename}`;
+      // Convert to Base64 string
+      const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
       
-      // Update the logo URL setting
+      // Update the logo URL setting with the base64 string
       await Setting.upsert({
         key: 'school_logo_url',
-        value: fileUrl
+        value: base64Image
       });
 
-      res.json({ message: 'Logo uploaded successfully', url: fileUrl });
+      res.json({ message: 'Logo uploaded successfully', url: base64Image });
     } catch (dbErr) {
       console.error('[POST /settings/upload-logo db]', dbErr);
       res.status(500).json({ message: 'Database error saving logo url.' });

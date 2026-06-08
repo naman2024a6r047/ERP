@@ -146,7 +146,7 @@ export default function ReportCard() {
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Generating...
                 </>
-              ) : '📥 Download PDF'}
+              ) : ' Download PDF'}
             </button>
             <button
               onClick={() => window.print()}

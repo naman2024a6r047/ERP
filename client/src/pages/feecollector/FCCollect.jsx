@@ -128,7 +128,7 @@ export default function FCCollect() {
     try {
       const r = await API.post('/fc/notify-whatsapp', { student_id: studentId, message_type: type });
       toast.success('WhatsApp message sent!');
-      alert(`📱 WhatsApp Preview:\n\nTo: ${r.data.phone}\n\n${r.data.preview}`);
+      alert(` WhatsApp Preview:\n\nTo: ${r.data.phone}\n\n${r.data.preview}`);
     } catch { toast.error('Failed to send WhatsApp.'); }
     finally { setWaLoading(false); }
   };
@@ -260,14 +260,14 @@ export default function FCCollect() {
                   disabled={whatsappLoading}
                   className="flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-medium px-3 py-2 rounded-lg transition-colors whitespace-nowrap"
                 >
-                  📱 Reminder
+                   Reminder
                 </button>
                 <button
                   onClick={() => sendWhatsApp(selected.student.id, 'payment_confirm')}
                   disabled={whatsappLoading}
                   className="flex items-center gap-1.5 border border-green-500 text-green-600 hover:bg-green-50 text-xs font-medium px-3 py-2 rounded-lg transition-colors whitespace-nowrap"
                 >
-                  📱 Confirm
+                   Confirm
                 </button>
               </div>
             </div>

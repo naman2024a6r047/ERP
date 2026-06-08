@@ -16,12 +16,12 @@ const workflowColor = {
 };
 
 const workflowLabel = {
-  draft:             '📝 Draft',
-  submitted:         '📤 Submitted',
-  incharge_approved: '✅ Incharge OK',
-  admin2_approved:   '✅ Admin2 OK',
-  published:         '🌐 Published',
-  rejected:          '❌ Rejected',
+  draft:             ' Draft',
+  submitted:         ' Submitted',
+  incharge_approved: ' Incharge OK',
+  admin2_approved:   ' Admin2 OK',
+  published:         ' Published',
+  rejected:          ' Rejected',
 };
 
 export default function EnterMarks() {
@@ -229,7 +229,7 @@ export default function EnterMarks() {
               <div className="px-4 py-3 border-t border-gray-100">
                 <button onClick={handleSave} disabled={saving || !examName.trim()}
                   className="w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">
-                  {saving ? 'Saving...' : `💾 Save Marks${isClassTest ? ' (Class Test)' : ''}`}
+                  {saving ? 'Saving...' : ` Save Marks${isClassTest ? ' (Class Test)' : ''}`}
                 </button>
               </div>
             </>

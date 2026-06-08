@@ -50,7 +50,7 @@ export default function NotificationForm({ onSubmit, loading = false }) {
 
       <button type="submit" disabled={loading}
         className="w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg text-sm transition-colors">
-        {loading ? 'Sending...' : '📢 Send Notification'}
+        {loading ? 'Sending...' : ' Send Notification'}
       </button>
     </form>
   );

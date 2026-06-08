@@ -180,7 +180,10 @@ app.listen(port, host, () => {
       // DEVELOPMENT → sync({ alter: true }) to auto-apply model changes.
       if (isProd) {
         console.log('[DB] Production mode — skipping schema alter (tables must exist)');
-        return sequelize.sync();   // validates models against existing tables
+        return sequelize.sync().then(() => {
+          // Hotfix: Ensure Settings value is LONGTEXT for base64 logos
+          return sequelize.query('ALTER TABLE settings MODIFY COLUMN value LONGTEXT;').catch(() => {});
+        });
       } else {
         console.log('[DB] Development mode — running sync({ alter: true })');
         return sequelize.sync({ alter: true });

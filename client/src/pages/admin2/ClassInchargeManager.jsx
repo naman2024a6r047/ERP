@@ -15,7 +15,7 @@ export default function ClassInchargeManager() {
   const [saving, setSaving]       = useState(false);
   const [loading, setLoading]     = useState(true);
 
-  // ✅ Both admin and admin2 can manage incharge
+  //  Both admin and admin2 can manage incharge
   const canAssign = can(user, 'ASSIGN_INCHARGE');
 
   const load = () => {
@@ -27,7 +27,7 @@ export default function ClassInchargeManager() {
       setIncharges(ic.data || []);
       setTeachers(tc.data || []);
     }).catch(err => {
-      // ✅ Better error message showing what failed
+      //  Better error message showing what failed
       toast.error(`Failed to load: ${err.response?.data?.message || err.message}`);
     }).finally(() => setLoading(false));
   };
@@ -84,7 +84,7 @@ export default function ClassInchargeManager() {
           <p className="text-center py-10 text-gray-400 text-sm">Loading...</p>
         ) : incharges.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-3xl mb-2">👨‍🏫</p>
+            <p className="text-3xl mb-2"></p>
             <p className="text-gray-500 font-medium">No incharge assignments yet.</p>
             {canAssign && <p className="text-gray-400 text-sm mt-1">Click "Assign Incharge" to get started.</p>}
           </div>

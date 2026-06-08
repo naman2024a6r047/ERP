@@ -91,7 +91,7 @@ export default function FeeStatus() {
                         onClick={() => generateFeeReceipt(fee, user?.linkedStudent, settings)}
                         className="text-xs text-blue-500 hover:text-blue-700 font-medium"
                       >
-                        📥 Receipt
+                         Receipt
                       </button>
                     )}
                   </div>

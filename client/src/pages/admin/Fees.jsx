@@ -122,7 +122,7 @@ export default function Fees() {
             disabled={generating}
             className="border border-blue-200 text-blue-600 hover:bg-blue-50 text-sm font-medium px-4 py-2 rounded-xl transition-colors disabled:opacity-60"
           >
-            {generating ? 'Generating...' : '⚡ Generate Fees'}
+            {generating ? 'Generating...' : ' Generate Fees'}
           </button>
         </div>
       </div>
@@ -280,7 +280,7 @@ export default function Fees() {
                               onClick={() => generateFeeReceipt(feeRec, s, settings)}
                               className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-2 py-1 rounded"
                             >
-                              📄 Receipt
+                               Receipt
                             </button>
                           ) : (
                             <>

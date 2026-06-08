@@ -157,7 +157,7 @@ export default function BulkUploadStudents() {
               className="w-full py-8 border-2 border-dashed border-slate-200 hover:border-blue-500 rounded-2xl cursor-pointer bg-slate-50/50 hover:bg-blue-50/10 transition-all flex flex-col items-center justify-center gap-2 group"
             >
               <div className="w-12 h-12 bg-white rounded-xl shadow-md border border-slate-100 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform duration-300">
-                📊
+                
               </div>
               <p className="text-xs font-bold text-slate-600 mt-1">
                 {file ? file.name : "Drag & Drop or click to browse"}
@@ -195,7 +195,7 @@ export default function BulkUploadStudents() {
           {/* Template Download Card */}
           <div className="bg-white rounded-3xl border border-slate-100 p-5 shadow-card">
             <h3 className="text-sm font-extrabold text-slate-700 mb-3 flex items-center gap-2">
-              <span>💡</span> Excel Template Guide
+              <span></span> Excel Template Guide
             </h3>
             <p className="text-[11px] font-semibold text-slate-500 leading-relaxed mb-4">
               To ensure data maps correctly, download our pre-formatted CSV template. Required fields are: Name (or First Name), Class, Parent Name, and Parent Phone.
@@ -204,7 +204,7 @@ export default function BulkUploadStudents() {
               onClick={downloadTemplate}
               className="w-full flex items-center justify-center gap-2 rounded-xl border border-blue-100 bg-blue-50/50 hover:bg-blue-50 text-xs font-bold text-blue-600 py-3 transition-colors"
             >
-              📥 Download Excel/CSV Template
+               Download Excel/CSV Template
             </button>
           </div>
         </div>
@@ -280,7 +280,7 @@ export default function BulkUploadStudents() {
                 <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-center col-span-2 md:col-span-1">
                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Status</p>
                   <p className="text-xs font-extrabold text-emerald-600 mt-2 flex items-center justify-center gap-1">
-                    <span>🟢</span> {isApproved ? 'Accounts Active' : 'Staged (Pending)'}
+                    <span></span> {isApproved ? 'Accounts Active' : 'Staged (Pending)'}
                   </p>
                 </div>
               </div>
@@ -314,7 +314,7 @@ export default function BulkUploadStudents() {
                       onClick={exportCredentials}
                       className="rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white px-4 py-2.5 shadow-lg shadow-emerald-500/10 active:scale-95 transition-all flex items-center justify-center gap-1.5"
                     >
-                      📊 Download Credentials (CSV)
+                       Download Credentials (CSV)
                     </button>
                   </div>
 
@@ -349,7 +349,7 @@ export default function BulkUploadStudents() {
           {!loading && !file && !results && (
             <div className="bg-white rounded-3xl border border-slate-100 p-8 shadow-card flex flex-col items-center justify-center text-center gap-4 min-h-[350px]">
               <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-3xl">
-                📂
+                
               </div>
               <div>
                 <h3 className="text-base font-extrabold text-slate-800">No Spreadsheet Selected</h3>

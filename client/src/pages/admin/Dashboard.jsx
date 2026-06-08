@@ -109,23 +109,33 @@ export default function Dashboard() {
 
   const displayEvents = holidayEvents.length > 0 ? [...holidayEvents, ...fallbackEvents].slice(0, 4) : fallbackEvents;
 
-  // Dynamic values binding real API stats with fallback layout requirements
-  const studentCount = stats.total_students !== undefined ? stats.total_students : 1248;
-  const teacherCount = stats.active_teachers !== undefined ? stats.active_teachers : 145;
-  const classCount   = 48; // Standard dynamic mock representation
-  const feeAmount    = stats.fee_collected ? `₹ ${Number(stats.fee_collected).toLocaleString('en-IN')}` : "₹ 28,75,000";
+  // Dynamic values binding real API stats
+  const studentCount = stats.total_students || 0;
+  const teacherCount = stats.active_teachers || 0;
+  const classCount   = 0; // Class count is not in API yet, default to 0 or we could add it
+  const feeTotal     = stats.fee_total || 0;
+  const feeCollected = stats.fee_collected || 0;
+  const feePending   = stats.pending_fee_amount || 0;
+  const feeAmount    = `₹ ${Number(feeCollected).toLocaleString('en-IN')}`;
+
+  const feePct = feeTotal > 0 ? Math.round((feeCollected / feeTotal) * 100) : 0;
+  const pendingPct = feeTotal > 0 ? Math.round((feePending / feeTotal) * 100) : 0;
 
   // Donut chart collections
   const feeDonutData = [
-    { name: 'Collected', value: 75, color: '#22c55e' },
-    { name: 'Pending', value: 20, color: '#f59e0b' },
-    { name: 'Overdue', value: 5, color: '#ef4444' }
+    { name: 'Collected', value: feePct, color: '#22c55e' },
+    { name: 'Pending', value: pendingPct, color: '#f59e0b' }
   ];
 
+  const presentCount = stats.attendance_present || 0;
+  const markedCount  = stats.attendance_marked || 0;
+  const absentCount  = markedCount - presentCount;
+  const presentPct   = markedCount > 0 ? Math.round((presentCount / markedCount) * 100) : 0;
+  const absentPct    = markedCount > 0 ? Math.round((absentCount / markedCount) * 100) : 0;
+
   const attDonutData = [
-    { name: 'Present', value: 92.6, color: '#22c55e' },
-    { name: 'Absent', value: 5.8, color: '#f59e0b' },
-    { name: 'Leave', value: 1.6, color: '#8b5cf6' }
+    { name: 'Present', value: presentPct, color: '#22c55e' },
+    { name: 'Absent', value: absentPct, color: '#f59e0b' }
   ];
 
   return (
@@ -134,8 +144,8 @@ export default function Dashboard() {
       {/* 1. Header Greeting Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">Good Morning, Admin! 👋</h2>
-          <p className="text-slate-400 text-xs sm:text-sm mt-1 font-semibold uppercase tracking-wider">Welcome back to Bright Future International School ERP</p>
+          <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">Good Morning, Admin!</h2>
+          <p className="text-slate-400 text-xs sm:text-sm mt-1 font-semibold uppercase tracking-wider">Welcome back to the School ERP</p>
         </div>
       </div>
 
@@ -146,7 +156,9 @@ export default function Dashboard() {
         <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-card hover:shadow-premium transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg border border-blue-100/60">👥</div>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg border border-blue-100/60">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+              </div>
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Students</p>
                 <h3 className="text-xl font-extrabold text-slate-800 tracking-tight mt-0.5">{studentCount}</h3>
@@ -168,8 +180,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="mt-4 pt-3.5 border-t border-slate-50 flex items-center gap-2">
-            <span className="text-[10px] bg-emerald-50 border border-emerald-100 text-emerald-600 font-extrabold px-2 py-0.5 rounded">↑ 4.5%</span>
-            <span className="text-[10px] text-slate-400 font-medium">vs last month</span>
+            <span className="text-[10px] text-slate-400 font-medium">Real-time stat</span>
           </div>
         </div>
 
@@ -177,7 +188,9 @@ export default function Dashboard() {
         <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-card hover:shadow-premium transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg border border-emerald-100/60">👨‍🏫</div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg border border-emerald-100/60">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+              </div>
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Teachers</p>
                 <h3 className="text-xl font-extrabold text-slate-800 tracking-tight mt-0.5">{teacherCount}</h3>
@@ -199,8 +212,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="mt-4 pt-3.5 border-t border-slate-50 flex items-center gap-2">
-            <span className="text-[10px] bg-emerald-50 border border-emerald-100 text-emerald-600 font-extrabold px-2 py-0.5 rounded">↑ 2.1%</span>
-            <span className="text-[10px] text-slate-400 font-medium">vs last month</span>
+            <span className="text-[10px] text-slate-400 font-medium">Real-time stat</span>
           </div>
         </div>
 
@@ -208,7 +220,9 @@ export default function Dashboard() {
         <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-card hover:shadow-premium transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-lg border border-purple-100/60">🏫</div>
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-lg border border-purple-100/60">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+              </div>
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Classes</p>
                 <h3 className="text-xl font-extrabold text-slate-800 tracking-tight mt-0.5">{classCount}</h3>
@@ -230,8 +244,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="mt-4 pt-3.5 border-t border-slate-50 flex items-center gap-2">
-            <span className="text-[10px] bg-emerald-50 border border-emerald-100 text-emerald-600 font-extrabold px-2 py-0.5 rounded">↑ 3.3%</span>
-            <span className="text-[10px] text-slate-400 font-medium">vs last month</span>
+            <span className="text-[10px] text-slate-400 font-medium">Real-time stat</span>
           </div>
         </div>
 
@@ -239,7 +252,9 @@ export default function Dashboard() {
         <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-card hover:shadow-premium transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg border border-amber-100/60">₹</div>
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg border border-amber-100/60">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fee Collection</p>
                 <h3 className="text-xl font-extrabold text-slate-800 tracking-tight mt-0.5">{feeAmount}</h3>
@@ -261,8 +276,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="mt-4 pt-3.5 border-t border-slate-50 flex items-center gap-2">
-            <span className="text-[10px] bg-emerald-50 border border-emerald-100 text-emerald-600 font-extrabold px-2 py-0.5 rounded">↑ 8.2%</span>
-            <span className="text-[10px] text-slate-400 font-medium">vs last month</span>
+            <span className="text-[10px] text-slate-400 font-medium">Real-time stat</span>
           </div>
         </div>
 
@@ -377,21 +391,17 @@ export default function Dashboard() {
           <div className="flex-1 w-full space-y-4">
             <div className="pb-3 border-b border-slate-50">
               <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Fee Collection Summary</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Total Target: ₹ 38,50,000</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Total Expected: ₹ {Number(feeTotal).toLocaleString('en-IN')}</p>
             </div>
             
             <div className="space-y-2.5 text-xs">
               <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl">
                 <span className="flex items-center gap-1.5 font-bold text-slate-600"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block" /> Collected</span>
-                <span className="font-extrabold text-slate-700">₹ 28,75,000 (75%)</span>
+                <span className="font-extrabold text-slate-700">₹ {Number(feeCollected).toLocaleString('en-IN')} ({feePct}%)</span>
               </div>
               <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl">
                 <span className="flex items-center gap-1.5 font-bold text-slate-600"><span className="w-2.5 h-2.5 rounded-full bg-amber-500 block" /> Pending</span>
-                <span className="font-extrabold text-amber-600">₹ 8,50,000 (20%)</span>
-              </div>
-              <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl">
-                <span className="flex items-center gap-1.5 font-bold text-slate-600"><span className="w-2.5 h-2.5 rounded-full bg-red-500 block" /> Overdue</span>
-                <span className="font-extrabold text-red-600">₹ 1,25,000 (5%)</span>
+                <span className="font-extrabold text-amber-600">₹ {Number(feePending).toLocaleString('en-IN')} ({pendingPct}%)</span>
               </div>
             </div>
 
@@ -425,7 +435,7 @@ export default function Dashboard() {
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Collected</span>
-              <span className="text-lg font-black text-slate-800 mt-1">75%</span>
+              <span className="text-lg font-black text-slate-800 mt-1">{feePct}%</span>
             </div>
           </div>
         </div>
@@ -435,21 +445,17 @@ export default function Dashboard() {
           <div className="flex-1 w-full space-y-4">
             <div className="pb-3 border-b border-slate-50">
               <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Attendance Summary</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Total Marked: 1,248 Students</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Total Marked: {markedCount} Students</p>
             </div>
             
             <div className="space-y-2.5 text-xs">
               <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl">
                 <span className="flex items-center gap-1.5 font-bold text-slate-600"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block" /> Present</span>
-                <span className="font-extrabold text-slate-700">1,154 (92.6%)</span>
+                <span className="font-extrabold text-slate-700">{presentCount} ({presentPct}%)</span>
               </div>
               <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl">
                 <span className="flex items-center gap-1.5 font-bold text-slate-600"><span className="w-2.5 h-2.5 rounded-full bg-amber-500 block" /> Absent</span>
-                <span className="font-extrabold text-amber-600">72 (5.8%)</span>
-              </div>
-              <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl">
-                <span className="flex items-center gap-1.5 font-bold text-slate-600"><span className="w-2.5 h-2.5 rounded-full bg-purple-50 block" /> Leave</span>
-                <span className="font-extrabold text-purple-600">22 (1.6%)</span>
+                <span className="font-extrabold text-amber-600">{absentCount} ({absentPct}%)</span>
               </div>
             </div>
 
@@ -483,7 +489,7 @@ export default function Dashboard() {
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Attendance</span>
-              <span className="text-lg font-black text-slate-800 mt-1">92.6%</span>
+              <span className="text-lg font-black text-slate-800 mt-1">{presentPct}%</span>
             </div>
           </div>
         </div>
@@ -505,7 +511,7 @@ export default function Dashboard() {
               <div key={i} className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-2xl">
                 <div>
                   <h4 className="text-xs font-extrabold text-slate-800">{item.title}</h4>
-                  <p className="text-[10px] font-semibold text-slate-400 mt-1 flex items-center gap-1">📅 {item.date}</p>
+                  <p className="text-[10px] font-semibold text-slate-400 mt-1 flex items-center gap-1">{item.date}</p>
                 </div>
                 <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full border uppercase tracking-wider ${item.color.split(' ')[0]} ${item.color.split(' ')[1]} ${item.color.split(' ')[2]}`}>
                   Active
@@ -532,19 +538,19 @@ export default function Dashboard() {
                   month: 'short',
                   year: 'numeric',
                 });
-                let icon = '📣';
+                let icon = <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>;
                 let bg = 'bg-purple-50 text-purple-600';
                 if (item.type === 'holiday') {
-                  icon = '🌴';
+                  icon = <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>;
                   bg = 'bg-emerald-50 text-emerald-600';
                 } else if (item.type === 'fee_reminder') {
-                  icon = '💰';
+                  icon = <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>;
                   bg = 'bg-amber-50 text-amber-600';
                 } else if (item.type === 'attendance_alert') {
-                  icon = '⏰';
+                  icon = <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>;
                   bg = 'bg-red-50 text-red-600';
                 } else if (item.type === 'result') {
-                  icon = '📝';
+                  icon = <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>;
                   bg = 'bg-blue-50 text-blue-600';
                 }
                 return (
@@ -569,43 +575,43 @@ export default function Dashboard() {
       {/* 6. Quick Links Section */}
       <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card">
         <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-5">
-          <span className="text-xl">⚡</span>
+          <svg className="w-5 h-5 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Quick Links</h3>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-4">
           <button onClick={() => navigate('/admin/students')} className="flex flex-col items-center justify-center p-4 border rounded-2xl bg-cyan-50 border-cyan-100 hover:bg-cyan-100/40 text-cyan-600 transition-all active:scale-95 text-center gap-2">
-            <span className="text-2xl">👤</span>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
             <span className="font-bold text-xs text-slate-700">Add Student</span>
           </button>
           
           <button onClick={() => navigate('/admin/teachers')} className="flex flex-col items-center justify-center p-4 border rounded-2xl bg-emerald-50 border-emerald-100 hover:bg-emerald-100/40 text-emerald-600 transition-all active:scale-95 text-center gap-2">
-            <span className="text-2xl">👨‍🏫</span>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             <span className="font-bold text-xs text-slate-700">Add Teacher</span>
           </button>
 
           <button onClick={() => navigate('/admin/class-fees')} className="flex flex-col items-center justify-center p-4 border rounded-2xl bg-purple-50 border-purple-100 hover:bg-purple-100/40 text-purple-600 transition-all active:scale-95 text-center gap-2">
-            <span className="text-2xl">🏫</span>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
             <span className="font-bold text-xs text-slate-700">Add Class</span>
           </button>
 
           <button onClick={() => navigate('/admin/attendance')} className="flex flex-col items-center justify-center p-4 border rounded-2xl bg-amber-50 border-amber-100 hover:bg-amber-100/40 text-amber-600 transition-all active:scale-95 text-center gap-2">
-            <span className="text-2xl">📅</span>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             <span className="font-bold text-xs text-slate-700">Take Attendance</span>
           </button>
 
           <button onClick={() => navigate('/admin/fees')} className="flex flex-col items-center justify-center p-4 border rounded-2xl bg-blue-50 border-blue-100 hover:bg-blue-100/40 text-blue-600 transition-all active:scale-95 text-center gap-2">
-            <span className="text-2xl">🧾</span>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             <span className="font-bold text-xs text-slate-700">Fee Receipt</span>
           </button>
 
           <button onClick={() => navigate('/admin/marks')} className="flex flex-col items-center justify-center p-4 border rounded-2xl bg-rose-50 border-rose-100 hover:bg-rose-100/40 text-rose-600 transition-all active:scale-95 text-center gap-2">
-            <span className="text-2xl">📋</span>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             <span className="font-bold text-xs text-slate-700">Exam Schedule</span>
           </button>
 
           <button onClick={() => navigate('/admin/promotion')} className="flex flex-col items-center justify-center p-4 border rounded-2xl bg-indigo-50 border-indigo-100 hover:bg-indigo-100/40 text-indigo-600 transition-all active:scale-95 text-center gap-2">
-            <span className="text-2xl">📊</span>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             <span className="font-bold text-xs text-slate-700">Generate Report</span>
           </button>
         </div>

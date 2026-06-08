@@ -24,16 +24,16 @@ export default function Admin2Dashboard() {
   }, []);
 
   const quickNav = [
-    { icon: '📝', label: 'Approve Results',    path: '/admin2/results',    color: 'bg-blue-500',   count: pendingResults.length },
-    { icon: '📋', label: 'Admission Requests', path: '/admin2/admissions', color: 'bg-purple-500', count: pendingAdmissions.length },
-    { icon: '👨‍🏫', label: 'Class Incharge',    path: '/admin2/incharge',   color: 'bg-green-500',  count: null },
-    { icon: '📅', label: 'Teacher Attendance', path: '/admin2/teachers',   color: 'bg-orange-500', count: null },
+    { icon: '', label: 'Approve Results',    path: '/admin2/results',    color: 'bg-blue-500',   count: pendingResults.length },
+    { icon: '', label: 'Admission Requests', path: '/admin2/admissions', color: 'bg-purple-500', count: pendingAdmissions.length },
+    { icon: '', label: 'Class Incharge',    path: '/admin2/incharge',   color: 'bg-green-500',  count: null },
+    { icon: '', label: 'Teacher Attendance', path: '/admin2/teachers',   color: 'bg-orange-500', count: null },
   ];
 
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg sm:text-xl font-bold text-gray-800">Welcome, {user?.name} 👋</h2>
+        <h2 className="text-lg sm:text-xl font-bold text-gray-800">Welcome, {user?.name} </h2>
         <p className="text-gray-400 text-sm mt-0.5">Admin2 Panel — Review and approve pending actions</p>
       </div>
 
@@ -55,8 +55,8 @@ export default function Admin2Dashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Pending Results"    value={loading ? '—' : pendingResults.length}    color="text-blue-600" icon="📝" />
-        <StatCard label="Pending Admissions" value={loading ? '—' : pendingAdmissions.length} color="text-purple-600" icon="📋" />
+        <StatCard label="Pending Results"    value={loading ? '—' : pendingResults.length}    color="text-blue-600" icon="" />
+        <StatCard label="Pending Admissions" value={loading ? '—' : pendingAdmissions.length} color="text-purple-600" icon="" />
         <StatCard label="My Role"            value="Admin 2" sub="Review & Approve"  />
         <StatCard label="Approval Level"     value="Level 2" sub="Before final admin" />
       </div>

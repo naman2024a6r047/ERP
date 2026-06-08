@@ -281,7 +281,7 @@ export default function MyProfilePage() {
                   onClick={() => setShowPwModal(true)}
                   className="rounded-xl border border-slate-200 hover:border-slate-300 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all"
                 >
-                  🔒 Password
+                   Password
                 </button>
               </div>
             </div>
@@ -299,14 +299,14 @@ export default function MyProfilePage() {
                   />
                 ) : (
                   <p className="text-xs font-extrabold text-slate-700 mt-1.5 flex items-center gap-1.5">
-                    <span className="text-blue-500">👤</span> {profile.name}
+                    <span className="text-blue-500"></span> {profile.name}
                   </p>
                 )}
               </div>
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</p>
                 <p className="text-xs font-extrabold text-blue-600 mt-1.5 truncate">
-                  📧 {profile.email}
+                   {profile.email}
                 </p>
               </div>
               <div>
@@ -321,7 +321,7 @@ export default function MyProfilePage() {
                   />
                 ) : (
                   <p className="text-xs font-extrabold text-slate-700 mt-1.5 whitespace-nowrap">
-                    📞 {profile.phone || 'Not set'}
+                     {profile.phone || 'Not set'}
                   </p>
                 )}
               </div>
@@ -340,7 +340,7 @@ export default function MyProfilePage() {
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</p>
                 <p className={`text-xs font-extrabold mt-1.5 ${profile.is_active ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {profile.is_active ? '🟢 Active' : '🔴 Inactive'}
+                  {profile.is_active ? ' Active' : ' Inactive'}
                 </p>
               </div>
             </div>
@@ -356,7 +356,7 @@ export default function MyProfilePage() {
         {isStudentPortal && student && (
           <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card">
             <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-5">
-              <span className="text-xl">📖</span>
+              <span className="text-xl"></span>
               <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Academic Information</h3>
             </div>
             <div className="divide-y divide-slate-100">
@@ -384,27 +384,27 @@ export default function MyProfilePage() {
         {isStudentPortal && student && (
           <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card">
             <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-5">
-              <span className="text-xl">👨‍👩‍👦</span>
+              <span className="text-xl"></span>
               <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Parent / Guardian Details</h3>
             </div>
             <div className="space-y-4">
               <div className="flex items-start gap-3.5 bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
                 <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
-                  👨
+                  
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-extrabold text-slate-800">{student.parent_name || 'N/A'} <span className="text-[10px] font-bold text-blue-500 ml-1.5">(Guardian)</span></p>
-                  <p className="text-[11px] font-semibold text-slate-400 mt-1">📞 {student.parent_phone || 'N/A'}</p>
-                  <p className="text-[11px] font-semibold text-slate-400 mt-0.5 truncate">📧 {student.parent_email || 'N/A'}</p>
+                  <p className="text-[11px] font-semibold text-slate-400 mt-1"> {student.parent_phone || 'N/A'}</p>
+                  <p className="text-[11px] font-semibold text-slate-400 mt-0.5 truncate"> {student.parent_email || 'N/A'}</p>
                   {student.parent_occupation && (
-                    <p className="text-[10px] font-bold text-slate-500 mt-1.5 uppercase tracking-wider flex items-center gap-1"><span className="text-xs">💼</span> {student.parent_occupation}</p>
+                    <p className="text-[10px] font-bold text-slate-500 mt-1.5 uppercase tracking-wider flex items-center gap-1"><span className="text-xs"></span> {student.parent_occupation}</p>
                   )}
                 </div>
               </div>
               {student.parent_address && (
                 <div className="pt-3 border-t border-slate-100">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Address</p>
-                  <p className="text-xs font-bold text-slate-600 mt-1.5 leading-relaxed">📍 {student.parent_address}</p>
+                  <p className="text-xs font-bold text-slate-600 mt-1.5 leading-relaxed"> {student.parent_address}</p>
                 </div>
               )}
             </div>
@@ -415,7 +415,7 @@ export default function MyProfilePage() {
         {profile.role === 'teacher' && teacher && (
           <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card">
             <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-5">
-              <span className="text-xl">🎓</span>
+              <span className="text-xl"></span>
               <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Teacher Information</h3>
             </div>
             <div className="divide-y divide-slate-100">
@@ -441,7 +441,7 @@ export default function MyProfilePage() {
         {/* Quote Card — shown for all roles */}
         <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card flex flex-col justify-between">
           <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-5">
-            <span className="text-xl">✨</span>
+            <span className="text-xl"></span>
             <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Inspiration</h3>
           </div>
           <div className="bg-[#f0f4ff]/80 border border-blue-500/5 rounded-2xl p-5 relative overflow-hidden flex-1 flex flex-col justify-center">
@@ -493,7 +493,7 @@ export default function MyProfilePage() {
         {['admin', 'admin2', 'fee_collector'].includes(profile.role) && (
           <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card">
             <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-5">
-              <span className="text-xl">🔐</span>
+              <span className="text-xl"></span>
               <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Account & Security</h3>
             </div>
             <div className="divide-y divide-slate-100">

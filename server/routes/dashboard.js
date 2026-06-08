@@ -72,6 +72,7 @@ router.get('/admin', protect, authorize('admin', 'admin2'), async (req, res) => 
         total_students: totalStudents,
         active_teachers: totalTeachers,
         fee_collected: feeCollected,
+        fee_total: feeTotal,
         pending_fee_amount: Math.max(feeTotal - feeCollected, 0),
         pending_student_approvals: pendingApprovals,
         pending_admission_requests: pendingAdmissions,

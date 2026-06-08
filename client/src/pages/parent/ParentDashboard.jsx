@@ -57,12 +57,12 @@ const noticesData = [
 ];
 
 const quickLinks = [
-  { label: 'Study Materials', icon: '📚', color: 'bg-cyan-50 border-cyan-100 hover:bg-cyan-100/40 text-cyan-600', path: '/parent/profile' },
-  { label: 'Online Resources', icon: '💻', color: 'bg-blue-50 border-blue-100 hover:bg-blue-100/40 text-blue-600', path: '/parent/profile' },
-  { label: 'Class Notes', icon: '📝', color: 'bg-amber-50 border-amber-100 hover:bg-amber-100/40 text-amber-600', path: '/parent/profile' },
-  { label: 'Library', icon: '📖', color: 'bg-purple-50 border-purple-100 hover:bg-purple-100/40 text-purple-600', path: '/parent/profile' },
-  { label: 'Ask Doubts', icon: '❓', color: 'bg-rose-50 border-rose-100 hover:bg-rose-100/40 text-rose-600', path: '/parent/profile' },
-  { label: 'Calendar', icon: '📅', color: 'bg-emerald-50 border-emerald-100 hover:bg-emerald-100/40 text-emerald-600', path: '/parent/attendance' },
+  { label: 'Study Materials', icon: '', color: 'bg-cyan-50 border-cyan-100 hover:bg-cyan-100/40 text-cyan-600', path: '/parent/profile' },
+  { label: 'Online Resources', icon: '', color: 'bg-blue-50 border-blue-100 hover:bg-blue-100/40 text-blue-600', path: '/parent/profile' },
+  { label: 'Class Notes', icon: '', color: 'bg-amber-50 border-amber-100 hover:bg-amber-100/40 text-amber-600', path: '/parent/profile' },
+  { label: 'Library', icon: '', color: 'bg-purple-50 border-purple-100 hover:bg-purple-100/40 text-purple-600', path: '/parent/profile' },
+  { label: 'Ask Doubts', icon: '', color: 'bg-rose-50 border-rose-100 hover:bg-rose-100/40 text-rose-600', path: '/parent/profile' },
+  { label: 'Calendar', icon: '', color: 'bg-emerald-50 border-emerald-100 hover:bg-emerald-100/40 text-emerald-600', path: '/parent/attendance' },
 ];
 
 // May 2025 Calendar Grid Config for Attendance (Image 3)
@@ -144,7 +144,7 @@ export default function ParentDashboard() {
           <div>
             <span className="bg-white/10 text-white/90 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">Aarav Sharma</span>
             <h2 className="text-2xl sm:text-3xl font-extrabold mt-3.5 tracking-tight flex items-center gap-2.5">
-              Welcome, Aarav Sharma! <span className="animate-bounce">👋</span>
+              Welcome, Aarav Sharma! <span className="animate-bounce"></span>
             </h2>
             <p className="text-blue-100 text-xs sm:text-sm mt-1.5 font-medium">Keep up the great work and stay consistent!</p>
           </div>
@@ -169,7 +169,7 @@ export default function ParentDashboard() {
         <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-card flex flex-col justify-between hover:border-slate-200 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Attendance</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold border border-emerald-100">📅</div>
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold border border-emerald-100"></div>
           </div>
           <div className="mt-4">
             <h3 className="text-2xl font-extrabold text-slate-800 tracking-tight">92.6%</h3>
@@ -185,7 +185,7 @@ export default function ParentDashboard() {
         <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-card flex flex-col justify-between hover:border-slate-200 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Average Grade</span>
-            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-sm font-bold border border-purple-100">⭐</div>
+            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-sm font-bold border border-purple-100"></div>
           </div>
           <div className="mt-4 flex items-end justify-between">
             <div>
@@ -207,7 +207,7 @@ export default function ParentDashboard() {
         <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-card flex flex-col justify-between hover:border-slate-200 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Upcoming Exams</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold border border-blue-100">📝</div>
+            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold border border-blue-100"></div>
           </div>
           <div className="mt-4">
             <h3 className="text-2xl font-extrabold text-slate-800 tracking-tight">2</h3>
@@ -219,7 +219,7 @@ export default function ParentDashboard() {
         <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-card flex flex-col justify-between hover:border-slate-200 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fees Due</span>
-            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold border border-amber-100">👛</div>
+            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold border border-amber-100"></div>
           </div>
           <div className="mt-4">
             <h3 className="text-2xl font-extrabold text-slate-800 tracking-tight">₹ 5,200</h3>
@@ -236,7 +236,7 @@ export default function ParentDashboard() {
         <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card lg:col-span-7 flex flex-col">
           <div className="pb-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
             <div className="flex items-center gap-2.5">
-              <span className="text-xl">📅</span>
+              <span className="text-xl"></span>
               <div>
                 <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Attendance Summary (May 2025)</h3>
                 <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mt-0.5">92.6% Present</p>
@@ -297,7 +297,7 @@ export default function ParentDashboard() {
         <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card lg:col-span-5 flex flex-col justify-between">
           <div className="pb-4 border-b border-slate-100 flex items-center justify-between gap-2.5 mb-4">
             <div className="flex items-center gap-2">
-              <span className="text-xl">🏫</span>
+              <span className="text-xl"></span>
               <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Today's Timetable</h3>
             </div>
             <button
@@ -340,7 +340,7 @@ export default function ParentDashboard() {
         <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card flex flex-col justify-between">
           <div className="pb-4 border-b border-slate-100 flex items-center justify-between gap-2.5 mb-4">
             <div className="flex items-center gap-2">
-              <span className="text-xl">📅</span>
+              <span className="text-xl"></span>
               <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Upcoming Exams</h3>
             </div>
             <button className="text-[10px] font-bold text-slate-400 hover:underline uppercase tracking-wider">View All</button>
@@ -352,7 +352,7 @@ export default function ParentDashboard() {
                 <div>
                   <h4 className="text-xs font-extrabold text-slate-800">{item.name}</h4>
                   <p className="text-[10px] font-bold text-slate-400 mt-1.5 flex items-center gap-1">
-                    <span>📅</span> {item.date}
+                    <span></span> {item.date}
                   </p>
                 </div>
                 <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full border uppercase tracking-wider ${item.color}`}>
@@ -367,7 +367,7 @@ export default function ParentDashboard() {
         <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card flex flex-col justify-between">
           <div className="pb-4 border-b border-slate-100 flex items-center justify-between gap-2.5 mb-4">
             <div className="flex items-center gap-2">
-              <span className="text-xl">📢</span>
+              <span className="text-xl"></span>
               <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Notice Board</h3>
             </div>
             <button className="text-[10px] font-bold text-slate-400 hover:underline uppercase tracking-wider">View All</button>
@@ -377,7 +377,7 @@ export default function ParentDashboard() {
             {noticesData.map((item, i) => (
               <div key={i} className="flex gap-3 px-1 py-1 hover:bg-slate-50/50 rounded-xl transition-colors">
                 <div className={`w-8 h-8 rounded-xl ${item.color} flex items-center justify-center text-lg font-bold flex-shrink-0 mt-0.5`}>
-                  📣
+                  
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
@@ -401,7 +401,7 @@ export default function ParentDashboard() {
           <div>
             <div className="pb-4 border-b border-slate-100 flex items-center justify-between gap-2.5 mb-4">
               <div className="flex items-center gap-2">
-                <span className="text-xl">📊</span>
+                <span className="text-xl"></span>
                 <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Academic Results (Term 1)</h3>
               </div>
               <button className="text-[10px] font-bold text-slate-400 hover:underline uppercase tracking-wider">View Full Report</button>
@@ -450,7 +450,7 @@ export default function ParentDashboard() {
         {/* Fees Overview Donut Card (5 cols) */}
         <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card lg:col-span-5 flex flex-col justify-between">
           <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-3">
-            <span className="text-xl">👛</span>
+            <span className="text-xl"></span>
             <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Fees Overview</h3>
           </div>
 
@@ -515,7 +515,7 @@ export default function ParentDashboard() {
       {/* 6. Quick Links Section */}
       <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card">
         <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-5">
-          <span className="text-xl">⚡</span>
+          <span className="text-xl"></span>
           <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Quick Links</h3>
         </div>
 
@@ -541,7 +541,7 @@ export default function ParentDashboard() {
 
         <div className="space-y-4 flex-1">
           <div className="flex items-center gap-2.5">
-            <span className="text-xl">🏆</span>
+            <span className="text-xl"></span>
             <h3 className="text-base font-extrabold text-white tracking-tight">Achievements & Recognition</h3>
           </div>
           
@@ -579,7 +579,7 @@ export default function ParentDashboard() {
             {/* Fallback to simple school trophy path */}
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5m0 0l6-3m-6 3l-6-3" />
           </svg>
-          <span className="absolute text-3xl z-20 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 select-none pointer-events-none">🏆</span>
+          <span className="absolute text-3xl z-20 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 select-none pointer-events-none"></span>
         </div>
       </div>
 
