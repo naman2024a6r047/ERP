@@ -293,18 +293,80 @@ router.post('/admission-request', protect, authorize(...FC_ROLES), async (req, r
 });
 
 // GET /api/fc/admission-requests
+// Merges records from admission_requests table AND students table
+// so that ALL students appear in the admissions list regardless of creation method.
 router.get('/admission-requests', protect, authorize('admin', 'admin2', 'fee_collector'), async (req, res) => {
   try {
-    const where = {};
-    if (req.query.status) where.status = req.query.status;
+    const statusFilter = req.query.status || '';
 
-    const requests = await AdmissionRequest.findAll({
-      where,
+    // 1. Get records from admission_requests table
+    const arWhere = {};
+    if (statusFilter) arWhere.status = statusFilter;
+
+    const admissionRequests = await AdmissionRequest.findAll({
+      where: arWhere,
       include: [{ model: User, as: 'submittedByUser', attributes: ['id', 'name'] }],
       order: [['created_at', 'DESC']],
     });
-    res.json(requests);
-  } catch (err) { res.status(500).json({ message: err.message }); }
+
+    // Collect student IDs already linked to admission requests
+    const linkedStudentIds = new Set(
+      admissionRequests.filter(r => r.student_id_created).map(r => r.student_id_created)
+    );
+
+    // 2. Get students from students table that do NOT have a linked admission request
+    //    Map their approval_status to the admission request status format
+    const statusMap = { approved: 'approved', pending: 'pending', rejected: 'rejected' };
+    const studentWhere = {};
+    if (statusFilter) {
+      // Map the admission request status filter to student approval_status
+      const mappedStatus = Object.entries(statusMap).find(([, v]) => v === statusFilter);
+      if (mappedStatus) studentWhere.approval_status = mappedStatus[0];
+    }
+
+    const students = await Student.findAll({
+      where: studentWhere,
+      order: [['created_at', 'DESC']],
+    });
+
+    // Convert students to admission-request-like objects (only those not already linked)
+    const studentAsRequests = students
+      .filter(s => !linkedStudentIds.has(s.id))
+      .map(s => ({
+        id: `student-${s.id}`,
+        first_name: s.first_name,
+        last_name: s.last_name,
+        date_of_birth: s.date_of_birth,
+        gender: s.gender,
+        applying_class: s.class,
+        parent_name: s.parent_name,
+        parent_phone: s.parent_phone,
+        parent_email: s.parent_email,
+        parent_address: s.parent_address,
+        previous_school: s.previous_school,
+        status: statusMap[s.approval_status] || 'approved',
+        submitted_by: s.created_by,
+        reviewed_by: s.approved_by,
+        approved_at: s.approved_at,
+        student_id_created: s.id,
+        admission_fee_paid: 0,
+        created_at: s.created_at,
+        updated_at: s.updated_at,
+        submittedByUser: null,
+        _source: 'students_table',
+      }));
+
+    // 3. Merge and return
+    const merged = [...admissionRequests.map(r => r.toJSON()), ...studentAsRequests];
+
+    // Sort by created_at descending
+    merged.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    res.json(merged);
+  } catch (err) {
+    console.error('[fc][GET /admission-requests]', err);
+    res.status(500).json({ message: err.message });
+  }
 });
 
 // PUT /api/fc/admission-requests/:id

@@ -81,7 +81,7 @@ export default function FCAdmissions() {
                     <td className="py-3 px-4 text-gray-500 text-xs">{r.applying_class}</td>
                     <td className="py-3 px-4 text-gray-600 text-xs">{r.parent_name}</td>
                     <td className="py-3 px-4 text-gray-500 text-xs">{r.parent_phone}</td>
-                    <td className="py-3 px-4 text-gray-400 text-xs whitespace-nowrap">{formatDate(r.created_at)}</td>
+                    <td className="py-3 px-4 text-gray-400 text-xs whitespace-nowrap">{formatDate(r.created_at || r.createdAt)}</td>
                     <td className="py-3 px-4 whitespace-nowrap">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[r.status]}`}>
                         {r.status.replace('_', ' ')}
