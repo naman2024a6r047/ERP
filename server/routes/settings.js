@@ -4,8 +4,8 @@ const { Setting } = require('../models');
 const { protect, authorize } = require('../middleware/auth');
 
 // GET /api/settings - Public (or protected if you want only logged-in users to see)
-// Since receipt generation needs it, it can be protected for all users.
-router.get('/', protect, async (req, res) => {
+// Since receipt generation and LoginPage needs it, it is public for all users.
+router.get('/', async (req, res) => {
   try {
     const settings = await Setting.findAll();
     // Convert array of {key, value} to an object {key: value}
