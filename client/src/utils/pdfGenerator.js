@@ -119,9 +119,12 @@ export const generateReportCard = (student, result) => {
 };
 
 // ── Fee Receipt PDF ───────────────────────────────────────────────────────────
-export const generateFeeReceipt = (fee, student) => {
+export const generateFeeReceipt = (fee, student, settings = {}) => {
   const doc = new jsPDF({ unit: 'mm', format: [148, 210] }); // A5
   const w = doc.internal.pageSize.width;
+
+  const schoolName = settings.school_name || 'EduSmart Public School';
+  const footerNote = settings.receipt_footer || 'This is a computer-generated receipt. No signature required.';
 
   // Header
   doc.setFillColor(30, 41, 59);
@@ -129,7 +132,7 @@ export const generateFeeReceipt = (fee, student) => {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text('EduSmart Public School', w / 2, 13, { align: 'center' });
+  doc.text(schoolName, w / 2, 13, { align: 'center' });
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.text('FEE RECEIPT', w / 2, 22, { align: 'center' });
@@ -183,7 +186,7 @@ export const generateFeeReceipt = (fee, student) => {
   doc.setFontSize(7);
   doc.setTextColor(148, 163, 184);
   doc.setFont('helvetica', 'normal');
-  doc.text('This is a computer-generated receipt. No signature required.', w / 2, fy, { align: 'center' });
+  doc.text(footerNote, w / 2, fy, { align: 'center' });
 
   doc.save(`Receipt_${fee?.receipt_number || 'fee'}.pdf`);
 };

@@ -106,6 +106,7 @@ app.use('/api/class-incharge', require('./routes/classIncharge'));
 app.use('/api/class-fees', require('./routes/classFees'));
 app.use('/api/credentials', require('./routes/credentials'));
 app.use('/api/profile', require('./routes/profile'));
+app.use('/api/settings', require('./routes/settings'));
 
 // ── Database status (shared between health and db-check) ──────────────────────
 let dbStatus = { connected: false, error: null, checkedAt: null };

@@ -1,4 +1,13 @@
+import { useSettings } from '../context/SettingsContext';
+
 export default function Receipt({ receipt, onPrint, onClose }) {
+  const { settings } = useSettings() || {};
+  const schoolName = settings?.school_name || receipt?.school?.name || 'EduSmart Public School';
+  const schoolAddress = settings?.school_address || receipt?.school?.address || '';
+  const schoolPhone = settings?.school_phone || receipt?.school?.phone || '';
+  const schoolEmail = settings?.school_email || receipt?.school?.email || '';
+  const footerNote = settings?.receipt_footer || 'This is a computer-generated receipt. No signature required.';
+
   if (!receipt) return null;
 
   const breakdown = Object.entries(receipt.fee_breakdown || {}).filter(
@@ -32,10 +41,10 @@ export default function Receipt({ receipt, onPrint, onClose }) {
         <div className="border-b border-gray-200 pb-4">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-2xl font-bold tracking-wide text-gray-900">{receipt.school?.name || 'School ERP'}</p>
-              <p className="mt-1 text-sm text-gray-500">{receipt.school?.address}</p>
+              <p className="text-2xl font-bold tracking-wide text-gray-900">{schoolName}</p>
+              <p className="mt-1 text-sm text-gray-500">{schoolAddress}</p>
               <p className="text-sm text-gray-500">
-                {receipt.school?.phone} {receipt.school?.email ? `| ${receipt.school.email}` : ''}
+                {schoolPhone} {schoolEmail ? `| ${schoolEmail}` : ''}
               </p>
             </div>
             <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-right">
@@ -133,7 +142,7 @@ export default function Receipt({ receipt, onPrint, onClose }) {
         </div>
 
         <p className="mt-5 text-center text-xs text-gray-500">
-          This is a computer-generated receipt. No signature required.
+          {footerNote}
         </p>
       </div>
     </div>

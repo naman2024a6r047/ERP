@@ -5,6 +5,7 @@ import StatCard from '../../components/common/StatCard';
 import FeeForm from '../../components/forms/FeeForm';
 import { formatCurrency, feeStatusColor } from '../../utils/helpers';
 import { generateFeeReceipt } from '../../utils/pdfGenerator';
+import { useSettings } from '../../context/SettingsContext';
 import { CLASSES, SECTIONS } from '../../constants/roles';
 import toast from 'react-hot-toast';
 
@@ -22,6 +23,7 @@ const statusColor = {
 };
 
 export default function Fees() {
+  const { settings } = useSettings() || {};
   const now = new Date();
   const [month, setMonth]         = useState(MONTHS[now.getMonth()]);
   const [year, setYear]           = useState(now.getFullYear());
@@ -74,7 +76,7 @@ export default function Fees() {
 
       const r = await API.post('/fees/collect', payload);
       toast.success('Payment collected!');
-      if (r.data.receipt) generateFeeReceipt(r.data.fee, collectModal);
+      if (r.data.receipt) generateFeeReceipt(r.data.fee, collectModal, settings);
       setCollect(null);
       load();
     } catch (err) {
@@ -275,8 +277,8 @@ export default function Fees() {
                         <div className="flex gap-2">
                           {s.fee_status === 'paid' ? (
                             <button
-                              onClick={() => generateFeeReceipt(feeRec, s)}
-                              className="text-xs text-blue-500 hover:text-blue-700 font-medium"
+                              onClick={() => generateFeeReceipt(feeRec, s, settings)}
+                              className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-2 py-1 rounded"
                             >
                               📄 Receipt
                             </button>

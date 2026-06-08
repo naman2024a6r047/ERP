@@ -18,6 +18,7 @@ const ClassIncharge    = require('./ClassIncharge');
 const ClassFeeStructure= require('./ClassFeeStructure');
 const AuditLog          = require('./AuditLog');
 const PushSubscription  = require('./PushSubscription');
+const Setting           = require('./Setting');
 
 // ── Associations ──────────────────────────────────────────────────────────────
 
@@ -113,4 +114,5 @@ module.exports = {
   AdmissionRequest, TeacherAttendance,
   ClassIncharge, ClassFeeStructure,
   AuditLog, PushSubscription,
+  Setting,
 };

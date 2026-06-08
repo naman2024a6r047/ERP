@@ -5,9 +5,11 @@ import Receipt from '../../components/Receipt';
 import FeeForm from '../../components/forms/FeeForm';
 import { generateFeeReceipt } from '../../utils/pdfGenerator';
 import { formatCurrency, feeStatusColor } from '../../utils/helpers';
+import { useSettings } from '../../context/SettingsContext';
 import toast from 'react-hot-toast';
 
 export default function FCCollect() {
+  const { settings } = useSettings() || {};
   const [query, setQuery]         = useState('');
   const [classFilter, setClassFilter] = useState('');
   const [sectionFilter, setSectionFilter] = useState('');
@@ -110,7 +112,7 @@ export default function FCCollect() {
       });
       toast.success('Fee collected!');
       setReceiptModal(r.data.receipt);
-      generateFeeReceipt(r.data.fee, feeModal.student);
+      generateFeeReceipt(r.data.fee, feeModal.student, settings);
       setFeeModal(null);
       if (selected?.student) {
         const updated = await API.get(`/fc/students/${selected.student.id}/details`);
@@ -313,7 +315,7 @@ export default function FCCollect() {
                           <button
                             onClick={() => {
                               setReceiptModal(buildReceiptPayload(f, selected.student));
-                              generateFeeReceipt(f, selected.student);
+                              generateFeeReceipt(f, selected.student, settings);
                             }}
                             className="text-xs text-blue-500 hover:text-blue-700 font-medium"
                           >

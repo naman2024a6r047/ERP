@@ -5,9 +5,11 @@ import { formatCurrency, feeStatusColor, formatDate } from '../../utils/helpers'
 import { generateFeeReceipt } from '../../utils/pdfGenerator';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
+import { useSettings } from '../../context/SettingsContext';
 
 export default function FeeStatus() {
   const { user } = useAuth();
+  const { settings } = useSettings() || {};
   const studentId = user?.linkedStudent?.id;
   const [fees, setFees]       = useState([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +88,7 @@ export default function FeeStatus() {
                     </span>
                     {fee.status === 'paid' && fee.receipt_number && (
                       <button
-                        onClick={() => generateFeeReceipt(fee, user?.linkedStudent)}
+                        onClick={() => generateFeeReceipt(fee, user?.linkedStudent, settings)}
                         className="text-xs text-blue-500 hover:text-blue-700 font-medium"
                       >
                         📥 Receipt

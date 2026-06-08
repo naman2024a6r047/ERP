@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { SettingsProvider } from './context/SettingsContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 import LoginPage from './pages/LoginPage';
@@ -18,6 +19,7 @@ import Promotion from './pages/admin/Promotion';
 import Notifications from './pages/admin/Notifications';
 import ClassFees from './pages/admin/ClassFees';
 import AdminTeacherAttendance from './pages/admin/TeacherAttendance';
+import Settings from './pages/admin/Settings';
 
 import Admin2Layout from './pages/admin2/Admin2Layout';
 import Admin2Dashboard from './pages/admin2/Admin2Dashboard';
@@ -52,11 +54,12 @@ import CredentialManagement from './pages/CredentialManagement';
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<Navigate to="/login" replace />} />
+      <SettingsProvider>
+        <BrowserRouter>
+          <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<Navigate to="/login" replace />} />
 
           <Route
             path="/admin"
@@ -83,6 +86,7 @@ export default function App() {
             <Route path="profile" element={<MyProfilePage />} />
             <Route path="bulk-upload" element={<BulkUploadStudents />} />
             <Route path="admissions" element={<FCAdmissions />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
 
           <Route
@@ -156,7 +160,8 @@ export default function App() {
             <Route path="notifications" element={<MyNotifications />} />
           </Route>
         </Routes>
-      </BrowserRouter>
+        </BrowserRouter>
+      </SettingsProvider>
     </AuthProvider>
   );
 }
