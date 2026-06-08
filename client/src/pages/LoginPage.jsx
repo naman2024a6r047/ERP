@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 import { ROLE_HOME } from '../constants/routes';
 import toast from 'react-hot-toast';
 
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [portal, setPortal]     = useState('student'); // 'student' or 'admin'
   const { login } = useAuth();
+  const { settings } = useSettings() || {};
   const navigate  = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -39,6 +41,9 @@ export default function LoginPage() {
     }
   };
 
+  const schoolName = settings?.school_name || 'EduSmart ERP';
+  const schoolSub = settings?.school_subtitle || 'School Management System';
+
   return (
     <div className="min-h-screen bg-[#070b19] flex items-center justify-center p-4 relative overflow-hidden">
       {/* Dynamic Background Glowing Blobs */}
@@ -51,13 +56,17 @@ export default function LoginPage() {
       <div className="w-full max-w-lg z-10">
         {/* Logo and Branding Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-lg shadow-blue-500/20 mb-4 transform hover:rotate-12 transition-transform duration-300">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-lg shadow-blue-500/20 mb-4 transform hover:rotate-12 transition-transform duration-300 overflow-hidden">
+            {settings?.school_logo_url ? (
+              <img src={settings.school_logo_url} alt="School Logo" className="w-full h-full object-cover" />
+            ) : (
+              <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            )}
           </div>
-          <h1 className="text-white text-3xl font-extrabold tracking-tight">EduSmart ERP</h1>
-          <p className="text-slate-400 text-xs mt-1.5 uppercase tracking-widest font-semibold">School Management System</p>
+          <h1 className="text-white text-3xl font-extrabold tracking-tight">{schoolName}</h1>
+          <p className="text-slate-400 text-xs mt-1.5 uppercase tracking-widest font-semibold">{schoolSub}</p>
         </div>
 
         {/* Login Container (Glassmorphism card) */}

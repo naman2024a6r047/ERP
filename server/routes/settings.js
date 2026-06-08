@@ -16,7 +16,8 @@ router.get('/', protect, async (req, res) => {
     
     // Provide defaults if not set
     const defaultSettings = {
-      school_name: 'EduSmart Public School',
+      school_name: 'EduSmart',
+      school_subtitle: 'Public School',
       school_address: '123 Education Lane, City, Country',
       school_phone: '+1 234 567 890',
       school_email: 'info@edusmart.com',

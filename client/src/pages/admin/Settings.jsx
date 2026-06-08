@@ -54,7 +54,7 @@ export default function Settings() {
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div className="space-y-1 sm:col-span-2">
+            <div className="space-y-1 sm:col-span-1">
               <label className="text-sm font-semibold text-gray-700">School Name</label>
               <input
                 type="text"
@@ -62,8 +62,20 @@ export default function Settings() {
                 value={settings.school_name || ''}
                 onChange={handleChange}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500 transition-colors"
-                placeholder="e.g. EduSmart Public School"
+                placeholder="e.g. EduSmart"
                 required
+              />
+            </div>
+
+            <div className="space-y-1 sm:col-span-1">
+              <label className="text-sm font-semibold text-gray-700">School Subtitle</label>
+              <input
+                type="text"
+                name="school_subtitle"
+                value={settings.school_subtitle || ''}
+                onChange={handleChange}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500 transition-colors"
+                placeholder="e.g. Public School"
               />
             </div>
 

@@ -5,7 +5,8 @@ const SettingsContext = createContext(null);
 
 export function SettingsProvider({ children }) {
   const [settings, setSettings] = useState({
-    school_name: 'EduSmart Public School',
+    school_name: 'EduSmart',
+    school_subtitle: 'Public School',
     school_address: '',
     school_phone: '',
     school_email: '',
