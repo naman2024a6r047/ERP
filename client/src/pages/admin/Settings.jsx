@@ -129,23 +129,43 @@ export default function Settings() {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={async (e) => {
+                  onChange={(e) => {
                     const file = e.target.files[0];
                     if (!file) return;
                     
-                    const formData = new FormData();
-                    formData.append('logo', file);
-                    
-                    const loadingToast = toast.loading('Uploading logo...');
-                    try {
-                      const res = await API.post('/settings/upload-logo', formData, {
-                        headers: { 'Content-Type': 'multipart/form-data' }
-                      });
-                      setSettings(prev => ({ ...prev, school_logo_url: res.data.url }));
-                      toast.success('Logo uploaded!', { id: loadingToast });
-                    } catch (err) {
-                      toast.error('Failed to upload logo', { id: loadingToast });
-                    }
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const img = new Image();
+                      img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        const MAX_SIZE = 200; // Resize to max 200px to ensure tiny base64 string
+                        
+                        if (width > height) {
+                          if (width > MAX_SIZE) {
+                            height = Math.round(height * (MAX_SIZE / width));
+                            width = MAX_SIZE;
+                          }
+                        } else {
+                          if (height > MAX_SIZE) {
+                            width = Math.round(width * (MAX_SIZE / height));
+                            height = MAX_SIZE;
+                          }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        const base64Str = canvas.toDataURL('image/webp', 0.8);
+                        setSettings(prev => ({ ...prev, school_logo_url: base64Str }));
+                        toast.success('Logo preview loaded! Click Save Settings to apply.');
+                      };
+                      img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
                   }}
                   className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors"
                 />
