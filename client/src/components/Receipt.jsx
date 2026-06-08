@@ -40,12 +40,21 @@ export default function Receipt({ receipt, onPrint, onClose }) {
       <div className="rounded-2xl border-2 border-gray-300 bg-white p-6 print:border print:rounded-none print:p-4">
         <div className="border-b border-gray-200 pb-4">
           <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-2xl font-bold tracking-wide text-gray-900">{schoolName}</p>
-              <p className="mt-1 text-sm text-gray-500">{schoolAddress}</p>
-              <p className="text-sm text-gray-500">
-                {schoolPhone} {schoolEmail ? `| ${schoolEmail}` : ''}
-              </p>
+            <div className="flex items-center gap-4">
+              {settings?.school_logo_url && (
+                <img 
+                  src={settings.school_logo_url} 
+                  alt="School Logo" 
+                  className="h-16 w-16 object-contain"
+                />
+              )}
+              <div>
+                <p className="text-2xl font-bold tracking-wide text-gray-900">{schoolName}</p>
+                <p className="mt-1 text-sm text-gray-500">{schoolAddress}</p>
+                <p className="text-sm text-gray-500">
+                  {schoolPhone} {schoolEmail ? `| ${schoolEmail}` : ''}
+                </p>
+              </div>
             </div>
             <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-right">
               <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">Receipt No.</p>
