@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useAttendance } from '../../hooks/useAttendance';
+import API from '../../utils/api';
 import { attendanceBg } from '../../utils/helpers';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
@@ -16,10 +17,21 @@ export default function MyAttendance() {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year]            = useState(now.getFullYear());
   const { records, stats, loading, fetchStudentAttendance } = useAttendance();
+  const [yearlyStats, setYearlyStats] = useState(null);
 
   useEffect(() => {
     if (studentId) fetchStudentAttendance(studentId, month, year);
   }, [studentId, month, year]);
+
+  useEffect(() => {
+    if (studentId) {
+      API.get(`/attendance/student/${studentId}`).then(res => {
+        if (res.data && res.data.stats) {
+          setYearlyStats(res.data.stats);
+        }
+      }).catch(err => console.error("Failed to load yearly stats", err));
+    }
+  }, [studentId]);
 
   const daysInMonth = new Date(year, month, 0).getDate();
   const firstDay    = new Date(year, month - 1, 1).getDay();
@@ -30,16 +42,46 @@ export default function MyAttendance() {
 
   return (
     <div className="space-y-4 max-w-lg">
+      {/* Yearly Overall Stats */}
+      {yearlyStats && (
+        <div className="bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl p-5 text-white shadow-lg">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-blue-100 mb-4">Overall Academic Year</h3>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-3xl font-extrabold">{yearlyStats.percentage}%</p>
+              <p className="text-xs font-medium text-blue-100 mt-1">Total Attendance</p>
+            </div>
+            <div className="flex gap-4 sm:gap-6 text-center">
+              <div>
+                <p className="text-xl font-bold">{yearlyStats.present}</p>
+                <p className="text-[10px] font-bold text-blue-100 uppercase tracking-widest mt-1">Present</p>
+              </div>
+              <div>
+                <p className="text-xl font-bold">{yearlyStats.absent}</p>
+                <p className="text-[10px] font-bold text-blue-100 uppercase tracking-widest mt-1">Absent</p>
+              </div>
+              <div>
+                <p className="text-xl font-bold">{yearlyStats.total}</p>
+                <p className="text-[10px] font-bold text-blue-100 uppercase tracking-widest mt-1">Working Days</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Month selector */}
-      <select
-        value={month}
-        onChange={e => setMonth(Number(e.target.value))}
-        className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 bg-white w-full sm:w-auto"
-      >
-        {MONTHS.map((m, i) => (
-          <option key={m} value={i + 1}>{m} {year}</option>
-        ))}
-      </select>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-bold text-slate-800">Monthly View</h3>
+        <select
+          value={month}
+          onChange={e => setMonth(Number(e.target.value))}
+          className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 bg-white w-auto"
+        >
+          {MONTHS.map((m, i) => (
+            <option key={m} value={i + 1}>{m} {year}</option>
+          ))}
+        </select>
+      </div>
 
       {/* Stats */}
       {!loading && (
