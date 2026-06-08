@@ -5,6 +5,8 @@ import { formatCurrency, feeStatusColor, formatDate } from '../../utils/helpers'
 import { generateFeeReceipt } from '../../utils/pdfGenerator';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
+import Modal from '../../components/common/Modal';
+import Receipt from '../../components/Receipt';
 import { useSettings } from '../../context/SettingsContext';
 
 export default function FeeStatus() {
@@ -13,6 +15,40 @@ export default function FeeStatus() {
   const studentId = user?.linkedStudent?.id;
   const [fees, setFees]       = useState([]);
   const [loading, setLoading] = useState(true);
+  const [receiptModal, setReceiptModal] = useState(null);
+
+  const buildReceiptPayload = (fee, student) => ({
+    student_name: `${student?.first_name || ''} ${student?.last_name || ''}`.trim(),
+    class: student?.class || '',
+    section: student?.section || '',
+    fee_type: fee?.fee_type || 'monthly',
+    total_amount: Number(fee?.total_amount || 0),
+    paid_amount: Number(fee?.paid_amount || 0),
+    payment_mode: fee?.payment_mode || '',
+    receipt_number: fee?.receipt_number || '',
+    date: fee?.paid_date || new Date().toISOString().split('T')[0],
+    collected_by: fee?.collectedByUser?.name || 'System',
+    school: {
+      name: settings?.school_name || 'EduSmart Public School',
+      address: settings?.school_address || '',
+      phone: settings?.school_phone || '',
+      email: settings?.school_email || '',
+    },
+    student: {
+      name: `${student?.first_name || ''} ${student?.last_name || ''}`.trim(),
+      class: `${student?.class || '—'} - ${student?.section || '—'}`,
+      parent_name: student?.parent_name || '',
+      phone: student?.parent_phone || '',
+    },
+    payment: {
+      fee_type: fee?.fee_type || 'monthly',
+      total_amount: Number(fee?.total_amount || 0),
+      paid_amount: Number(fee?.paid_amount || 0),
+      payment_mode: fee?.payment_mode || '',
+      status: fee?.status || 'paid',
+    },
+    fee_breakdown: fee?.fee_breakdown || { [fee?.fee_type || 'fee']: Number(fee?.paid_amount || fee?.total_amount || 0) },
+  });
 
   useEffect(() => {
     if (!studentId) return;
@@ -87,12 +123,20 @@ export default function FeeStatus() {
                       {fee.status}
                     </span>
                     {fee.status === 'paid' && fee.receipt_number && (
-                      <button
-                        onClick={() => generateFeeReceipt(fee, user?.linkedStudent, settings)}
-                        className="text-xs text-blue-500 hover:text-blue-700 font-medium"
-                      >
-                         Receipt
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setReceiptModal(buildReceiptPayload(fee, user?.linkedStudent))}
+                          className="text-xs text-blue-500 hover:text-blue-700 font-medium"
+                        >
+                          Preview
+                        </button>
+                        <button
+                          onClick={() => generateFeeReceipt(fee, user?.linkedStudent, settings)}
+                          className="text-xs text-gray-500 hover:text-gray-700 font-medium"
+                        >
+                          Download
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -101,6 +145,19 @@ export default function FeeStatus() {
           </div>
         )}
       </div>
+      
+      <Modal
+        isOpen={!!receiptModal}
+        onClose={() => setReceiptModal(null)}
+        title="Receipt Preview"
+        size="xl"
+      >
+        <Receipt
+          receipt={receiptModal}
+          onClose={() => setReceiptModal(null)}
+          onPrint={() => window.print()}
+        />
+      </Modal>
     </div>
   );
 }
