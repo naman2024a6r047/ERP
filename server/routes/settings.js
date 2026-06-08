@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Setting } = require('../models');
-const { protect, authorize } = require('../utils/auth');
+const { protect, authorize } = require('../middleware/auth');
 
 // GET /api/settings - Public (or protected if you want only logged-in users to see)
 // Since receipt generation needs it, it can be protected for all users.
