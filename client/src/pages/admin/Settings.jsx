@@ -115,17 +115,41 @@ export default function Settings() {
               />
             </div>
 
-            {/* Logo could just be a URL for simplicity, or we can add file upload later */}
+            {/* Logo Image Upload */}
             <div className="space-y-1 sm:col-span-2">
-              <label className="text-sm font-semibold text-gray-700">Logo URL (Optional)</label>
-              <input
-                type="url"
-                name="school_logo_url"
-                value={settings.school_logo_url || ''}
-                onChange={handleChange}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500 transition-colors"
-                placeholder="https://example.com/logo.png"
-              />
+              <label className="text-sm font-semibold text-gray-700">School Logo</label>
+              <div className="flex items-center gap-4">
+                {settings.school_logo_url && (
+                  <img 
+                    src={settings.school_logo_url} 
+                    alt="Logo preview" 
+                    className="h-12 w-12 object-contain rounded border border-gray-200"
+                  />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const formData = new FormData();
+                    formData.append('logo', file);
+                    
+                    const loadingToast = toast.loading('Uploading logo...');
+                    try {
+                      const res = await API.post('/settings/upload-logo', formData, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                      });
+                      setSettings(prev => ({ ...prev, school_logo_url: res.data.url }));
+                      toast.success('Logo uploaded!', { id: loadingToast });
+                    } catch (err) {
+                      toast.error('Failed to upload logo', { id: loadingToast });
+                    }
+                  }}
+                  className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors"
+                />
+              </div>
             </div>
 
             <div className="space-y-1 sm:col-span-2">

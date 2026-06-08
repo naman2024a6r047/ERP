@@ -51,4 +51,64 @@ router.put('/', protect, authorize('admin'), async (req, res) => {
   }
 });
 
+// Configure multer for logo uploads
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = path.join(__dirname, '..', 'public', 'uploads');
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    // Save as school-logo.ext or similar
+    const ext = path.extname(file.originalname);
+    cb(null, `school-logo-${Date.now()}${ext}`);
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only images are allowed'));
+    }
+  }
+}).single('logo');
+
+// POST /api/settings/upload-logo - Upload logo image (Admin only)
+router.post('/upload-logo', protect, authorize('admin'), (req, res) => {
+  upload(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ message: err.message || 'File upload failed.' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded.' });
+    }
+
+    try {
+      // The file is accessible via /uploads/filename
+      const fileUrl = `/uploads/${req.file.filename}`;
+      
+      // Update the logo URL setting
+      await Setting.upsert({
+        key: 'school_logo_url',
+        value: fileUrl
+      });
+
+      res.json({ message: 'Logo uploaded successfully', url: fileUrl });
+    } catch (dbErr) {
+      console.error('[POST /settings/upload-logo db]', dbErr);
+      res.status(500).json({ message: 'Database error saving logo url.' });
+    }
+  });
+});
+
 module.exports = router;
