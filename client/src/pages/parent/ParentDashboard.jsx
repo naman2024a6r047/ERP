@@ -37,24 +37,7 @@ const subjectColors = {
   Free:            'bg-gray-100 text-gray-400',
 };
 
-const examData = [
-  { name: 'Math Unit Test', date: '15 May 2025, Thursday', left: '2 Days Left', color: 'bg-blue-50 text-blue-600 border-blue-100' },
-  { name: 'Science Quiz', date: '22 May 2025, Thursday', left: '9 Days Left', color: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
-];
-
-const marksData = [
-  { subject: 'English', marks: 87, max: 100, grade: 'A', bg: 'bg-slate-50' },
-  { subject: 'Hindi', marks: 92, max: 100, grade: 'A+', bg: 'bg-white' },
-  { subject: 'Mathematics', marks: 95, max: 100, grade: 'A+', bg: 'bg-slate-50' },
-  { subject: 'Science', marks: 89, max: 100, grade: 'A', bg: 'bg-white' },
-  { subject: 'Social Studies', marks: 84, max: 100, grade: 'A', bg: 'bg-slate-50' },
-];
-
-const noticesData = [
-  { title: 'Summer Break 2025', desc: 'School will remain closed from 25 May to 10 June 2025.', date: '12 May 2025', color: 'bg-cyan-100 text-cyan-600' },
-  { title: 'PTM Schedule', desc: 'Parent Teacher Meeting on 18 May 2025.', date: '10 May 2025', color: 'bg-red-100 text-red-600' },
-  { title: 'Annual Day Celebration', desc: 'Annual Day on 30 May 2025. All are invited!', date: '08 May 2025', color: 'bg-amber-100 text-amber-600' },
-];
+// Dynamic data will be fetched via API
 
 const quickLinks = [
   { label: 'Study Materials', icon: '', color: 'bg-cyan-50 border-cyan-100 hover:bg-cyan-100/40 text-cyan-600', path: '/parent/profile' },
@@ -118,6 +101,8 @@ export default function ParentDashboard() {
   // Integration states
   const [fees, setFees] = useState([]);
   const [attendance, setAttendance] = useState([]);
+  const [results, setResults] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [dashboardLoading, setDashboardLoading] = useState(true);
 
   useEffect(() => {
@@ -126,10 +111,14 @@ export default function ParentDashboard() {
 
     Promise.all([
       API.get(`/fees/student/${studentId}`).catch(() => ({ data: [] })),
-      API.get(`/attendance/student/${studentId}`).catch(() => ({ data: [] }))
-    ]).then(([feesRes, attRes]) => {
+      API.get(`/attendance/student/${studentId}`).catch(() => ({ data: [] })),
+      API.get(`/results/student/${studentId}`).catch(() => ({ data: [] })),
+      API.get(`/notifications`).catch(() => ({ data: [] }))
+    ]).then(([feesRes, attRes, resRes, notifRes]) => {
       setFees(feesRes.data || []);
       setAttendance(attRes.data || []);
+      setResults(resRes.data || []);
+      setNotifications(notifRes.data || []);
       setDashboardLoading(false);
     });
   }, [user?.linkedStudent?.id]);
@@ -152,6 +141,9 @@ export default function ParentDashboard() {
   const presentDays = attendance.filter(a => a.status === 'present').length;
   const attendancePercentage = totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(1) : 0;
 
+
+  const latestResult = results.length > 0 ? results[0] : null;
+  const overallGrade = latestResult?.grade || '—';
 
   return (
     <div className="space-y-6">
@@ -213,8 +205,8 @@ export default function ParentDashboard() {
           </div>
           <div className="mt-4 flex items-end justify-between">
             <div>
-              <h3 className="text-2xl font-extrabold text-slate-800 tracking-tight">A+</h3>
-              <p className="text-[10px] font-semibold text-slate-400 mt-1 uppercase tracking-wider">Excellent</p>
+              <h3 className="text-2xl font-extrabold text-slate-800 tracking-tight">{overallGrade}</h3>
+              <p className="text-[10px] font-semibold text-slate-400 mt-1 uppercase tracking-wider">Latest Grade</p>
             </div>
             {/* Sparkline line graph */}
             <div className="w-16 h-10">
@@ -398,19 +390,9 @@ export default function ParentDashboard() {
           </div>
 
           <div className="space-y-3.5 flex-1">
-            {examData.map((item, i) => (
-              <div key={i} className="flex items-center justify-between p-4 bg-slate-50/80 border border-slate-100 rounded-2xl">
-                <div>
-                  <h4 className="text-xs font-extrabold text-slate-800">{item.name}</h4>
-                  <p className="text-[10px] font-bold text-slate-400 mt-1.5 flex items-center gap-1">
-                    <span></span> {item.date}
-                  </p>
-                </div>
-                <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full border uppercase tracking-wider ${item.color}`}>
-                  {item.left}
-                </span>
-              </div>
-            ))}
+            <div className="text-center text-xs text-gray-400 mt-4">
+              No upcoming exams currently scheduled.
+            </div>
           </div>
         </div>
 
@@ -425,20 +407,28 @@ export default function ParentDashboard() {
           </div>
 
           <div className="space-y-3.5 flex-1">
-            {noticesData.map((item, i) => (
-              <div key={i} className="flex gap-3 px-1 py-1 hover:bg-slate-50/50 rounded-xl transition-colors">
-                <div className={`w-8 h-8 rounded-xl ${item.color} flex items-center justify-center text-lg font-bold flex-shrink-0 mt-0.5`}>
-                  
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <h4 className="text-xs font-extrabold text-slate-800 truncate">{item.title}</h4>
-                    <span className="text-[9px] font-bold text-slate-400 flex-shrink-0">{item.date}</span>
-                  </div>
-                  <p className="text-[10px] font-bold text-slate-500 mt-1 leading-normal">{item.desc}</p>
-                </div>
+            {notifications.length === 0 ? (
+              <div className="text-center text-xs text-gray-400 mt-4">
+                No recent notices.
               </div>
-            ))}
+            ) : (
+              notifications.slice(0, 3).map((item, i) => (
+                <div key={i} className="flex gap-3 px-1 py-1 hover:bg-slate-50/50 rounded-xl transition-colors">
+                  <div className={`w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg font-bold flex-shrink-0 mt-0.5`}>
+                    
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="text-xs font-extrabold text-slate-800 truncate">{item.title}</h4>
+                      <span className="text-[9px] font-bold text-slate-400 flex-shrink-0">
+                        {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}
+                      </span>
+                    </div>
+                    <p className="text-[10px] font-bold text-slate-500 mt-1 leading-normal">{item.message}</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -469,15 +459,21 @@ export default function ParentDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 font-bold text-slate-700">
-                  {marksData.map((row, i) => (
-                    <tr key={i} className={`hover:bg-slate-50/50 ${row.bg}`}>
-                      <td className="py-2.5 font-extrabold">{row.subject}</td>
-                      <td className="py-2.5 text-center">{row.marks} / {row.max}</td>
-                      <td className={`py-2.5 text-right font-black ${
-                        row.grade === 'A+' ? 'text-emerald-500' : 'text-blue-500'
-                      }`}>{row.grade}</td>
+                  {!latestResult ? (
+                    <tr>
+                      <td colSpan="3" className="py-4 text-center text-xs text-gray-400">No results published</td>
                     </tr>
-                  ))}
+                  ) : (
+                    (latestResult.subjects || []).map((row, i) => (
+                      <tr key={i} className={`hover:bg-slate-50/50 ${i % 2 === 0 ? 'bg-slate-50' : 'bg-white'}`}>
+                        <td className="py-2.5 font-extrabold">{row.subject}</td>
+                        <td className="py-2.5 text-center">{row.obtained_marks} / {row.max_marks}</td>
+                        <td className={`py-2.5 text-right font-black ${
+                          row.grade === 'A+' ? 'text-emerald-500' : 'text-blue-500'
+                        }`}>{row.grade}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -488,12 +484,12 @@ export default function ParentDashboard() {
             <div className="text-xs">
               <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Average Percentage</span>
               <p className="text-sm font-extrabold text-slate-700 mt-1 flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" /> 89.4%
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" /> {latestResult ? latestResult.percentage : 0}%
               </p>
             </div>
             <div className="text-right text-xs">
               <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Overall Grade</span>
-              <p className="text-sm font-black text-emerald-600 mt-1">A+</p>
+              <p className="text-sm font-black text-emerald-600 mt-1">{overallGrade}</p>
             </div>
           </div>
         </div>
