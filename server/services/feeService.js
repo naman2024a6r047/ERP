@@ -52,6 +52,16 @@ const getOrCreateFeeRecord = async (student, month, year, feeType = 'monthly', t
 
   if (existing) return { record: existing, created: false };
 
+  // If asking for monthly, check if an admission fee exists for this month.
+  // If so, the monthly fee is bundled inside it.
+  if (feeType === 'monthly') {
+    const existingAdmission = await Fee.findOne({
+      where: { student_id: student.id, month, year, fee_type: 'admission' },
+      ...options
+    });
+    if (existingAdmission) return { record: existingAdmission, created: false };
+  }
+
   // Get the fee amount from class structure
   const structure = await getFeeStructureForClass(student.class);
 
@@ -135,6 +145,12 @@ const getStudentsWithFeeStatus = async (month, year, filters = {}) => {
     const sJson  = s.toJSON();
     const fees   = feeMap[s.id] || [];
     let monthly = fees.find(f => f.fee_type === 'monthly');
+    const admission = fees.find(f => f.fee_type === 'admission');
+
+    // If an admission fee exists but no separate monthly fee, the admission fee serves as both
+    if (!monthly && admission) {
+      monthly = admission;
+    }
 
     const hasRealMonthly = !!monthly;
     if (!monthly) {
@@ -255,22 +271,24 @@ const createAdmissionFee = async (student, paidAmountOrTxn = 0, txnObj = null) =
   const year    = now.getFullYear();
 
   const structure = await getFeeStructureForClass(student.class);
-  const amount    = parseFloat(structure.admission_fee || 5000);
+  const admissionFee = parseFloat(structure.admission_fee || 5000);
+  const monthlyFee   = parseFloat(structure.monthly_fee || 2500);
+  const totalAmount  = admissionFee + monthlyFee;
 
-  if (amount <= 0) return null;
+  if (totalAmount <= 0) return null;
 
-  const status = paidAmount >= amount ? 'paid' : paidAmount > 0 ? 'partial' : 'unpaid';
+  const status = paidAmount >= totalAmount ? 'paid' : paidAmount > 0 ? 'partial' : 'unpaid';
 
   return await Fee.create({
     student_id:    student.id,
     month,
     year,
     fee_type:      'admission',
-    total_amount:  amount,
+    total_amount:  totalAmount,
     paid_amount:   paidAmount,
     status:        status,
     session_id:    student.session_id,
-    fee_breakdown: { admission: amount },
+    fee_breakdown: { admission: admissionFee, monthly: monthlyFee },
   }, options);
 };
 

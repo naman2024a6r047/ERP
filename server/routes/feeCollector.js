@@ -520,7 +520,6 @@ router.put('/admission-requests/:id', protect, authorize('admin', 'admin2'), asy
       const month = MONTHS[now.getMonth()];
       const year = now.getFullYear();
 
-      await getOrCreateFeeRecord(newStudent, month, year, 'monthly', txn);
       await createAdmissionFee(newStudent, parseFloat(request.admission_fee_paid || 0), txn);
     }
 

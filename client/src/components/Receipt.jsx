@@ -10,6 +10,8 @@ export default function Receipt({ receipt, onPrint, onClose }) {
 
   if (!receipt) return null;
 
+  const isAdmission = receipt.fee_type === 'admission' || receipt.payment?.fee_type === 'admission';
+
   const breakdown = Object.entries(receipt.fee_breakdown || {}).filter(
     ([, value]) => typeof value === 'number' || !Number.isNaN(Number(value))
   );
@@ -18,7 +20,9 @@ export default function Receipt({ receipt, onPrint, onClose }) {
     <div className="space-y-4 print:space-y-3">
       <div className="flex items-start justify-between gap-3 print:hidden">
         <div>
-          <h3 className="text-lg font-bold text-gray-800">Fee Receipt</h3>
+          <h3 className={`text-lg font-bold ${isAdmission ? 'text-purple-800' : 'text-gray-800'}`}>
+            {isAdmission ? 'Admission Receipt' : 'Fee Receipt'}
+          </h3>
           <p className="text-sm text-gray-500">Printable receipt layout for fee collection.</p>
         </div>
         <div className="flex gap-2">
@@ -56,10 +60,10 @@ export default function Receipt({ receipt, onPrint, onClose }) {
                 </p>
               </div>
             </div>
-            <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-right">
-              <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">Receipt No.</p>
-              <p className="text-sm font-bold text-blue-900">{receipt.receipt_number || 'Pending'}</p>
-              <p className="mt-1 text-xs text-blue-700">{receipt.date || receipt.receipt_date || '—'}</p>
+            <div className={`rounded-xl border px-4 py-2 text-right ${isAdmission ? 'border-purple-200 bg-purple-50' : 'border-blue-200 bg-blue-50'}`}>
+              <p className={`text-xs font-semibold uppercase tracking-wider ${isAdmission ? 'text-purple-700' : 'text-blue-700'}`}>Receipt No.</p>
+              <p className={`text-sm font-bold ${isAdmission ? 'text-purple-900' : 'text-blue-900'}`}>{receipt.receipt_number || 'Pending'}</p>
+              <p className={`mt-1 text-xs ${isAdmission ? 'text-purple-700' : 'text-blue-700'}`}>{receipt.date || receipt.receipt_date || '—'}</p>
             </div>
           </div>
         </div>
@@ -139,10 +143,10 @@ export default function Receipt({ receipt, onPrint, onClose }) {
                 </tr>
               )}
             </tbody>
-            <tfoot className="bg-blue-50">
+            <tfoot className={isAdmission ? 'bg-purple-50' : 'bg-blue-50'}>
               <tr>
                 <td className="px-4 py-3 font-semibold text-gray-800">Paid Amount</td>
-                <td className="px-4 py-3 text-right text-lg font-bold text-blue-900">
+                <td className={`px-4 py-3 text-right text-lg font-bold ${isAdmission ? 'text-purple-900' : 'text-blue-900'}`}>
                   Rs. {Number(receipt.paid_amount || receipt.payment?.paid_amount || 0).toLocaleString('en-IN')}
                 </td>
               </tr>
