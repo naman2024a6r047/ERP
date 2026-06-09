@@ -134,11 +134,6 @@ export default function FCAdmission() {
             </div>
           </div>
 
-          <div className="border-t border-gray-100 pt-4">
-            <label className={l}>Admission Fee Paid (₹)</label>
-            <input type="number" {...register('admission_fee_paid')} className={f} defaultValue={0} />
-          </div>
-
           <button type="submit" disabled={saving}
             className="w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl text-sm transition-colors">
             {saving ? 'Submitting...' : ' Submit Admission Request'}

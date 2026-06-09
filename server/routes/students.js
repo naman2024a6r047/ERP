@@ -144,7 +144,7 @@ router.put('/:id/approval', protect, authorize('admin'), validateStudentApproval
       const { getOrCreateFeeRecord, MONTHS } = require('../services/feeService');
       const now = new Date();
       await getOrCreateFeeRecord(student, MONTHS[now.getMonth()], now.getFullYear(), 'monthly', txn);
-      await createAdmissionFee(student, txn);
+      await createAdmissionFee(student, 0, txn);
     }
 
     await txn.commit();
@@ -227,7 +227,7 @@ router.post('/', protect, authorize('admin', 'admin2', 'fee_collector'), validat
       const month = MONTHS[now.getMonth()];
       const year  = now.getFullYear();
       await getOrCreateFeeRecord(student, month, year, 'monthly', txn);
-      await createAdmissionFee(student, txn);
+      await createAdmissionFee(student, 0, txn);
     }
 
     await txn.commit();
@@ -442,7 +442,7 @@ router.post('/bulk-upload', protect, authorize('admin', 'admin2', 'fee_collector
             const month = MONTHS[now.getMonth()];
             const year = now.getFullYear();
             await getOrCreateFeeRecord(student, month, year, 'monthly', txn);
-            await createAdmissionFee(student, txn);
+            await createAdmissionFee(student, 0, txn);
           }
 
           results.push({

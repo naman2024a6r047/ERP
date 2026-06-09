@@ -338,7 +338,9 @@ export default function FCCollect() {
                 <tbody>
                   {selected.fees.map(f => (
                     <tr key={f.id} className="border-b border-gray-50 hover:bg-gray-50">
-                      <td className="py-2.5 px-3 font-medium">{f.month}</td>
+                      <td className="py-2.5 px-3 font-medium">
+                        {f.fee_type === 'admission' ? `Admission + ${f.month}` : f.month}
+                      </td>
                       <td className="py-2.5 px-3">₹{Number(f.total_amount).toLocaleString()}</td>
                       <td className="py-2.5 px-3 text-green-600">₹{Number(f.paid_amount).toLocaleString()}</td>
                       <td className="py-2.5 px-3">{statusBadge(f.status)}</td>
