@@ -220,10 +220,11 @@ router.post('/collect-multiple-months', protect, authorize(...FC_ROLES), async (
 
     const results = [];
     let totalPaidInThisTransaction = 0;
-    const receiptNumber = generateReceiptNumber();
+    const baseReceiptNumber = generateReceiptNumber();
     const updatedFees = [];
 
-    for (const entry of months) {
+    for (let i = 0; i < months.length; i++) {
+      const entry = months[i];
       const { record } = await getOrCreateFeeRecord(
         student, entry.month, parseInt(year), 'monthly', txn
       );
@@ -239,6 +240,7 @@ router.post('/collect-multiple-months', protect, authorize(...FC_ROLES), async (
       }
 
       const status = newPaid >= totalAmount ? 'paid' : newPaid > 0 ? 'partial' : 'unpaid';
+      const uniqueReceiptNumber = `${baseReceiptNumber}-${i + 1}`;
 
       await record.update({
         paid_amount:    newPaid,
@@ -247,7 +249,7 @@ router.post('/collect-multiple-months', protect, authorize(...FC_ROLES), async (
         collected_by:   req.user.id,
         paid_date:      new Date().toISOString().split('T')[0],
         status,
-        receipt_number: receiptNumber,
+        receipt_number: uniqueReceiptNumber,
       }, { transaction: txn });
 
       totalPaidInThisTransaction += parseFloat(entry.amount);
@@ -265,7 +267,7 @@ router.post('/collect-multiple-months', protect, authorize(...FC_ROLES), async (
       paid_amount: totalPaidInThisTransaction,
       total_amount: updatedFees.reduce((sum, f) => sum + parseFloat(f.total_amount), 0),
       month: months.map(m => m.month.slice(0, 3)).join(', '),
-      receipt_number: receiptNumber,
+      receipt_number: baseReceiptNumber,
       fee_breakdown: Object.fromEntries(months.map(m => [`${m.month} Fee`, parseFloat(m.amount)])),
     };
 
