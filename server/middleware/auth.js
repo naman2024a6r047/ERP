@@ -1,5 +1,5 @@
 const jwt      = require('jsonwebtoken');
-const { User, Student } = require('../models');
+const { User, Student, Teacher } = require('../models');
 const { PERMISSIONS, ROLE_LEVELS } = require('../config/roles');
 
 /**
@@ -24,7 +24,10 @@ const protect = async (req, res, next) => {
     // so IDOR checks in fee/attendance routes work correctly
     req.user = await User.findByPk(decoded.id, {
       attributes: { exclude: ['password'] },
-      include: [{ model: Student, as: 'linkedStudent', attributes: ['id', 'first_name', 'last_name', 'class', 'section', 'approval_status'] }],
+      include: [
+        { model: Student, as: 'linkedStudent', attributes: ['id', 'first_name', 'last_name', 'class', 'section', 'approval_status'] },
+        { model: Teacher, as: 'linkedTeacher', attributes: ['id', 'name', 'subject', 'assigned_classes'] }
+      ],
     });
 
     if (!req.user || !req.user.is_active) {

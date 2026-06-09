@@ -3,6 +3,7 @@ const router  = express.Router();
 const { Op }  = require('sequelize');
 const { Attendance, Student } = require('../models');
 const { protect, hasPermission, authorize } = require('../middleware/auth');
+const { getTeacherAllowedClasses } = require('../utils/teacherAllowedClasses');
 
 // POST /api/attendance/bulk
 // ✅ admin, admin2, teacher
@@ -12,6 +13,13 @@ router.post('/bulk', protect, hasPermission('MANAGE_STUDENT_ATTENDANCE'), async 
 
     if (!date || !records?.length) {
       return res.status(400).json({ message: 'Date and records are required.' });
+    }
+
+    if (req.user.role === 'teacher') {
+      const allowedClasses = await getTeacherAllowedClasses(req.user.linked_teacher_id);
+      if (!allowedClasses.includes(cls)) {
+        return res.status(403).json({ message: 'Access denied. You can only mark attendance for your assigned classes.' });
+      }
     }
 
     const ops = records.map(r =>
@@ -56,6 +64,17 @@ router.get('/student/:studentId', protect, async (req, res) => {
       }
     }
 
+    if (req.user.role === 'teacher') {
+      const student = await Student.findByPk(req.params.studentId);
+      if (!student) {
+        return res.status(404).json({ message: 'Student not found.' });
+      }
+      const allowedClasses = await getTeacherAllowedClasses(req.user.linked_teacher_id);
+      if (!allowedClasses.includes(student.class)) {
+        return res.status(403).json({ message: 'Access denied. Student is not in your assigned classes.' });
+      }
+    }
+
     const { month, year } = req.query;
     const where = { student_id: req.params.studentId };
 
@@ -91,6 +110,13 @@ router.get('/class', protect, hasPermission('MANAGE_STUDENT_ATTENDANCE'), async 
   try {
     const { class: cls, section, date } = req.query;
 
+    if (req.user.role === 'teacher') {
+      const allowedClasses = await getTeacherAllowedClasses(req.user.linked_teacher_id);
+      if (!allowedClasses.includes(cls)) {
+        return res.status(403).json({ message: 'Access denied. You can only view attendance for your assigned classes.' });
+      }
+    }
+
     const students = await Student.findAll({
       where:  { class: cls, section, is_active: true },
       order:  [['roll_number', 'ASC']],
@@ -119,6 +145,13 @@ router.get('/class', protect, hasPermission('MANAGE_STUDENT_ATTENDANCE'), async 
 router.get('/report/monthly', protect, hasPermission('MANAGE_STUDENT_ATTENDANCE'), async (req, res) => {
   try {
     const { class: cls, section, month, year } = req.query;
+
+    if (req.user.role === 'teacher') {
+      const allowedClasses = await getTeacherAllowedClasses(req.user.linked_teacher_id);
+      if (!allowedClasses.includes(cls)) {
+        return res.status(403).json({ message: 'Access denied. You can only view attendance reports for your assigned classes.' });
+      }
+    }
 
     const start    = new Date(year, month - 1, 1);
     const end      = new Date(year, month, 0);

@@ -9,6 +9,8 @@ export default function InchargeResults() {
   const [loading, setLoading] = useState(true);
   const [examName, setExamName] = useState('');
   const [payload, setPayload] = useState({ incharge: null, exams: [], results: [] });
+  const [reviewNotes, setReviewNotes] = useState({});
+  const [actionLoading, setActionLoading] = useState({});
 
   const loadResults = async (selectedExam = '') => {
     if (!can(user, 'INCHARGE_REVIEW')) return;
@@ -30,6 +32,20 @@ export default function InchargeResults() {
     loadResults(examName);
   }, [examName]);
 
+  const handleReview = async (resultId, action) => {
+    setActionLoading((prev) => ({ ...prev, [resultId]: true }));
+    try {
+      const notes = reviewNotes[resultId] || '';
+      await API.put(`/results/${resultId}/incharge-review`, { action, notes });
+      toast.success(`Result ${action === 'approve' ? 'approved' : 'rejected'} successfully.`);
+      loadResults(examName);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Action failed.');
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [resultId]: false }));
+    }
+  };
+
   const groupedRows = useMemo(() => {
     const rows = new Map();
 
@@ -46,10 +62,17 @@ export default function InchargeResults() {
 
       const entry = rows.get(key);
       const examKey = result.exam_name || 'Exam';
-      if (!entry.exams[examKey]) entry.exams[examKey] = [];
+      if (!entry.exams[examKey]) {
+        entry.exams[examKey] = {
+          resultId: result.id,
+          workflowStatus: result.workflow_status,
+          rejectionReason: result.rejection_reason,
+          subjects: [],
+        };
+      }
 
       for (const subject of result.subjects || []) {
-        entry.exams[examKey].push({
+        entry.exams[examKey].subjects.push({
           subject: subject.subject,
           marks: `${subject.obtained_marks}/${subject.max_marks}`,
           grade: subject.grade,
@@ -102,7 +125,7 @@ export default function InchargeResults() {
           <div className="p-8 text-center text-sm text-gray-400">No results found for this class.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] text-sm">
+            <table className="w-full min-w-[1000px] text-sm">
               <thead className="bg-gray-50 text-left text-xs uppercase tracking-wider text-gray-500">
                 <tr>
                   <th className="px-4 py-3">Roll No.</th>
@@ -112,12 +135,14 @@ export default function InchargeResults() {
                   <th className="px-4 py-3">Marks</th>
                   <th className="px-4 py-3">Grade</th>
                   <th className="px-4 py-3">Entered By</th>
+                  <th className="px-4 py-3 text-center">Status</th>
+                  <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {groupedRows.flatMap((row) =>
-                  Object.entries(row.exams).flatMap(([exam, subjects], examIndex) =>
-                    subjects.map((subject, subjectIndex) => (
+                  Object.entries(row.exams).flatMap(([exam, examData], examIndex) =>
+                    examData.subjects.map((subject, subjectIndex) => (
                       <tr key={`${row.studentId}-${exam}-${subject.subject}-${subjectIndex}`} className="border-t border-gray-100">
                         <td className="px-4 py-3 text-gray-600">{subjectIndex === 0 && examIndex === 0 ? row.rollNumber : ''}</td>
                         <td className="px-4 py-3">
@@ -135,6 +160,67 @@ export default function InchargeResults() {
                         <td className="px-4 py-3 font-medium text-gray-800">{subject.marks}</td>
                         <td className="px-4 py-3">{subject.grade}</td>
                         <td className="px-4 py-3 text-gray-500">{subject.enteredBy}</td>
+                        {subjectIndex === 0 && (
+                          <td className="px-4 py-3 text-center border-l border-gray-100" rowSpan={examData.subjects.length}>
+                            {examData.workflowStatus === 'draft' && (
+                              <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">Draft</span>
+                            )}
+                            {examData.workflowStatus === 'submitted' && (
+                              <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">Pending Review</span>
+                            )}
+                            {examData.workflowStatus === 'incharge_approved' && (
+                              <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">Approved by Incharge</span>
+                            )}
+                            {examData.workflowStatus === 'admin2_approved' && (
+                              <span className="inline-flex items-center rounded-md bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700 ring-1 ring-inset ring-purple-700/10">Forwarded to Admin</span>
+                            )}
+                            {examData.workflowStatus === 'published' && (
+                              <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Published</span>
+                            )}
+                            {examData.workflowStatus === 'rejected' && (
+                              <div>
+                                <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">Rejected</span>
+                                {examData.rejectionReason && (
+                                  <p className="mt-1 text-xs text-red-500 max-w-[120px] mx-auto break-words font-normal">Reason: {examData.rejectionReason}</p>
+                                )}
+                              </div>
+                            )}
+                          </td>
+                        )}
+                        {subjectIndex === 0 && (
+                          <td className="px-4 py-3 text-center border-l border-gray-100" rowSpan={examData.subjects.length}>
+                            {examData.workflowStatus === 'submitted' ? (
+                              <div className="flex flex-col gap-2 min-w-[180px] max-w-[220px] mx-auto text-left">
+                                <input
+                                  type="text"
+                                  placeholder="Review notes (optional)..."
+                                  value={reviewNotes[examData.resultId] || ''}
+                                  onChange={(e) => setReviewNotes({ ...reviewNotes, [examData.resultId]: e.target.value })}
+                                  className="rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-blue-500 w-full"
+                                  disabled={actionLoading[examData.resultId]}
+                                />
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleReview(examData.resultId, 'approve')}
+                                    disabled={actionLoading[examData.resultId]}
+                                    className="flex-1 rounded bg-green-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:opacity-50"
+                                  >
+                                    Approve
+                                  </button>
+                                  <button
+                                    onClick={() => handleReview(examData.resultId, 'reject')}
+                                    disabled={actionLoading[examData.resultId]}
+                                    className="flex-1 rounded bg-red-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:opacity-50"
+                                  >
+                                    Reject
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 text-xs">—</span>
+                            )}
+                          </td>
+                        )}
                       </tr>
                     ))
                   )

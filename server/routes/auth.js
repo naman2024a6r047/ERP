@@ -43,7 +43,7 @@ router.post('/login', loginLimiter, validateLogin, async (req, res) => {
       where: { email, is_active: true },
       include: [
         { model: Student, as: 'linkedStudent', attributes: ['id', 'first_name', 'last_name', 'class', 'section', 'approval_status'] },
-        { model: Teacher, as: 'linkedTeacher', attributes: ['id', 'name', 'subject'] }
+        { model: Teacher, as: 'linkedTeacher', attributes: ['id', 'name', 'subject', 'assigned_classes'] }
       ]
     });
 

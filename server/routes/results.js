@@ -12,6 +12,7 @@ const {
 } = require('../models');
 const { protect, authorize, hasPermission } = require('../middleware/auth');
 const { validateResultCreate, validateResultInchargeReview } = require('../middleware/validator');
+const { getTeacherAllowedClasses } = require('../utils/teacherAllowedClasses');
 
 const calcGrade = (pct) =>
   pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B' : pct >= 60 ? 'C' : pct >= 40 ? 'D' : 'F';
@@ -60,6 +61,17 @@ router.get('/class', protect, authorize('admin', 'admin2', 'teacher'), async (re
     if (section) where.section = section;
     if (exam_name) where.exam_name = exam_name;
     if (workflow_status) where.workflow_status = workflow_status;
+
+    if (req.user.role === 'teacher') {
+      const allowedClasses = await getTeacherAllowedClasses(req.user.linked_teacher_id);
+      if (cls) {
+        if (!allowedClasses.includes(cls)) {
+          return res.status(403).json({ message: 'Access denied. You are not assigned to this class.' });
+        }
+      } else {
+        where.class = { [Op.in]: allowedClasses };
+      }
+    }
 
     const results = await Result.findAll({
       where,
@@ -175,11 +187,22 @@ router.post('/', protect, authorize('admin', 'admin2', 'teacher'), validateResul
     } = req.body;
 
     if (req.user.role === 'teacher') {
-      const teacherRecord = await Teacher.findByPk(req.user.linked_teacher_id);
-      const subject = subjects?.[0]?.subject;
-      const allowed = await teacherCanEnter(teacherRecord, cls, section, subject);
-      if (!allowed) {
-        return res.status(403).json({ message: 'You are not assigned to this class or subject.' });
+      const isIncharge = await ClassIncharge.findOne({
+        where: {
+          teacher_id: req.user.linked_teacher_id,
+          class: cls,
+          section: section,
+          is_active: true
+        }
+      });
+
+      if (!isIncharge) {
+        const teacherRecord = await Teacher.findByPk(req.user.linked_teacher_id);
+        const subject = subjects?.[0]?.subject;
+        const allowed = await teacherCanEnter(teacherRecord, cls, section, subject);
+        if (!allowed) {
+          return res.status(403).json({ message: 'You are not assigned to this class or subject, and you are not the class incharge.' });
+        }
       }
     }
 

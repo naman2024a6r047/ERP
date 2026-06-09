@@ -1,8 +1,9 @@
 const express = require('express');
 const { Op, fn, col } = require('sequelize');
-const { Student, Teacher, Fee, Attendance, AdmissionRequest, Notification } = require('../models');
+const { Student, Teacher, Fee, Attendance, AdmissionRequest, Notification, ClassIncharge, Timetable, Event, Result } = require('../models');
 const { protect, authorize } = require('../middleware/auth');
 const { MONTHS } = require('../services/feeService');
+const { getTeacherAllowedClasses } = require('../utils/teacherAllowedClasses');
 
 const router = express.Router();
 
@@ -270,6 +271,166 @@ router.get('/chart', protect, authorize('admin', 'admin2'), async (req, res) => 
     });
   } catch (err) {
     console.error('[dashboard][GET /chart]', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/dashboard/teacher - Retrieve real-time dashboard statistics for teachers
+router.get('/teacher', protect, authorize('teacher'), async (req, res) => {
+  try {
+    const teacher = await Teacher.findByPk(req.user.linked_teacher_id);
+    if (!teacher) {
+      return res.status(404).json({ message: 'Teacher record not found.' });
+    }
+
+    const allowedClasses = await getTeacherAllowedClasses(req.user.linked_teacher_id);
+    const today = new Date().toISOString().split('T')[0];
+
+    const [
+      totalStudents,
+      todayAttendance,
+      allAttendanceStats,
+      incharges,
+      notifications,
+      upcomingEvents
+    ] = await Promise.all([
+      // 1. Total students in allowed classes
+      Student.count({
+        where: {
+          class: { [Op.in]: allowedClasses },
+          is_active: true,
+          approval_status: 'approved'
+        }
+      }),
+      // 2. Today's attendance summary
+      Attendance.findAll({
+        where: {
+          class: { [Op.in]: allowedClasses },
+          date: today
+        },
+        attributes: ['status', [fn('COUNT', col('id')), 'count']],
+        group: ['status']
+      }),
+      // 3. All attendance stats for average percentage
+      Attendance.findAll({
+        where: {
+          class: { [Op.in]: allowedClasses }
+        },
+        attributes: ['status', [fn('COUNT', col('id')), 'count']],
+        group: ['status']
+      }),
+      // 4. Incharge classes for pending result approvals
+      ClassIncharge.findAll({
+        where: { teacher_id: req.user.linked_teacher_id, is_active: true }
+      }),
+      // 5. Announcements
+      Notification.findAll({
+        where: {
+          is_active: true,
+          [Op.or]: [
+            { recipient_type: 'all' },
+            { recipient_type: 'role', recipient_role: { [Op.in]: ['all', 'teachers'] } },
+            { recipient_type: 'individual', recipient_user_id: req.user.id }
+          ]
+        },
+        order: [['created_at', 'DESC']],
+        limit: 5
+      }),
+      // 6. Upcoming events
+      Event.findAll({
+        where: {
+          is_active: true,
+          event_date: { [Op.gte]: new Date().setHours(0, 0, 0, 0) }
+        },
+        order: [['event_date', 'ASC']],
+        limit: 5
+      })
+    ]);
+
+    // Process attendance today
+    const attendanceMap = todayAttendance.reduce((acc, row) => {
+      acc[row.status] = Number(row.get('count') || 0);
+      return acc;
+    }, {});
+    const marked = Object.values(attendanceMap).reduce((sum, count) => sum + count, 0);
+
+    // Process overall attendance percentage
+    const allAttMap = allAttendanceStats.reduce((acc, row) => {
+      acc[row.status] = Number(row.get('count') || 0);
+      return acc;
+    }, {});
+    const allPresent = (allAttMap.present || 0) + (allAttMap.late || 0);
+    const allMarked = Object.values(allAttMap).reduce((sum, count) => sum + count, 0);
+    const averageAttendancePercentage = allMarked ? Math.round((allPresent / allMarked) * 100) : 0;
+
+    // Process pending approvals
+    let pendingResultApprovals = 0;
+    if (incharges.length > 0) {
+      pendingResultApprovals = await Result.count({
+        where: {
+          workflow_status: 'submitted',
+          [Op.or]: incharges.map(i => ({ class: i.class, section: i.section }))
+        }
+      });
+    }
+
+    // Process Timetable Today
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const todayDayName = days[new Date().getDay()];
+    let timetableToday = [];
+
+    if (todayDayName !== 'Sunday') {
+      timetableToday = await Timetable.findAll({
+        where: {
+          teacher_id: teacher.id,
+          day: todayDayName
+        },
+        order: [['period_number', 'ASC']]
+      });
+    }
+
+    const slots = timetableToday.map(t => ({ class: t.class, section: t.section }));
+    const studentCounts = {};
+    if (slots.length > 0) {
+      const counts = await Student.findAll({
+        where: {
+          is_active: true,
+          approval_status: 'approved',
+          [Op.or]: slots.map(s => ({ class: s.class, section: s.section }))
+        },
+        attributes: ['class', 'section', [fn('COUNT', col('id')), 'count']],
+        group: ['class', 'section']
+      });
+      counts.forEach(c => {
+        const key = `${c.class}_${c.section}`;
+        studentCounts[key] = Number(c.get('count') || 0);
+      });
+    }
+
+    const timetableWithStudentCounts = timetableToday.map(t => {
+      const key = `${t.class}_${t.section}`;
+      return {
+        ...t.toJSON(),
+        student_count: studentCounts[key] || 0
+      };
+    });
+
+    res.json({
+      stats: {
+        assigned_classes: allowedClasses.length,
+        total_students: totalStudents,
+        attendance_present: (attendanceMap.present || 0) + (attendanceMap.late || 0),
+        attendance_marked: marked,
+        attendance_percentage: averageAttendancePercentage,
+        pending_approvals: pendingResultApprovals
+      },
+      timetable: timetableWithStudentCounts,
+      announcements: notifications,
+      events: upcomingEvents
+    });
+
+  } catch (err) {
+    console.error('[dashboard][GET /teacher]', err);
     res.status(500).json({ message: err.message });
   }
 });

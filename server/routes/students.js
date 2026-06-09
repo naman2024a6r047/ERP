@@ -1,7 +1,9 @@
 const express = require('express');
 const router  = express.Router();
 const { Op }  = require('sequelize');
-const { Student, Session, User } = require('../models');
+const { Student, Session, User, Teacher, ClassIncharge } = require('../models');
+
+const { getTeacherAllowedClasses } = require('../utils/teacherAllowedClasses');
 const { protect, hasPermission, isSuperAdmin, authorize } = require('../middleware/auth');
 const { createAdmissionFee } = require('../services/feeService');
 const { makeStudentId, makeStudentEmail, makeTemporaryPassword } = require('../utils/credentialGenerator');
@@ -49,6 +51,17 @@ router.get('/', protect, hasPermission('VIEW_STUDENTS'), async (req, res) => {
     if (session_id)     where.session_id     = session_id;
     if (student_status) where.student_status = student_status;
     if (source)         where.source         = source;
+
+    if (req.user.role === 'teacher') {
+      const allowedClasses = await getTeacherAllowedClasses(req.user.linked_teacher_id);
+      if (cls) {
+        if (!allowedClasses.includes(cls)) {
+          return res.status(403).json({ message: 'Access denied. You are not assigned to this class.' });
+        }
+      } else {
+        where.class = { [Op.in]: allowedClasses };
+      }
+    }
 
     if (search) {
       where[Op.or] = [
@@ -149,6 +162,14 @@ router.get('/:id', protect, hasPermission('VIEW_STUDENTS'), async (req, res) => 
       include: [{ model: Session, as: 'session' }]
     });
     if (!student) return res.status(404).json({ message: 'Student not found.' });
+
+    if (req.user.role === 'teacher') {
+      const allowedClasses = await getTeacherAllowedClasses(req.user.linked_teacher_id);
+      if (!allowedClasses.includes(student.class)) {
+        return res.status(403).json({ message: 'Access denied. Student is not in your assigned classes.' });
+      }
+    }
+
     res.json(student);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
