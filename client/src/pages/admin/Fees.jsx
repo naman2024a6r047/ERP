@@ -277,29 +277,27 @@ export default function Fees() {
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap">
                         <div className="flex gap-2">
-                          {s.fee_status === 'paid' ? (
+                          {isPaid ? (
                             <button
-                              onClick={() => generateFeeReceipt(feeRec, s, settings)}
-                              className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-2 py-1 rounded"
-                            >
+                               onClick={() => generateFeeReceipt(feeRec, s, settings)}
+                               className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 font-medium"
+                             >
                                Receipt
                             </button>
                           ) : (
-                            <>
-                              <button
-                                onClick={() => setCollect(s)}
-                                className="text-xs bg-blue-500 text-white px-2.5 py-1 rounded-lg hover:bg-blue-600 font-medium"
-                              >
-                                Collect
-                              </button>
-                              <button
-                                onClick={() => setMultiModal(s)}
-                                className="text-xs border border-blue-200 text-blue-600 px-2.5 py-1 rounded-lg hover:bg-blue-50 font-medium"
-                              >
-                                Multi-Month
-                              </button>
-                            </>
+                            <button
+                              onClick={() => setCollect(s)}
+                              className="text-xs bg-blue-500 text-white px-2.5 py-1 rounded-lg hover:bg-blue-600 font-medium"
+                            >
+                              Collect
+                            </button>
                           )}
+                          <button
+                            onClick={() => setMultiModal(s)}
+                            className="text-xs border border-indigo-200 text-indigo-600 px-2.5 py-1 rounded-lg hover:bg-indigo-50 font-medium"
+                          >
+                            Multi-Month
+                          </button>
                         </div>
                       </td>
                     </tr>

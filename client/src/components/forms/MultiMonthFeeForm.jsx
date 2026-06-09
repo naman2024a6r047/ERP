@@ -22,7 +22,7 @@ export default function MultiMonthFeeForm({ student, year, onSubmit, loading }) 
     API.get(`/fees/student/${student.id}`)
       .then(r => {
         // Filter fees for the current year
-        const currentYearFees = r.data.filter(f => parseInt(f.year) === parseInt(year) && f.fee_type === 'monthly');
+        const currentYearFees = r.data.filter(f => parseInt(f.year) === parseInt(year) && (f.fee_type === 'monthly' || f.fee_type === 'admission'));
         setStudentFees(currentYearFees);
       })
       .catch(() => toast.error('Failed to load student fee records.'))
