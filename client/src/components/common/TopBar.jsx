@@ -50,7 +50,68 @@ export default function TopBar({ title, onMenuClick }) {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [session, setSession] = useState('2024-25');
+  const [sessions, setSessions] = useState([]);
+  const [activeSession, setActiveSession] = useState(null);
+  const [selectedSessionId, setSelectedSessionId] = useState('');
+  const [loadingSessions, setLoadingSessions] = useState(true);
+
+  useEffect(() => {
+    const fetchSessionData = async () => {
+      try {
+        if (user?.role === 'admin' || user?.role === 'admin2') {
+          // Admins can fetch all sessions
+          const res = await API.get('/session');
+          const list = res.data || [];
+          setSessions(list);
+          const active = list.find(s => s.is_active);
+          if (active) {
+            setActiveSession(active);
+            setSelectedSessionId(active.id);
+          }
+        } else {
+          // Other roles can only fetch the active session
+          const res = await API.get('/session/active');
+          if (res.data) {
+            setActiveSession(res.data);
+            setSelectedSessionId(res.data.id);
+            setSessions([res.data]);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load session data:', err);
+      } finally {
+        setLoadingSessions(false);
+      }
+    };
+
+    if (user) {
+      fetchSessionData();
+    }
+  }, [user]);
+
+  const handleSessionChange = async (e) => {
+    const sessionId = e.target.value;
+    setSelectedSessionId(sessionId);
+
+    if (user?.role !== 'admin') {
+      toast.error('Only Super Admin can activate academic sessions.');
+      return;
+    }
+
+    const toastId = toast.loading('Activating session...');
+    try {
+      await API.put(`/session/${sessionId}/activate`);
+      toast.success('Session activated successfully!', { id: toastId });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to activate session.', { id: toastId });
+      if (activeSession) {
+        setSelectedSessionId(activeSession.id);
+      }
+    }
+  };
   const [unreadNotifsCount, setUnreadNotifsCount] = useState(0);
 
   useEffect(() => {
@@ -110,12 +171,20 @@ export default function TopBar({ title, onMenuClick }) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           <select
-            value={session}
-            onChange={(e) => setSession(e.target.value)}
-            className="pl-9 pr-8 py-2 bg-slate-50 border border-slate-100 hover:border-slate-200 text-xs font-bold text-slate-700 rounded-xl outline-none appearance-none cursor-pointer transition-all"
+            value={selectedSessionId}
+            onChange={handleSessionChange}
+            disabled={user?.role !== 'admin' || loadingSessions}
+            className="pl-9 pr-8 py-2 bg-slate-50 border border-slate-100 hover:border-slate-200 text-xs font-bold text-slate-700 rounded-xl outline-none appearance-none cursor-pointer transition-all disabled:opacity-85 disabled:cursor-not-allowed"
           >
-            <option value="2024-25">Academic Session 2024-25</option>
-            <option value="2023-24">Academic Session 2023-24</option>
+            {loadingSessions ? (
+              <option>Loading...</option>
+            ) : (
+              sessions.map(s => (
+                <option key={s.id} value={s.id}>
+                  {s.is_active ? `Active Session: ${s.name}` : `Session: ${s.name}`}
+                </option>
+              ))
+            )}
           </select>
           <svg className="w-3.5 h-3.5 text-slate-400 absolute right-3 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
