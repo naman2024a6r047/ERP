@@ -35,26 +35,53 @@ export default function MultiMonthFeeForm({ student, year, onSubmit, loading }) 
   // Map month status: paid, unpaid, or lock (not allowed to select yet)
   const getMonthStatus = () => {
     const statuses = {};
-    let firstUnpaidFound = false;
+    
+    let lastPaidIndex = -1;
+    let firstRecordIndex = -1;
 
-    MONTHS_LIST.forEach(m => {
+    MONTHS_LIST.forEach((m, idx) => {
       const record = studentFees.find(f => f.month === m);
+      if (record) {
+        if (firstRecordIndex === -1) firstRecordIndex = idx;
+        if (record.status === 'paid') lastPaidIndex = idx;
+      }
+    });
+
+    MONTHS_LIST.forEach((m, idx) => {
+      const record = studentFees.find(f => f.month === m);
+
       if (record && record.status === 'paid') {
         statuses[m] = 'paid';
       } else {
-        if (!firstUnpaidFound) {
-          statuses[m] = 'unpaid'; // Next sequentially unpaid month
-          firstUnpaidFound = true;
-        } else {
-          // If a previous unpaid month was selected, unlock the next one sequentially
-          // E.g., if Jan is unpaid and selected, Feb is allowed.
-          const prevMonthIndex = MONTHS_LIST.indexOf(m) - 1;
-          const prevMonth = prevMonthIndex >= 0 ? MONTHS_LIST[prevMonthIndex] : null;
-          
-          if (prevMonth && selectedMonths.includes(prevMonth)) {
+        const prevMonth = idx > 0 ? MONTHS_LIST[idx - 1] : null;
+
+        if (lastPaidIndex !== -1) {
+          // If there's a paid month, start unlocking right after the last paid month
+          if (idx <= lastPaidIndex) {
+            statuses[m] = 'locked';
+          } else if (idx === lastPaidIndex + 1) {
             statuses[m] = 'unpaid';
           } else {
+            if (prevMonth && selectedMonths.includes(prevMonth)) {
+              statuses[m] = 'unpaid';
+            } else {
+              statuses[m] = 'locked';
+            }
+          }
+        } else {
+          // No paid months yet. Start from the very first month that has a record.
+          const startIndex = firstRecordIndex !== -1 ? firstRecordIndex : 0;
+          
+          if (idx < startIndex) {
             statuses[m] = 'locked';
+          } else if (idx === startIndex) {
+            statuses[m] = 'unpaid';
+          } else {
+            if (prevMonth && selectedMonths.includes(prevMonth)) {
+              statuses[m] = 'unpaid';
+            } else {
+              statuses[m] = 'locked';
+            }
           }
         }
       }
