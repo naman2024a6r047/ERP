@@ -12,6 +12,8 @@ export default function Receipt({ receipt, onPrint, onClose }) {
 
   const isAdmission = receipt.fee_type === 'admission' || receipt.payment?.fee_type === 'admission';
 
+  const isSessionStart = receipt.fee_type === 'session_start' || receipt.payment?.fee_type === 'session_start';
+
   const breakdown = Object.entries(receipt.fee_breakdown || {}).filter(
     ([, value]) => typeof value === 'number' || !Number.isNaN(Number(value))
   );
@@ -20,8 +22,8 @@ export default function Receipt({ receipt, onPrint, onClose }) {
     <div className="space-y-4 print:space-y-3">
       <div className="flex items-start justify-between gap-3 print:hidden">
         <div>
-          <h3 className={`text-lg font-bold ${isAdmission ? 'text-purple-800' : 'text-gray-800'}`}>
-            {isAdmission ? 'Admission Receipt' : 'Fee Receipt'}
+          <h3 className={`text-lg font-bold ${isAdmission ? 'text-purple-800' : isSessionStart ? 'text-blue-800' : 'text-gray-800'}`}>
+            {isAdmission ? 'Admission Receipt' : isSessionStart ? 'Session Fee Receipt' : 'Fee Receipt'}
           </h3>
           <p className="text-sm text-gray-500">Printable receipt layout for fee collection.</p>
         </div>

@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 const FEE_FIELDS = [
   { key: 'monthly_fee',   label: 'Monthly Fee',   icon: '📅' },
   { key: 'admission_fee', label: 'Admission Fee',  icon: '🎓' },
-  { key: 'annual_fee',    label: 'Annual Fee',     icon: '📆' },
+  { key: 'annual_fee',    label: 'Session Fee',    icon: '📆' },
   { key: 'promotion_fee', label: 'Promotion Fee',  icon: '🔁' },
   { key: 'exam_fee',      label: 'Exam Fee',       icon: '📝' },
 ];

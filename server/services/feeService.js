@@ -292,15 +292,14 @@ const createAdmissionFee = async (student, paidAmountOrTxn = 0, txnObj = null) =
   }, options);
 };
 
-/**
- * Create promotion fee for a student being promoted.
- */
 const createPromotionFee = async (student, toClass, sessionId, txn = null) => {
   const options   = txn ? { transaction: txn } : {};
   const structure = await getFeeStructureForClass(toClass);
-  const amount    = parseFloat(structure.promotion_fee || 0);
+  const promotionAmt = parseFloat(structure.promotion_fee || 0);
+  const sessionAmt   = parseFloat(structure.annual_fee || 0);
+  const totalAmount  = promotionAmt + sessionAmt;
 
-  if (amount <= 0) return null;
+  if (totalAmount <= 0) return null;
 
   const now   = new Date();
   const month = MONTHS[now.getMonth()];
@@ -310,12 +309,12 @@ const createPromotionFee = async (student, toClass, sessionId, txn = null) => {
     student_id:    student.id,
     month,
     year,
-    fee_type:      'promotion',
-    total_amount:  amount,
+    fee_type:      'session_start',
+    total_amount:  totalAmount,
     paid_amount:   0,
     status:        'unpaid',
     session_id:    sessionId,
-    fee_breakdown: { promotion: amount, to_class: toClass },
+    fee_breakdown: { promotion: promotionAmt, session: sessionAmt, to_class: toClass },
   }, options);
 };
 

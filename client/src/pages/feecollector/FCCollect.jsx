@@ -339,7 +339,9 @@ export default function FCCollect() {
                   {selected.fees.map(f => (
                     <tr key={f.id} className="border-b border-gray-50 hover:bg-gray-50">
                       <td className="py-2.5 px-3 font-medium">
-                        {f.fee_type === 'admission' ? `Admission + ${f.month}` : f.month}
+                        {f.fee_type === 'admission' ? `Admission + ${f.month}` : 
+                         f.fee_type === 'session_start' ? `Session Fee + ${f.month}` : 
+                         f.month}
                       </td>
                       <td className="py-2.5 px-3">₹{Number(f.total_amount).toLocaleString()}</td>
                       <td className="py-2.5 px-3 text-green-600">₹{Number(f.paid_amount).toLocaleString()}</td>
@@ -377,7 +379,7 @@ export default function FCCollect() {
       <Modal
         isOpen={!!feeModal}
         onClose={() => setFeeModal(null)}
-        title={`Collect Payment — ${feeModal?.month}`}
+        title={`Collect Payment — ${feeModal?.fee_type === 'admission' ? 'Admission + ' + feeModal?.month : feeModal?.fee_type === 'session_start' ? 'Session Fee + ' + feeModal?.month : feeModal?.month}`}
       >
         <FeeForm fee={feeModal} onSubmit={handleCollect} loading={collecting} />
       </Modal>
