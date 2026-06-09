@@ -23,7 +23,7 @@ const navConfig = {
       section: 'FINANCIALS',
       items: [
         { icon: 'fees', label: 'Fee Management', to: '/admin/fees' },
-        { icon: 'class-fees', label: 'Class Fees', to: '/admin/class-fees' },
+        { icon: 'class-fees', label: 'Fee Structure', to: '/admin/fee-structure' },
       ],
     },
     {

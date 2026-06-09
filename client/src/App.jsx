@@ -17,7 +17,7 @@ import Marks from './pages/admin/Marks';
 import Timetable from './pages/admin/Timetable';
 import Promotion from './pages/admin/Promotion';
 import Notifications from './pages/admin/Notifications';
-import ClassFees from './pages/admin/ClassFees';
+import FeeStructure from './pages/admin/FeeStructure';
 import Events from './pages/admin/Events';
 import AdminTeacherAttendance from './pages/admin/TeacherAttendance';
 import Settings from './pages/admin/Settings';
@@ -77,8 +77,7 @@ export default function App() {
             <Route path="teacher-attendance" element={<AdminTeacherAttendance />} />
             <Route path="attendance" element={<Attendance />} />
             <Route path="fees" element={<Fees />} />
-            <Route path="class-fees" element={<ClassFees />} />
-            <Route path="fee-structure" element={<ClassFees />} />
+            <Route path="fee-structure" element={<FeeStructure />} />
             <Route path="marks" element={<Marks />} />
             <Route path="timetable" element={<Timetable />} />
             <Route path="promotion" element={<Promotion />} />
