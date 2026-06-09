@@ -277,7 +277,7 @@ export default function Fees() {
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap">
                         <div className="flex gap-2">
-                          {isPaid ? (
+                          {s.fee_status === 'paid' ? (
                             <button
                                onClick={() => generateFeeReceipt(feeRec, s, settings)}
                                className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 font-medium"
