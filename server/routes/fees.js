@@ -313,6 +313,9 @@ router.post('/collect-multiple-months', protect, hasPermission('COLLECT_FEES'), 
     if (!student) { await txn.rollback(); return res.status(404).json({ message: 'Student not found.' }); }
 
     const results = [];
+    let totalPaidInThisTransaction = 0;
+    const receiptNumber = generateReceiptNumber();
+    const updatedFees = [];
 
     for (const entry of months) {
       const { record } = await getOrCreateFeeRecord(
@@ -340,18 +343,37 @@ router.post('/collect-multiple-months', protect, hasPermission('COLLECT_FEES'), 
         collected_by:   req.user.id,
         paid_date:      new Date().toISOString().split('T')[0],
         status,
-        receipt_number: generateReceiptNumber(),
+        receipt_number: receiptNumber, // Use single consolidated receipt number
       }, { transaction: txn });
 
+      totalPaidInThisTransaction += parseFloat(entry.amount);
       results.push({ month: entry.month, status, paid: newPaid });
+      updatedFees.push(record);
     }
 
     await txn.commit();
+
+    const collectedByUser = await User.findByPk(req.user.id, { attributes: ['id', 'name'] });
+
+    // Build consolidated receipt data
+    const consolidatedFeeMock = {
+      ...updatedFees[0].toJSON(),
+      fee_type: 'monthly_multi',
+      paid_amount: totalPaidInThisTransaction,
+      total_amount: updatedFees.reduce((sum, f) => sum + parseFloat(f.total_amount), 0),
+      month: months.map(m => m.month.slice(0, 3)).join(', '),
+      receipt_number: receiptNumber,
+      fee_breakdown: Object.fromEntries(months.map(m => [`${m.month} Fee`, parseFloat(m.amount)])),
+    };
+
+    const receipt = buildReceiptData(consolidatedFeeMock, student, collectedByUser);
 
     res.json({
       message:        `Fees collected for ${months.length} month(s).`,
       student:        { id: student.id, name: `${student.first_name} ${student.last_name}` },
       months_updated: results,
+      receipt,
+      fee: consolidatedFeeMock,
     });
   } catch (err) {
     await txn.rollback();

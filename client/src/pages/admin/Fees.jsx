@@ -3,6 +3,7 @@ import API from '../../utils/api';
 import Modal from '../../components/common/Modal';
 import StatCard from '../../components/common/StatCard';
 import FeeForm from '../../components/forms/FeeForm';
+import MultiMonthFeeForm from '../../components/forms/MultiMonthFeeForm';
 import { formatCurrency, feeStatusColor } from '../../utils/helpers';
 import { generateFeeReceipt } from '../../utils/pdfGenerator';
 import { useSettings } from '../../context/SettingsContext';
@@ -87,7 +88,7 @@ export default function Fees() {
   const handleMultiCollect = async (data) => {
     setCollecting(true);
     try {
-      await API.post('/fees/collect-multiple-months', {
+      const r = await API.post('/fees/collect-multiple-months', {
         student_id:   multiModal.id,
         months:       data.months,
         year:         parseInt(year),
@@ -95,6 +96,7 @@ export default function Fees() {
         remarks:      data.remarks,
       });
       toast.success(`Fees collected for ${data.months.length} months!`);
+      if (r.data.receipt) generateFeeReceipt(r.data.fee, multiModal, settings);
       setMultiModal(null);
       load();
     } catch (err) {
@@ -367,102 +369,4 @@ export default function Fees() {
     </div>
   );
 }
-
-// ── Multi-month payment form ───────────────────────────────────────────────────
-function MultiMonthFeeForm({ student, year, onSubmit, loading }) {
-  const [selectedMonths, setSelectedMonths] = useState([]);
-  const [mode, setMode]                     = useState('cash');
-  const [remarks, setRemarks]               = useState('');
-  const [feeAmount, setFeeAmount]           = useState(2500);
-
-  useEffect(() => {
-    API.get(`/fees/structure/${student.class}`)
-      .then(r => setFeeAmount(parseFloat(r.data?.monthly_fee || 2500)))
-      .catch(() => {});
-  }, [student.class]);
-
-  const toggleMonth = (m) => {
-    setSelectedMonths(prev =>
-      prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]
-    );
-  };
-
-  const handleSubmit = () => {
-    if (!selectedMonths.length) return toast.error('Select at least one month.');
-    onSubmit({
-      months:       selectedMonths.map(m => ({ month: m, amount: feeAmount })),
-      payment_mode: mode,
-      remarks,
-    });
-  };
-
-  const MONTHS_LIST = ['January','February','March','April','May','June',
-                       'July','August','September','October','November','December'];
-
-  const f = 'border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 bg-white w-full';
-
-  return (
-    <div className="space-y-4">
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-800">
-        Monthly fee for {student.class}: <strong>{formatCurrency(feeAmount)}</strong>
-      </div>
-
-      {/* Month selection grid */}
-      <div>
-        <label className="block text-xs font-medium text-gray-500 mb-2">
-          Select Months for {year}
-        </label>
-        <div className="grid grid-cols-3 gap-2">
-          {MONTHS_LIST.map(m => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => toggleMonth(m)}
-              className={`py-2 px-3 rounded-xl text-xs font-medium border transition-all ${
-                selectedMonths.includes(m)
-                  ? 'bg-blue-500 text-white border-blue-500'
-                  : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              {m.slice(0, 3)}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {selectedMonths.length > 0 && (
-        <div className="bg-gray-50 rounded-xl p-3 text-sm">
-          <div className="flex justify-between font-semibold">
-            <span>Total ({selectedMonths.length} months)</span>
-            <span>{formatCurrency(selectedMonths.length * feeAmount)}</span>
-          </div>
-          <p className="text-xs text-gray-400 mt-1">{selectedMonths.join(', ')}</p>
-        </div>
-      )}
-
-      <div>
-        <label className="block text-xs font-medium text-gray-500 mb-1.5">Payment Mode</label>
-        <select value={mode} onChange={e => setMode(e.target.value)} className={f}>
-          <option value="cash">Cash</option>
-          <option value="online">Online / UPI</option>
-          <option value="cheque">Cheque</option>
-          <option value="dd">Demand Draft</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-xs font-medium text-gray-500 mb-1.5">Remarks</label>
-        <input value={remarks} onChange={e => setRemarks(e.target.value)}
-          className={f} placeholder="Optional remarks" />
-      </div>
-
-      <button
-        onClick={handleSubmit}
-        disabled={loading || selectedMonths.length === 0}
-        className="w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white font-semibold py-3 rounded-xl text-sm transition-colors"
-      >
-        {loading ? 'Processing...' : `Collect ${formatCurrency(selectedMonths.length * feeAmount)}`}
-      </button>
-    </div>
-  );
-}
+

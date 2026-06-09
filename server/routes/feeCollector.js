@@ -204,6 +204,86 @@ router.post('/collect', protect, authorize(...FC_ROLES), async (req, res) => {
   }
 });
 
+// POST /api/fc/collect-multiple-months
+router.post('/collect-multiple-months', protect, authorize(...FC_ROLES), async (req, res) => {
+  const txn = await sequelize.transaction();
+  try {
+    const { student_id, months, year, payment_mode, remarks } = req.body;
+
+    if (!student_id || !months?.length) {
+      await txn.rollback();
+      return res.status(400).json({ message: 'student_id and months array required.' });
+    }
+
+    const student = await Student.findByPk(student_id, { transaction: txn });
+    if (!student) { await txn.rollback(); return res.status(404).json({ message: 'Student not found.' }); }
+
+    const results = [];
+    let totalPaidInThisTransaction = 0;
+    const receiptNumber = generateReceiptNumber();
+    const updatedFees = [];
+
+    for (const entry of months) {
+      const { record } = await getOrCreateFeeRecord(
+        student, entry.month, parseInt(year), 'monthly', txn
+      );
+
+      const newPaid = parseFloat(record.paid_amount) + parseFloat(entry.amount);
+      const totalAmount = parseFloat(record.total_amount);
+
+      if (newPaid > totalAmount) {
+        await txn.rollback();
+        return res.status(400).json({
+          message: `Overpayment not allowed for ${entry.month}.`,
+        });
+      }
+
+      const status = newPaid >= totalAmount ? 'paid' : newPaid > 0 ? 'partial' : 'unpaid';
+
+      await record.update({
+        paid_amount:    newPaid,
+        payment_mode,
+        remarks,
+        collected_by:   req.user.id,
+        paid_date:      new Date().toISOString().split('T')[0],
+        status,
+        receipt_number: receiptNumber,
+      }, { transaction: txn });
+
+      totalPaidInThisTransaction += parseFloat(entry.amount);
+      results.push({ month: entry.month, status, paid: newPaid });
+      updatedFees.push(record);
+    }
+
+    await txn.commit();
+
+    const collectedByUser = await User.findByPk(req.user.id, { attributes: ['id', 'name'] });
+
+    const consolidatedFeeMock = {
+      ...updatedFees[0].toJSON(),
+      fee_type: 'monthly_multi',
+      paid_amount: totalPaidInThisTransaction,
+      total_amount: updatedFees.reduce((sum, f) => sum + parseFloat(f.total_amount), 0),
+      month: months.map(m => m.month.slice(0, 3)).join(', '),
+      receipt_number: receiptNumber,
+      fee_breakdown: Object.fromEntries(months.map(m => [`${m.month} Fee`, parseFloat(m.amount)])),
+    };
+
+    const receipt = buildReceiptData(consolidatedFeeMock, student, collectedByUser);
+
+    res.json({
+      message:        `Fees collected for ${months.length} month(s).`,
+      student:        { id: student.id, name: `${student.first_name} ${student.last_name}` },
+      months_updated: results,
+      receipt,
+      fee: consolidatedFeeMock,
+    });
+  } catch (err) {
+    await txn.rollback();
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // GET /api/fc/summary
 router.get('/summary', protect, authorize(...FC_ROLES), async (req, res) => {
   try {

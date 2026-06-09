@@ -3,6 +3,7 @@ import API from '../../utils/api';
 import Modal from '../../components/common/Modal';
 import Receipt from '../../components/Receipt';
 import FeeForm from '../../components/forms/FeeForm';
+import MultiMonthFeeForm from '../../components/forms/MultiMonthFeeForm';
 import { generateFeeReceipt } from '../../utils/pdfGenerator';
 import { formatCurrency, feeStatusColor } from '../../utils/helpers';
 import { useSettings } from '../../context/SettingsContext';
@@ -21,6 +22,7 @@ export default function FCCollect() {
   const [collecting, setCollecting] = useState(false);
   const [whatsappLoading, setWaLoading] = useState(false);
   const [receiptModal, setReceiptModal] = useState(null);
+  const [multiModal, setMultiModal] = useState(null);
 
   const classes = useMemo(
     () => ['Playgroup', 'Nursery', 'LKG', 'UKG', 'day care', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'],
@@ -117,6 +119,31 @@ export default function FCCollect() {
       setReceiptModal(r.data.receipt);
       generateFeeReceipt(r.data.fee, feeModal.student, settings);
       setFeeModal(null);
+      if (selected?.student) {
+        const updated = await API.get(`/fc/students/${selected.student.id}/details`);
+        setSelected(updated.data);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed.');
+    } finally { setCollecting(false); }
+  };
+
+  const handleMultiCollect = async (data) => {
+    setCollecting(true);
+    try {
+      const r = await API.post('/fc/collect-multiple-months', {
+        student_id:   multiModal.id,
+        months:       data.months,
+        year:         new Date().getFullYear(),
+        payment_mode: data.payment_mode,
+        remarks:      data.remarks,
+      });
+      toast.success(`Fees collected for ${data.months.length} months!`);
+      if (r.data.receipt) {
+        setReceiptModal(r.data.receipt);
+        generateFeeReceipt(r.data.fee, multiModal, settings);
+      }
+      setMultiModal(null);
       if (selected?.student) {
         const updated = await API.get(`/fc/students/${selected.student.id}/details`);
         setSelected(updated.data);
@@ -290,6 +317,15 @@ export default function FCCollect() {
             </div>
 
             {/* Fee records */}
+            <div className="flex justify-between items-end mb-2 mt-4">
+              <h4 className="font-semibold text-gray-700 text-sm">Fee Records</h4>
+              <button
+                onClick={() => setMultiModal(selected.student)}
+                className="text-xs bg-indigo-500 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-600 font-medium transition-colors"
+              >
+                Multi-Month Payment
+              </button>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm" style={{ minWidth: 400 }}>
                 <thead className="bg-gray-50">
@@ -342,6 +378,22 @@ export default function FCCollect() {
         title={`Collect Payment — ${feeModal?.month}`}
       >
         <FeeForm fee={feeModal} onSubmit={handleCollect} loading={collecting} />
+      </Modal>
+
+      {/* Multi-month collect modal */}
+      <Modal
+        isOpen={!!multiModal}
+        onClose={() => setMultiModal(null)}
+        title={`Multi-Month Payment — ${multiModal?.first_name} ${multiModal?.last_name || ''}`}
+      >
+        {multiModal && (
+          <MultiMonthFeeForm
+            student={multiModal}
+            year={new Date().getFullYear()}
+            onSubmit={handleMultiCollect}
+            loading={collecting}
+          />
+        )}
       </Modal>
 
       <Modal
