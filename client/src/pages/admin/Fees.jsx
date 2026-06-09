@@ -38,6 +38,7 @@ export default function Fees() {
   const [collectModal, setCollect] = useState(null);
   const [multiModal, setMultiModal] = useState(null);
   const [collecting, setCollecting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const load = useCallback(() => {
     setLoading(true);
@@ -173,11 +174,22 @@ export default function Fees() {
               <option value="not_generated">Not Generated</option>
             </select>
           </div>
+          {/* Search */}
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Search Student</label>
+            <input
+              type="text"
+              placeholder="Name or ID..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className={f}
+            />
+          </div>
           {/* Reset */}
           <div className="flex items-end">
             <button
-              onClick={() => { setClass(''); setSection(''); setStatus(''); }}
-              className="w-full border border-gray-200 text-gray-500 hover:bg-gray-50 text-xs px-3 py-2 rounded-xl"
+              onClick={() => { setClass(''); setSection(''); setStatus(''); setSearchQuery(''); }}
+              className="w-full border border-gray-200 text-gray-500 hover:bg-gray-50 text-xs px-3 py-2 rounded-xl transition-colors"
             >
               Reset
             </button>
@@ -227,86 +239,100 @@ export default function Fees() {
         </div>
 
         {loading ? (
-          <p className="text-center py-10 text-gray-400 text-sm">Loading...</p>
-        ) : students.length === 0 ? (
-          <p className="text-center py-10 text-gray-400 text-sm">No students found.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm" style={{ minWidth: 700 }}>
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  {['Student','Class','Total','Paid','Balance','Status','Actions'].map(h => (
-                    <th key={h} className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {students.map(s => {
-                  const feeRec = s.fee_record;
-                  const totalAmt = feeRec ? parseFloat(feeRec.total_amount) : 0;
-                  const paidAmt  = feeRec ? parseFloat(feeRec.paid_amount)  : 0;
-                  const balance  = totalAmt - paidAmt;
-
-                  return (
-                    <tr key={s.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center flex-shrink-0">
-                            {s.first_name?.[0]}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-medium text-gray-800 truncate">{s.first_name} {s.last_name}</p>
-                            <p className="text-xs text-gray-400 font-mono">{s.student_id}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-gray-500 text-xs whitespace-nowrap">{s.class} - {s.section}</td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        {feeRec ? formatCurrency(totalAmt) : <span className="text-gray-400">—</span>}
-                      </td>
-                      <td className="py-3 px-4 text-green-600 whitespace-nowrap">
-                        {feeRec ? formatCurrency(paidAmt) : <span className="text-gray-400">—</span>}
-                      </td>
-                      <td className="py-3 px-4 text-red-500 whitespace-nowrap">
-                        {feeRec && balance > 0 ? formatCurrency(balance) : <span className="text-gray-400">—</span>}
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[s.fee_status] || statusColor.not_generated}`}>
-                          {s.fee_status?.replace('_', ' ')}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="flex gap-2">
-                          {s.fee_status === 'paid' ? (
-                            <button
-                               onClick={() => generateFeeReceipt(feeRec, s, settings)}
-                               className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 font-medium"
-                             >
-                               Receipt
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => setCollect(s)}
-                              className="text-xs bg-blue-500 text-white px-2.5 py-1 rounded-lg hover:bg-blue-600 font-medium"
-                            >
-                              Collect
-                            </button>
-                          )}
-                          <button
-                            onClick={() => setMultiModal(s)}
-                            className="text-xs border border-indigo-200 text-indigo-600 px-2.5 py-1 rounded-lg hover:bg-indigo-50 font-medium"
-                          >
-                            Multi-Month
-                          </button>
-                        </div>
-                      </td>
+          <div className="py-12 text-center text-gray-400 text-sm">Loading fee records...</div>
+        ) : (() => {
+            const filteredStudents = students.filter(s => {
+              if (!searchQuery) return true;
+              const q = searchQuery.toLowerCase();
+              const name = `${s.first_name || ''} ${s.last_name || ''}`.toLowerCase();
+              const sid = (s.student_id || '').toLowerCase();
+              return name.includes(q) || sid.includes(q);
+            });
+            
+            return filteredStudents.length === 0 ? (
+              <div className="py-12 text-center text-gray-400 text-sm">No records found.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-gray-50 border-b border-gray-100 text-gray-500 uppercase tracking-wide text-xs">
+                    <tr>
+                      <th className="py-3 px-4 font-semibold">Student</th>
+                      <th className="py-3 px-4 font-semibold">Class</th>
+                      <th className="py-3 px-4 font-semibold">Due</th>
+                      <th className="py-3 px-4 font-semibold">Paid</th>
+                      <th className="py-3 px-4 font-semibold">Balance</th>
+                      <th className="py-3 px-4 font-semibold">Status</th>
+                      <th className="py-3 px-4 font-semibold">Actions</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                  </thead>
+                  <tbody>
+                    {filteredStudents.map(s => {
+                      const feeRec = s.fee_record;
+                      const totalAmt = feeRec ? parseFloat(feeRec.total_amount) : 0;
+                      const paidAmt  = feeRec ? parseFloat(feeRec.paid_amount)  : 0;
+                      const balance  = totalAmt - paidAmt;
+
+                      return (
+                        <tr key={s.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center flex-shrink-0">
+                                {s.first_name?.[0]}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-medium text-gray-800 truncate">{s.first_name} {s.last_name}</p>
+                                <p className="text-xs text-gray-400 font-mono">{s.student_id}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-gray-500 text-xs whitespace-nowrap">{s.class} - {s.section}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {feeRec ? formatCurrency(totalAmt) : <span className="text-gray-400">—</span>}
+                          </td>
+                          <td className="py-3 px-4 text-green-600 whitespace-nowrap">
+                            {feeRec ? formatCurrency(paidAmt) : <span className="text-gray-400">—</span>}
+                          </td>
+                          <td className="py-3 px-4 text-red-500 whitespace-nowrap">
+                            {feeRec && balance > 0 ? formatCurrency(balance) : <span className="text-gray-400">—</span>}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[s.fee_status] || statusColor.not_generated}`}>
+                              {s.fee_status?.replace('_', ' ')}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <div className="flex gap-2">
+                              {s.fee_status === 'paid' ? (
+                                <button
+                                   onClick={() => generateFeeReceipt(feeRec, s, settings)}
+                                   className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 font-medium"
+                                 >
+                                   Receipt
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => setCollect(s)}
+                                  className="text-xs bg-blue-500 text-white px-2.5 py-1 rounded-lg hover:bg-blue-600 font-medium"
+                                >
+                                  Collect
+                                </button>
+                              )}
+                              <button
+                                onClick={() => setMultiModal(s)}
+                                className="text-xs border border-indigo-200 text-indigo-600 px-2.5 py-1 rounded-lg hover:bg-indigo-50 font-medium"
+                              >
+                                Multi-Month
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            );
+        })()}
       </div>
 
       {/* Single month collect modal */}
