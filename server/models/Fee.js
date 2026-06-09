@@ -9,7 +9,7 @@ const Fee = sequelize.define('Fee', {
   fee_type: {
     type: DataTypes.ENUM(
       'monthly', 'quarterly', 'annual',
-      'exam', 'admission', 'promotion', 'miscellaneous'
+      'exam', 'admission', 'promotion', 'miscellaneous', 'session_start'
     ),
     defaultValue: 'monthly'
   },

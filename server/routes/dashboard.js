@@ -148,7 +148,7 @@ router.get('/chart', protect, authorize('admin', 'admin2'), async (req, res) => 
         }
       }),
       Result.findAll({
-        where: { created_at: { [Op.between]: [startDate, endDate] } }
+        where: { createdAt: { [Op.between]: [startDate, endDate] } }
       })
     ]);
 
@@ -183,7 +183,7 @@ router.get('/chart', protect, authorize('admin', 'admin2'), async (req, res) => 
         const feesRate = monthExpected > 0 ? (cumulativePaid / monthExpected) * 100 : null;
 
         // 3. Exams average percentage
-        const dayResults = results.filter(r => r.created_at.toISOString().split('T')[0] === dateStr);
+        const dayResults = results.filter(r => (r.createdAt || r.created_at).toISOString().split('T')[0] === dateStr);
         const examsRate = dayResults.length > 0
           ? dayResults.reduce((acc, r) => acc + parseFloat(r.percentage || 0), 0) / dayResults.length
           : null;
@@ -220,7 +220,7 @@ router.get('/chart', protect, authorize('admin', 'admin2'), async (req, res) => 
 
         // 3. Exams
         const monthResults = results.filter(r => {
-          const d = new Date(r.created_at);
+          const d = new Date(r.createdAt || r.created_at);
           return d.getMonth() === monthNum && d.getFullYear() === year;
         });
         const examsRate = monthResults.length > 0
