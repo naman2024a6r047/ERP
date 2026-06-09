@@ -99,19 +99,27 @@ const getStudentsWithFeeStatus = async (month, year, filters = {}) => {
 
   if (!students.length) return [];
 
-  // Fetch existing fee records for these students this month
+  // Fetch existing fee records for these students this month and active ClassFeeStructures
   const studentIds = students.map(s => s.id);
-  const feeRecords = await Fee.findAll({
-    where: {
-      student_id: { [Op.in]: studentIds },
-      month,
-      year: parseInt(year),
-    },
-    include: [{
-      model: User,
-      as: 'collectedByUser',
-      attributes: ['id', 'name']
-    }]
+  const [feeRecords, feeStructures] = await Promise.all([
+    Fee.findAll({
+      where: {
+        student_id: { [Op.in]: studentIds },
+        month,
+        year: parseInt(year),
+      },
+      include: [{
+        model: User,
+        as: 'collectedByUser',
+        attributes: ['id', 'name']
+      }]
+    }),
+    ClassFeeStructure.findAll({ where: { is_active: true } })
+  ]);
+
+  const structureMap = {};
+  feeStructures.forEach(fs => {
+    structureMap[fs.class] = fs;
   });
 
   // Map fees by student_id + fee_type
@@ -126,14 +134,31 @@ const getStudentsWithFeeStatus = async (month, year, filters = {}) => {
   return students.map(s => {
     const sJson  = s.toJSON();
     const fees   = feeMap[s.id] || [];
-    const monthly = fees.find(f => f.fee_type === 'monthly');
+    let monthly = fees.find(f => f.fee_type === 'monthly');
+
+    const hasRealMonthly = !!monthly;
+    if (!monthly) {
+      const clsStructure = structureMap[s.class];
+      const monthlyFee = clsStructure ? parseFloat(clsStructure.monthly_fee || 0) : 2500;
+      monthly = {
+        id: null,
+        student_id: s.id,
+        month,
+        year: parseInt(year),
+        fee_type: 'monthly',
+        total_amount: monthlyFee,
+        paid_amount: 0.00,
+        status: 'not_generated',
+        fee_breakdown: { monthly: monthlyFee }
+      };
+    }
 
     return {
       ...sJson,
-      fee_record:     monthly || null,
-      all_fees:       fees,
-      fee_status:     monthly?.status || 'not_generated',
-      total_due:      fees.reduce((a, f) => a + parseFloat(f.total_amount || 0), 0),
+      fee_record:     monthly,
+      all_fees:       hasRealMonthly ? fees : [monthly, ...fees],
+      fee_status:     hasRealMonthly ? monthly.status : 'not_generated',
+      total_due:      fees.reduce((a, f) => a + parseFloat(f.total_amount || 0), 0) + (hasRealMonthly ? 0 : monthly.total_amount),
       total_paid:     fees.reduce((a, f) => a + parseFloat(f.paid_amount  || 0), 0),
       has_fee_record: fees.length > 0,
     };

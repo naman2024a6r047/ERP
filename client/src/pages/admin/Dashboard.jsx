@@ -25,18 +25,36 @@ export default function Dashboard() {
   const [notifs, setNotifs] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState([]);
+  const [chartPeriod, setChartPeriod] = useState('current_month');
+  const [chartData, setChartData] = useState([]);
+  const [chartStats, setChartStats] = useState({ attendance: '0%', fees: '0%', exams: '0%' });
   const navigate = useNavigate();
 
   useEffect(() => {
-    API.get('/dashboard/admin')
-      .then(({ data }) => {
+    Promise.all([
+      API.get('/dashboard/admin'),
+      API.get('/events').catch(() => ({ data: [] }))
+    ])
+      .then(([dashRes, eventsRes]) => {
+        const data = dashRes.data;
         setStudents(data.recent_students || []);
         setNotifs(data.notifications || []);
         setStats(data.stats || {});
+        setEvents(eventsRes.data || []);
       })
       .catch(() => toast.error('Failed to load dashboard metrics'))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    API.get(`/dashboard/chart?period=${chartPeriod}`)
+      .then(({ data }) => {
+        setChartData(data.data || []);
+        setChartStats(data.averages || { attendance: '0%', fees: '0%', exams: '0%' });
+      })
+      .catch(() => toast.error('Failed to load overview chart data'));
+  }, [chartPeriod]);
 
   if (loading) return <LoadingSpinner />;
 
@@ -87,18 +105,31 @@ export default function Dashboard() {
     });
   }
 
-  // Dynamic Events list: extract real holiday notifications from API
-  const holidayEvents = notifs
-    .filter(n => n.type === 'holiday')
-    .map(n => ({
-      title: n.title,
-      date: new Date(n.created_at).toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      }),
-      color: 'text-emerald-500 bg-emerald-50 border-emerald-100'
-    }));
+  // Dynamic Events list: map real events
+  const mappedEvents = events.map(e => {
+    const colors = [
+      'text-blue-500 bg-blue-50 border-blue-100',
+      'text-amber-500 bg-amber-50 border-amber-100',
+      'text-emerald-500 bg-emerald-50 border-emerald-100',
+      'text-purple-500 bg-purple-50 border-purple-100'
+    ];
+    const color = colors[e.id % colors.length] || colors[0];
+    const eventDate = new Date(e.event_date);
+    const dateStr = eventDate.toLocaleString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    return {
+      title: e.title,
+      date: dateStr,
+      color: color
+    };
+  });
 
   const fallbackEvents = [
     { title: 'Parents Meeting', date: '17 Jun 2026, 10:00 AM', color: 'text-blue-500 bg-blue-50 border-blue-100' },
@@ -107,7 +138,7 @@ export default function Dashboard() {
     { title: 'PTM (Grade 6-10)', date: '07 Jul 2026, 10:00 AM', color: 'text-purple-500 bg-purple-50 border-purple-100' },
   ];
 
-  const displayEvents = holidayEvents.length > 0 ? [...holidayEvents, ...fallbackEvents].slice(0, 4) : fallbackEvents;
+  const displayEvents = mappedEvents.length > 0 ? mappedEvents.slice(0, 4) : fallbackEvents;
 
   // Dynamic values binding real API stats
   const studentCount = stats.total_students || 0;
@@ -295,9 +326,16 @@ export default function Dashboard() {
             
             {/* Dropdown switch */}
             <div className="relative">
-              <select className="pl-3.5 pr-8 py-1.5 bg-slate-50 border border-slate-100 hover:border-slate-200 text-[10px] font-bold text-slate-600 rounded-xl outline-none appearance-none cursor-pointer transition-all">
-                <option>This Month</option>
-                <option>This Year</option>
+              <select
+                value={chartPeriod}
+                onChange={(e) => setChartPeriod(e.target.value)}
+                className="pl-3.5 pr-8 py-1.5 bg-slate-50 border border-slate-100 hover:border-slate-200 text-[10px] font-bold text-slate-600 rounded-xl outline-none appearance-none cursor-pointer transition-all"
+              >
+                <option value="current_month">Current Month</option>
+                <option value="last_2_months">Last 2 Months</option>
+                <option value="last_3_months">Last 3 Months</option>
+                <option value="last_6_months">Last 6 Months</option>
+                <option value="last_12_months">Last 12 Months (1 Year)</option>
               </select>
               <svg className="w-3 h-3 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -308,20 +346,20 @@ export default function Dashboard() {
           {/* Indicators Legend */}
           <div className="flex items-center gap-6 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-5 pl-1">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 block" /> Attendance (92.6%)
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 block" /> Attendance ({chartStats.attendance})
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block" /> Fee Collection (75%)
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block" /> Fee Collection ({chartStats.fees})
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 block" /> Exam Performance (78.4%)
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 block" /> Exam Performance ({chartStats.exams})
             </div>
           </div>
 
           {/* Recharts Area Chart */}
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={mainChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="mainBlue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
@@ -338,7 +376,7 @@ export default function Dashboard() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f8fafc" vertical={false} />
                 <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} />
-                <YAxis domain={[40, 100]} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
                 <Tooltip />
                 <Area type="monotone" dataKey="attendance" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#mainBlue)" dot={{ r: 4 }} />
                 <Area type="monotone" dataKey="fees" stroke="#22c55e" strokeWidth={2} fillOpacity={1} fill="url(#mainGreen)" dot={{ r: 4 }} />

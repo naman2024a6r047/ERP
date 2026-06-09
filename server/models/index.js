@@ -19,6 +19,7 @@ const ClassFeeStructure= require('./ClassFeeStructure');
 const AuditLog          = require('./AuditLog');
 const PushSubscription  = require('./PushSubscription');
 const Setting           = require('./Setting');
+const Event             = require('./Event');
 
 // ── Associations ──────────────────────────────────────────────────────────────
 
@@ -104,6 +105,26 @@ ClassIncharge.belongsTo(Teacher, { foreignKey: 'teacher_id', as: 'teacher' });
 User.hasMany(ClassFeeStructure, { foreignKey: 'updated_by', as: 'feeStructureUpdates' });
 ClassFeeStructure.belongsTo(User, { foreignKey: 'updated_by', as: 'updatedByUser' });
 
+User.hasMany(Event, { foreignKey: 'created_by', as: 'createdEvents' });
+Event.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
+
+// ── Global JSON Serializer Override ─────────────────────────────────────────
+// This ensures that created_at and updated_at are always populated in the JSON output.
+for (const modelName of Object.keys(sequelize.models)) {
+  const model = sequelize.models[modelName];
+  const originalToJSON = model.prototype.toJSON;
+  model.prototype.toJSON = function () {
+    const values = originalToJSON.call(this);
+    if (values.createdAt && !values.created_at) {
+      values.created_at = values.createdAt;
+    }
+    if (values.updatedAt && !values.updated_at) {
+      values.updated_at = values.updatedAt;
+    }
+    return values;
+  };
+}
+
 module.exports = {
   sequelize,
   User, Student, Teacher, Session,
@@ -115,4 +136,5 @@ module.exports = {
   ClassIncharge, ClassFeeStructure,
   AuditLog, PushSubscription,
   Setting,
+  Event,
 };

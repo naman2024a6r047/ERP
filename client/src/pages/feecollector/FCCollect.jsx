@@ -106,6 +106,9 @@ export default function FCCollect() {
     try {
       const r = await API.post('/fc/collect', {
         fee_id:       feeModal.id,
+        student_id:   feeModal.student_id,
+        month:        feeModal.month,
+        year:         feeModal.year,
         amount:       parseFloat(data.amount),
         payment_mode: data.payment_mode,
         remarks:      data.remarks,

@@ -52,8 +52,37 @@ router.post('/', protect, isSuperAdmin, async (req, res) => {
   try {
     const safeData = pick(req.body, SESSION_CREATE_FIELDS);
 
-    if (!safeData.name || !safeData.start_date || !safeData.end_date) {
-      return res.status(400).json({ message: 'name, start_date, and end_date are required.' });
+    if (!safeData.name) {
+      return res.status(400).json({ message: 'Session name is required.' });
+    }
+
+    if (!safeData.start_date || !safeData.end_date) {
+      // Derive from name if possible
+      const nameStr = safeData.name.trim();
+      const matchRange = nameStr.match(/^(\d{4})[-/](\d{2,4})$/);
+      if (matchRange) {
+        const startYear = parseInt(matchRange[1], 10);
+        let endYearStr = matchRange[2];
+        if (endYearStr.length === 2) {
+          endYearStr = matchRange[1].slice(0, 2) + endYearStr;
+        }
+        const endYear = parseInt(endYearStr, 10);
+        
+        if (!safeData.start_date) safeData.start_date = `${startYear}-06-01`;
+        if (!safeData.end_date) safeData.end_date = `${endYear}-05-31`;
+      } else {
+        const matchSingle = nameStr.match(/^(\d{4})$/);
+        if (matchSingle) {
+          const startYear = parseInt(matchSingle[1], 10);
+          if (!safeData.start_date) safeData.start_date = `${startYear}-06-01`;
+          if (!safeData.end_date) safeData.end_date = `${startYear + 1}-05-31`;
+        } else {
+          // Fallback to academic year starting in June of current year
+          const currentYear = new Date().getFullYear();
+          if (!safeData.start_date) safeData.start_date = `${currentYear}-06-01`;
+          if (!safeData.end_date) safeData.end_date = `${currentYear + 1}-05-31`;
+        }
+      }
     }
 
     const session = await Session.create(safeData);

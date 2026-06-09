@@ -18,6 +18,7 @@ import Timetable from './pages/admin/Timetable';
 import Promotion from './pages/admin/Promotion';
 import Notifications from './pages/admin/Notifications';
 import ClassFees from './pages/admin/ClassFees';
+import Events from './pages/admin/Events';
 import AdminTeacherAttendance from './pages/admin/TeacherAttendance';
 import Settings from './pages/admin/Settings';
 
@@ -82,6 +83,7 @@ export default function App() {
             <Route path="timetable" element={<Timetable />} />
             <Route path="promotion" element={<Promotion />} />
             <Route path="notifications" element={<Notifications />} />
+            <Route path="events" element={<Events />} />
             <Route path="credentials" element={<CredentialManagement />} />
             <Route path="profile" element={<MyProfilePage />} />
             <Route path="bulk-upload" element={<BulkUploadStudents />} />
@@ -106,6 +108,7 @@ export default function App() {
             <Route path="profile" element={<MyProfilePage />} />
             <Route path="bulk-upload" element={<BulkUploadStudents />} />
             <Route path="notifications" element={<MyNotifications />} />
+            <Route path="events" element={<Events />} />
           </Route>
 
           <Route

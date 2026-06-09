@@ -37,7 +37,8 @@ const navConfig = {
     {
       section: 'COMMUNICATION',
       items: [
-        { icon: 'notices', label: 'Notifications', to: '/admin/notifications' }
+        { icon: 'notices', label: 'Notifications', to: '/admin/notifications' },
+        { icon: 'timetable', label: 'Upcoming Events', to: '/admin/events' }
       ],
     },
     {
@@ -60,6 +61,7 @@ const navConfig = {
         { icon: 'bulk-upload', label: 'Bulk Admission', to: '/admin2/bulk-upload' },
         { icon: 'teacher-attendance', label: 'Teacher Attendance', to: '/admin2/teachers' },
         { icon: 'profile', label: 'My Profile', to: '/admin2/profile' },
+        { icon: 'timetable', label: 'Upcoming Events', to: '/admin2/events' }
       ],
     },
   ],

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import API from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import { can } from '../../utils/roleUtils';
+import { formatDate } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 const typeStyle = {
@@ -225,7 +226,7 @@ export default function Notifications() {
                           : ' All'}
                       </span>
                       <span className="text-xs text-gray-400 ml-auto">
-                        {new Date(n.created_at).toLocaleDateString('en-IN', { day:'2-digit', month:'short' })}
+                        {formatDate(n.created_at)}
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.message}</p>

@@ -70,7 +70,7 @@ export default function Fees() {
   const handleCollect = async (data) => {
     setCollecting(true);
     try {
-      const payload = collectModal.fee_record
+      const payload = collectModal.fee_record && collectModal.fee_record.id
         ? { fee_id: collectModal.fee_record.id, amount: parseFloat(data.amount), payment_mode: data.payment_mode, remarks: data.remarks }
         : { student_id: collectModal.id, month, year: parseInt(year), amount: parseFloat(data.amount), payment_mode: data.payment_mode, remarks: data.remarks };
 

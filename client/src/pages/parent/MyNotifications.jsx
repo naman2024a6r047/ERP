@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import API from '../../utils/api';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { formatDate } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 const typeStyle = {
@@ -91,9 +92,7 @@ export default function MyNotifications() {
                   </div>
                   <p className="text-sm text-gray-500 mt-1 leading-relaxed">{n.message}</p>
                   <p className="text-xs text-gray-400 mt-1.5">
-                    {new Date(n.created_at).toLocaleDateString('en-IN', {
-                      day: '2-digit', month: 'short', year: 'numeric'
-                    })}
+                    {formatDate(n.created_at)}
                   </p>
                 </div>
               </div>

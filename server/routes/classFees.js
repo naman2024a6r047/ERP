@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { ClassFeeStructure, User } = require('../models');
+const { ClassFeeStructure, User, Student, Fee } = require('../models');
 const { protect, hasPermission } = require('../middleware/auth');
 
 const ensureAdminModifier = (req, res) => {
@@ -9,6 +9,31 @@ const ensureAdminModifier = (req, res) => {
     return false;
   }
   return true;
+};
+
+const propagateClassFees = async (cls, monthly_fee, admission_fee) => {
+  try {
+    const students = await Student.findAll({
+      where: { class: cls, is_active: true, approval_status: 'approved' },
+      attributes: ['id']
+    });
+    const studentIds = students.map(s => s.id);
+    if (studentIds.length === 0) return;
+    
+    await Promise.all([
+      Fee.update(
+        { total_amount: parseFloat(monthly_fee || 0) },
+        { where: { student_id: studentIds, fee_type: 'monthly', status: 'unpaid' } }
+      ),
+      Fee.update(
+        { total_amount: parseFloat(admission_fee || 0) },
+        { where: { student_id: studentIds, fee_type: 'admission', status: 'unpaid' } }
+      )
+    ]);
+    console.log(`[classFees] Propagated fee updates to ${studentIds.length} students in class ${cls}.`);
+  } catch (err) {
+    console.error('[classFees] Propagation failed:', err);
+  }
 };
 
 // GET /api/class-fees
@@ -65,6 +90,8 @@ router.post('/', protect, hasPermission('MANAGE_FEES'), async (req, res) => {
       structure = await ClassFeeStructure.create(payload);
     }
 
+    await propagateClassFees(cls, monthly_fee, admission_fee);
+
     res.status(existing ? 200 : 201).json({
       message: `Class fee for ${cls} ${existing ? 'updated' : 'created'}.`,
       structure,
@@ -93,6 +120,8 @@ router.put('/:class', protect, hasPermission('MANAGE_FEES'), async (req, res) =>
       admission_fee: req.body.admission_fee !== undefined ? parseFloat(req.body.admission_fee || 0) : structure.admission_fee,
       updated_by: req.user.id,
     });
+
+    await propagateClassFees(req.params.class, structure.monthly_fee, structure.admission_fee);
 
     res.json({
       message: `Class fee for ${req.params.class} updated.`,

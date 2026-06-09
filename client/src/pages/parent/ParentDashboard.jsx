@@ -325,7 +325,7 @@ export default function ParentDashboard() {
                   {item.status !== 'empty' && <span className={dotClass} />}
                 </div>
               );
-            })()}
+            })})()}
           </div>
         </div>
 
