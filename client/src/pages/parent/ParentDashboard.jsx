@@ -54,7 +54,7 @@ export default function ParentDashboard() {
     if (studentClass && studentSection) {
       setLoadingTimetable(true);
       API.get(`/timetable?class=${studentClass}&section=${studentSection}`)
-        .then(r => setTimetableData(r.data || []))
+        .then(r => setTimetableData(Array.isArray(r.data) ? r.data : []))
         .catch(err => console.error('Failed to load student timetable', err))
         .finally(() => setLoadingTimetable(false));
     }
@@ -106,10 +106,10 @@ export default function ParentDashboard() {
       API.get(`/results/student/${studentId}`).catch(() => ({ data: [] })),
       API.get(`/notifications`).catch(() => ({ data: [] }))
     ]).then(([feesRes, attRes, resRes, notifRes]) => {
-      setFees(feesRes.data || []);
+      setFees(Array.isArray(feesRes.data) ? feesRes.data : []);
       setAttendance(attRes.data?.records || (Array.isArray(attRes.data) ? attRes.data : []));
-      setResults(resRes.data || []);
-      setNotifications(notifRes.data || []);
+      setResults(Array.isArray(resRes.data) ? resRes.data : []);
+      setNotifications(Array.isArray(notifRes.data) ? notifRes.data : []);
       setDashboardLoading(false);
     });
   }, [user?.linkedStudent?.id]);
@@ -664,7 +664,7 @@ export default function ParentDashboard() {
                             <div>{subj}</div>
                             {slot?.teacher && (
                               <div className="text-[9px] opacity-75 mt-0.5">
-                                {slot.teacher.name?.split(' ').slice(-1)[0]}
+                                {slot.teacher.name ? slot.teacher.name.split(' ').slice(-1)[0] : ''}
                               </div>
                             )}
                           </div>

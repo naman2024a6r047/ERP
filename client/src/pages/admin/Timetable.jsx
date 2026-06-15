@@ -201,7 +201,7 @@ export default function Timetable() {
                               <div>{subj}</div>
                               {slot?.teacher && (
                                 <div className="text-[10px] opacity-70 mt-0.5">
-                                  {slot.teacher.name?.split(' ').slice(-1)[0]}
+                                  {slot.teacher.name ? slot.teacher.name.split(' ').slice(-1)[0] : ''}
                                 </div>
                               )}
                             </div>
