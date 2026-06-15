@@ -22,7 +22,7 @@ const validateLogin = [
     .trim()
     .notEmpty().withMessage('Email is required.')
     .isEmail().withMessage('Please enter a valid email address.')
-    .normalizeEmail(),
+    .normalizeEmail({ gmail_remove_dots: false }),
   body('password')
     .notEmpty().withMessage('Password is required.'),
   validate,
@@ -37,7 +37,7 @@ const validateRegister = [
     .trim()
     .notEmpty().withMessage('Email is required.')
     .isEmail().withMessage('Please enter a valid email address.')
-    .normalizeEmail(),
+    .normalizeEmail({ gmail_remove_dots: false }),
   body('password')
     .notEmpty().withMessage('Password is required.')
     .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long.'),
@@ -106,7 +106,7 @@ const validateStudentCreate = [
     .optional({ checkFalsy: true })
     .trim()
     .isEmail().withMessage('Please enter a valid email address.')
-    .normalizeEmail(),
+    .normalizeEmail({ gmail_remove_dots: false }),
   body('parent_address')
     .optional({ checkFalsy: true })
     .trim(),
@@ -125,7 +125,7 @@ const validateStudentCreate = [
     .optional({ checkFalsy: true })
     .trim()
     .isEmail().withMessage('Please enter a valid student login email (User ID).')
-    .normalizeEmail(),
+    .normalizeEmail({ gmail_remove_dots: false }),
   body('password')
     .optional({ checkFalsy: true })
     .isLength({ min: 6 }).withMessage('Password must be at least 6 characters.'),
@@ -179,7 +179,7 @@ const validateStudentUpdate = [
     .optional({ checkFalsy: true })
     .trim()
     .isEmail().withMessage('Please enter a valid email address.')
-    .normalizeEmail(),
+    .normalizeEmail({ gmail_remove_dots: false }),
   body('student_status')
     .optional()
     .isIn(['active', 'inactive', 'alumni', 'transferred', 'suspended'])
@@ -219,7 +219,7 @@ const validateTeacherCreate = [
     .optional({ checkFalsy: true })
     .trim()
     .isEmail().withMessage('Please enter a valid email address.')
-    .normalizeEmail(),
+    .normalizeEmail({ gmail_remove_dots: false }),
   body('qualification')
     .optional({ checkFalsy: true })
     .trim()
@@ -254,7 +254,7 @@ const validateTeacherUpdate = [
     .optional({ checkFalsy: true })
     .trim()
     .isEmail().withMessage('Please enter a valid email address.')
-    .normalizeEmail(),
+    .normalizeEmail({ gmail_remove_dots: false }),
   body('qualification')
     .optional({ checkFalsy: true })
     .trim()
