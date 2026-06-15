@@ -83,7 +83,11 @@ export default function ParentDashboard() {
   // Build weekly timetable grid day → period → slot
   const fullGrid = {};
   DAYS.forEach(d => { fullGrid[d] = {}; });
-  timetableData.forEach(slot => { fullGrid[slot.day][slot.period_number] = slot; });
+  timetableData.forEach(slot => {
+    if (slot.day && fullGrid[slot.day]) {
+      fullGrid[slot.day][slot.period_number] = slot;
+    }
+  });
 
   // Integration states
   const [fees, setFees] = useState([]);

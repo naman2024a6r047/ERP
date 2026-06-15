@@ -64,7 +64,11 @@ export default function Timetable() {
   // Build grid: day → period → slot
   const grid = {};
   DAYS.forEach(d => { grid[d] = {}; });
-  timetable.forEach(slot => { grid[slot.day][slot.period_number] = slot; });
+  timetable.forEach(slot => {
+    if (slot.day && grid[slot.day]) {
+      grid[slot.day][slot.period_number] = slot;
+    }
+  });
 
   const handleCellClick = (day, periodNum) => {
     const existing = grid[day][periodNum];
