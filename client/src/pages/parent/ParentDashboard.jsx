@@ -102,12 +102,12 @@ export default function ParentDashboard() {
 
     Promise.all([
       API.get(`/fees/student/${studentId}`).catch(() => ({ data: [] })),
-      API.get(`/attendance/student/${studentId}`).catch(() => ({ data: [] })),
+      API.get(`/attendance/student/${studentId}`).catch(() => ({ data: { records: [] } })),
       API.get(`/results/student/${studentId}`).catch(() => ({ data: [] })),
       API.get(`/notifications`).catch(() => ({ data: [] }))
     ]).then(([feesRes, attRes, resRes, notifRes]) => {
       setFees(feesRes.data || []);
-      setAttendance(attRes.data || []);
+      setAttendance(attRes.data?.records || (Array.isArray(attRes.data) ? attRes.data : []));
       setResults(resRes.data || []);
       setNotifications(notifRes.data || []);
       setDashboardLoading(false);
