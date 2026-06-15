@@ -40,14 +40,29 @@ router.post('/login', loginLimiter, validateLogin, async (req, res) => {
     }
 
     const user = await User.findOne({
-      where: { email, is_active: true },
+      where: { email },
       include: [
         { model: Student, as: 'linkedStudent', attributes: ['id', 'first_name', 'last_name', 'class', 'section', 'approval_status'] },
         { model: Teacher, as: 'linkedTeacher', attributes: ['id', 'name', 'subject', 'assigned_classes'] }
       ]
     });
 
-    if (!user || !(await user.comparePassword(password))) {
+    console.log(`[LOGIN] Attempt for email: "${email}"`);
+    if (!user) {
+      console.log(`[LOGIN] ❌ Fail: No user found in DB for email "${email}"`);
+      return res.status(401).json({ message: 'Invalid email or password.' });
+    }
+
+    if (!user.is_active) {
+      console.log(`[LOGIN] ❌ Fail: User exists but is inactive/deactivated: "${email}"`);
+      return res.status(401).json({ message: 'Invalid email or password.' });
+    }
+
+    const isMatch = await user.comparePassword(password);
+    console.log(`[LOGIN] Password verification result for "${email}": ${isMatch}`);
+
+    if (!isMatch) {
+      console.log(`[LOGIN] ❌ Fail: Incorrect password for "${email}"`);
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
