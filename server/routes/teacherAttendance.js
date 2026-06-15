@@ -4,6 +4,15 @@ const { Op }  = require('sequelize');
 const { TeacherAttendance, Teacher } = require('../models');
 const { protect, hasPermission } = require('../middleware/auth');
 
+const formatDateRange = (year, month) => {
+  const y = parseInt(year, 10);
+  const m = parseInt(month, 10);
+  const start = `${y}-${String(m).padStart(2, '0')}-01`;
+  const lastDay = new Date(y, m, 0).getDate();
+  const end = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+  return { start, end };
+};
+
 // GET /api/teacher-attendance
 // ✅ Both admin and admin2 can view all teacher attendance
 router.get('/', protect, hasPermission('MANAGE_TEACHER_ATTENDANCE'), async (req, res) => {
@@ -15,8 +24,7 @@ router.get('/', protect, hasPermission('MANAGE_TEACHER_ATTENDANCE'), async (req,
     if (teacher_id) where.teacher_id = teacher_id;
 
     if (month && year) {
-      const start = new Date(year, month - 1, 1);
-      const end   = new Date(year, month, 0);
+      const { start, end } = formatDateRange(year, month);
       where.date  = { [Op.between]: [start, end] };
     }
 
@@ -58,8 +66,7 @@ router.get('/my', protect, hasPermission('VIEW_TEACHER_ATTENDANCE'), async (req,
     const where = { teacher_id: teacher.id };
 
     if (month && year) {
-      const start = new Date(year, month - 1, 1);
-      const end   = new Date(year, month, 0);
+      const { start, end } = formatDateRange(year, month);
       where.date  = { [Op.between]: [start, end] };
     }
 
@@ -139,12 +146,8 @@ router.get('/summary/:teacherId', protect, hasPermission('MANAGE_TEACHER_ATTENDA
     const where = { teacher_id: req.params.teacherId };
 
     if (month && year) {
-      where.date = {
-        [Op.between]: [
-          new Date(year, month - 1, 1),
-          new Date(year, month, 0),
-        ],
-      };
+      const { start, end } = formatDateRange(year, month);
+      where.date = { [Op.between]: [start, end] };
     }
 
     const records    = await TeacherAttendance.findAll({ where, order: [['date', 'ASC']] });
