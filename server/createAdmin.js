@@ -23,7 +23,7 @@ const User = require('./models/User');
     if (existing) {
       console.log(`[ADMIN] User with email "${email}" already exists (id: ${existing.id}, role: ${existing.role}).`);
       console.log('[ADMIN] Updating password and ensuring role is admin...');
-      existing.password = 'PBM@Admin182204';
+      existing.password = 'PBM@182204';
       existing.role = 'admin';
       existing.is_active = true;
       await existing.save();
@@ -32,7 +32,7 @@ const User = require('./models/User');
       const user = await User.create({
         name: 'Admin',
         email,
-        password: 'PBM@Admin182204',
+        password: 'PBM@182204',
         role: 'admin',
         is_active: true,
       });
@@ -41,7 +41,7 @@ const User = require('./models/User');
 
     // Verify the password works
     const admin = await User.findOne({ where: { email } });
-    const match = await admin.comparePassword('PBM@Admin182204');
+    const match = await admin.comparePassword('PBM@182204');
     console.log(`[ADMIN] Password verification: ${match ? '✅ PASS' : '❌ FAIL'}`);
 
     process.exit(0);
