@@ -34,9 +34,8 @@ const Attendance = sequelize.define('Attendance', {
 }, {
   tableName: 'attendance',
   indexes: [
-    { unique: true, fields: ['student_id', 'date'] },
-    { fields: ['date'] },
-    { fields: ['status'] }
+    // One attendance record per student per day
+    { unique: true, fields: ['student_id', 'date'] }
   ]
 });
 
