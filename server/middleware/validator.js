@@ -227,6 +227,22 @@ const validateTeacherCreate = [
   body('status')
     .optional()
     .isIn(['active', 'leave', 'inactive']).withMessage('Invalid status selected.'),
+  body('document_type')
+    .optional({ checkFalsy: true })
+    .isIn(['Aadhaar Card', 'PAN Card', 'Driving License', 'Passport', 'Voter ID', 'Employee ID', 'Other']).withMessage('Invalid document type selected.'),
+  body('document_number')
+    .optional({ checkFalsy: true })
+    .trim()
+    .custom((value, { req }) => {
+      const type = req.body.document_type;
+      if (type === 'Aadhaar Card' && !/^\d{12}$/.test(value)) {
+        throw new Error('Aadhaar must be exactly 12 digits.');
+      }
+      if (type === 'PAN Card' && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(value)) {
+        throw new Error('Invalid PAN format (e.g. ABCDE1234F).');
+      }
+      return true;
+    }),
   body('password')
     .optional({ checkFalsy: true })
     .isLength({ min: 6 }).withMessage('Password must be at least 6 characters.'),
@@ -262,6 +278,22 @@ const validateTeacherUpdate = [
   body('status')
     .optional()
     .isIn(['active', 'leave', 'inactive']).withMessage('Invalid status selected.'),
+  body('document_type')
+    .optional({ checkFalsy: true })
+    .isIn(['Aadhaar Card', 'PAN Card', 'Driving License', 'Passport', 'Voter ID', 'Employee ID', 'Other']).withMessage('Invalid document type selected.'),
+  body('document_number')
+    .optional({ checkFalsy: true })
+    .trim()
+    .custom((value, { req }) => {
+      const type = req.body.document_type;
+      if (type === 'Aadhaar Card' && !/^\d{12}$/.test(value)) {
+        throw new Error('Aadhaar must be exactly 12 digits.');
+      }
+      if (type === 'PAN Card' && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(value)) {
+        throw new Error('Invalid PAN format (e.g. ABCDE1234F).');
+      }
+      return true;
+    }),
   validate,
 ];
 

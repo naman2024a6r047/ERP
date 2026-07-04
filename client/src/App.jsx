@@ -9,7 +9,7 @@ import LoginPage from './pages/LoginPage';
 import AdminLayout from './pages/admin/AdminLayout';
 import Dashboard from './pages/admin/Dashboard';
 import Students from './pages/admin/Students';
-import Teachers from './pages/admin/Teachers';
+import Staff from './pages/admin/Staff';
 import Attendance from './pages/admin/Attendance';
 import Fees from './pages/admin/Fees';
 import Marks from './pages/admin/Marks';
@@ -74,7 +74,7 @@ export default function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="students" element={<Students />} />
-            <Route path="teachers" element={<Teachers />} />
+            <Route path="teachers" element={<Staff />} />
             <Route path="teacher-attendance" element={<AdminTeacherAttendance />} />
             <Route path="staff-attendance/:id/leaves" element={<StaffLeaveManagement />} />
             <Route path="attendance" element={<Attendance />} />

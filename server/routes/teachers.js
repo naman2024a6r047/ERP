@@ -7,8 +7,8 @@ const { makeTeacherId, makeTemporaryPassword } = require('../utils/credentialGen
 const { validateTeacherCreate, validateTeacherUpdate } = require('../middleware/validator');
 
 // (C3 fix) — whitelisted fields for teacher operations
-const TEACHER_CREATE_FIELDS = ['name', 'subject', 'phone', 'status', 'assigned_classes', 'qualification', 'experience', 'date_of_joining', 'email', 'password'];
-const TEACHER_UPDATE_FIELDS = ['name', 'subject', 'phone', 'status', 'assigned_classes', 'qualification', 'experience', 'email'];
+const TEACHER_CREATE_FIELDS = ['name', 'subject', 'phone', 'status', 'assigned_classes', 'qualification', 'experience', 'date_of_joining', 'email', 'password', 'document_type', 'document_number'];
+const TEACHER_UPDATE_FIELDS = ['name', 'subject', 'phone', 'status', 'assigned_classes', 'qualification', 'experience', 'email', 'document_type', 'document_number'];
 
 const pick = (obj, keys) => {
   const result = {};

@@ -35,9 +35,14 @@ const Teacher = sequelize.define('Teacher', {
     type: DataTypes.ENUM('active', 'leave', 'inactive'),
     defaultValue: 'active'
   },
-  // Comma-separated: "Class 8,Class 9,Class 10"
   assigned_classes: {
     type: DataTypes.TEXT
+  },
+  document_type: {
+    type: DataTypes.STRING(50)
+  },
+  document_number: {
+    type: DataTypes.STRING(100)
   }
 }, {
   tableName: 'teachers'
