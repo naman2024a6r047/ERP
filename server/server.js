@@ -111,6 +111,7 @@ app.use('/api/class-fees', require('./routes/classFees'));
 app.use('/api/credentials', require('./routes/credentials'));
 app.use('/api/profile', require('./routes/profile'));
 app.use('/api/settings', require('./routes/settings'));
+app.use('/api/events', require('./routes/events'));
 
 // ── Database status (shared between health and db-check) ──────────────────────
 let dbStatus = { connected: false, error: null, checkedAt: null };
@@ -172,7 +173,7 @@ app.listen(port, host, () => {
 
   // ── Connect to database asynchronously ──────────────────────────────────
   sequelize.authenticate()
-    .then(() => {
+    .then(async () => {
       console.log('[DB] ✅ MySQL connected successfully');
       dbStatus.connected = true;
       dbStatus.error = null;
@@ -184,10 +185,53 @@ app.listen(port, host, () => {
       // DEVELOPMENT → sync({ alter: true }) to auto-apply model changes.
       if (isProd) {
         console.log('[DB] Production mode — skipping sequelize.sync() to avoid index conflicts');
-        // Run hotfix directly
-        return sequelize.query('ALTER TABLE `settings` MODIFY COLUMN `value` LONGTEXT;').catch(err => {
+        // Run hotfixes for existing tables
+        await sequelize.query('ALTER TABLE `settings` MODIFY COLUMN `value` LONGTEXT;').catch(err => {
           console.error('[DB] Failed to alter settings table to LONGTEXT:', err.message);
         });
+        // Auto-create any new tables that were added after initial deployment
+        const newTableQueries = [
+          `CREATE TABLE IF NOT EXISTS \`events\` (
+            \`id\` INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            \`title\` VARCHAR(150) NOT NULL,
+            \`description\` TEXT,
+            \`event_date\` DATETIME NOT NULL,
+            \`location\` VARCHAR(150),
+            \`is_active\` TINYINT(1) DEFAULT 1,
+            \`created_by\` INTEGER,
+            \`createdAt\` DATETIME DEFAULT CURRENT_TIMESTAMP,
+            \`updatedAt\` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+          ) ENGINE=InnoDB;`,
+          `CREATE TABLE IF NOT EXISTS \`document_requests\` (
+            \`id\` INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            \`title\` VARCHAR(255) NOT NULL,
+            \`description\` TEXT,
+            \`document_type\` ENUM('pdf','image','any') DEFAULT 'any',
+            \`recipient_type\` ENUM('everyone','all_students','all_teachers','individual') NOT NULL,
+            \`recipients\` JSON,
+            \`custom_fields\` JSON,
+            \`created_by\` INTEGER NOT NULL,
+            \`deadline\` DATETIME,
+            \`status\` ENUM('active','closed') DEFAULT 'active',
+            \`createdAt\` DATETIME DEFAULT CURRENT_TIMESTAMP,
+            \`updatedAt\` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+          ) ENGINE=InnoDB;`,
+          `CREATE TABLE IF NOT EXISTS \`document_submissions\` (
+            \`id\` INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            \`request_id\` INTEGER NOT NULL,
+            \`user_id\` INTEGER NOT NULL,
+            \`file_url\` VARCHAR(255) NOT NULL,
+            \`custom_data\` JSON,
+            \`status\` ENUM('pending','approved','rejected') DEFAULT 'pending',
+            \`feedback\` TEXT,
+            \`createdAt\` DATETIME DEFAULT CURRENT_TIMESTAMP,
+            \`updatedAt\` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+          ) ENGINE=InnoDB;`
+        ];
+        for (const sql of newTableQueries) {
+          try { await sequelize.query(sql); } catch (e) { console.error('[DB] Table creation warning:', e.message); }
+        }
+        console.log('[DB] ✅ New tables checked / created');
       } else {
         console.log('[DB] Development mode — running sync({ alter: true })');
         return sequelize.sync({ alter: true });

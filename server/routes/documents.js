@@ -92,7 +92,7 @@ router.get('/requests', protect, async (req, res) => {
 });
 
 // ── POST / PUT / DELETE Requests (Admin Only) ───────────────────────────────
-router.post('/requests', protect, hasPermission('MANAGE_DOCUMENTS', 'admin'), async (req, res) => {
+router.post('/requests', protect, hasPermission('MANAGE_DOCUMENTS'), async (req, res) => {
   try {
     const { title, description, document_type, recipient_type, recipients, custom_fields, deadline } = req.body;
     
@@ -114,7 +114,7 @@ router.post('/requests', protect, hasPermission('MANAGE_DOCUMENTS', 'admin'), as
   }
 });
 
-router.put('/requests/:id', protect, hasPermission('MANAGE_DOCUMENTS', 'admin'), async (req, res) => {
+router.put('/requests/:id', protect, hasPermission('MANAGE_DOCUMENTS'), async (req, res) => {
   try {
     const request = await DocumentRequest.findByPk(req.params.id);
     if (!request) return res.status(404).json({ message: 'Not found' });
@@ -127,7 +127,7 @@ router.put('/requests/:id', protect, hasPermission('MANAGE_DOCUMENTS', 'admin'),
   }
 });
 
-router.delete('/requests/:id', protect, hasPermission('MANAGE_DOCUMENTS', 'admin'), async (req, res) => {
+router.delete('/requests/:id', protect, hasPermission('MANAGE_DOCUMENTS'), async (req, res) => {
   try {
     const request = await DocumentRequest.findByPk(req.params.id);
     if (!request) return res.status(404).json({ message: 'Not found' });
@@ -200,7 +200,7 @@ router.post('/requests/:id/submit', protect, upload.single('file'), async (req, 
 });
 
 // ── GET Submissions (Admin) ──────────────────────────────────────────────────
-router.get('/requests/:id/submissions', protect, hasPermission('MANAGE_DOCUMENTS', 'admin'), async (req, res) => {
+router.get('/requests/:id/submissions', protect, hasPermission('MANAGE_DOCUMENTS'), async (req, res) => {
   try {
     const submissions = await DocumentSubmission.findAll({
       where: { request_id: req.params.id },
@@ -217,7 +217,7 @@ router.get('/requests/:id/submissions', protect, hasPermission('MANAGE_DOCUMENTS
 });
 
 // ── PUT Submission Feedback/Status (Admin) ───────────────────────────────────
-router.put('/submissions/:id', protect, hasPermission('MANAGE_DOCUMENTS', 'admin'), async (req, res) => {
+router.put('/submissions/:id', protect, hasPermission('MANAGE_DOCUMENTS'), async (req, res) => {
   try {
     const { status, feedback } = req.body;
     const submission = await DocumentSubmission.findByPk(req.params.id);

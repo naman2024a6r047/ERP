@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../../components/common/Sidebar';
 import TopBar  from '../../components/common/TopBar';
+import ErrorBoundary from '../../components/common/ErrorBoundary';
 
 const titles = {
   '/admin':               'Dashboard',
@@ -36,7 +37,9 @@ export default function AdminLayout() {
           onMenuClick={() => setSidebarOpen(true)}
         />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </div>

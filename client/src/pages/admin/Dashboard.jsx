@@ -25,6 +25,7 @@ export default function Dashboard() {
   const [notifs, setNotifs] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [events, setEvents] = useState([]);
   const [chartPeriod, setChartPeriod] = useState('current_month');
   const [chartData, setChartData] = useState([]);
@@ -33,31 +34,48 @@ export default function Dashboard() {
 
   useEffect(() => {
     Promise.all([
-      API.get('/dashboard/admin'),
+      API.get('/dashboard/admin').catch(err => { console.error('[Dashboard] admin API fail:', err); return { data: {} }; }),
       API.get('/events').catch(() => ({ data: [] }))
     ])
       .then(([dashRes, eventsRes]) => {
-        const data = dashRes.data;
-        setStudents(data.recent_students || []);
-        setNotifs(data.notifications || []);
+        const data = dashRes.data || {};
+        setStudents(Array.isArray(data.recent_students) ? data.recent_students : []);
+        setNotifs(Array.isArray(data.notifications) ? data.notifications : []);
         setStats(data.stats || {});
-        setEvents(eventsRes.data || []);
+        setEvents(Array.isArray(eventsRes.data) ? eventsRes.data : []);
       })
-      .catch(() => toast.error('Failed to load dashboard metrics'))
+      .catch((err) => {
+        console.error('[Dashboard] Fatal load error:', err);
+        setError('Failed to load dashboard data. Please reload the page.');
+        toast.error('Failed to load dashboard metrics');
+      })
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     API.get(`/dashboard/chart?period=${chartPeriod}`)
       .then(({ data }) => {
-        setChartData(data.data || []);
+        setChartData(Array.isArray(data.data) ? data.data : []);
         setChartStats(data.averages || { attendance: '0%', fees: '0%', teacherAttendance: '0%' });
       })
-      .catch(() => toast.error('Failed to load overview chart data'));
+      .catch(() => {});
   }, [chartPeriod]);
 
   if (loading) return <LoadingSpinner />;
 
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md text-center">
+          <h3 className="text-lg font-bold text-red-800 mb-2">Dashboard Error</h3>
+          <p className="text-sm text-red-600 mb-4">{error}</p>
+          <button onClick={() => window.location.reload()} className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-xl text-sm font-semibold">
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
   // Get current date details
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
