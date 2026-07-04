@@ -183,12 +183,10 @@ app.listen(port, host, () => {
       //               exist (created via schema.sql or migrations).
       // DEVELOPMENT → sync({ alter: true }) to auto-apply model changes.
       if (isProd) {
-        console.log('[DB] Production mode — skipping schema alter (tables must exist)');
-        return sequelize.sync().then(() => {
-          // Hotfix: Ensure Settings value is LONGTEXT for base64 logos
-          return sequelize.query('ALTER TABLE `settings` MODIFY COLUMN `value` LONGTEXT;').catch(err => {
-            console.error('[DB] Failed to alter settings table to LONGTEXT:', err.message);
-          });
+        console.log('[DB] Production mode — skipping sequelize.sync() to avoid index conflicts');
+        // Run hotfix directly
+        return sequelize.query('ALTER TABLE `settings` MODIFY COLUMN `value` LONGTEXT;').catch(err => {
+          console.error('[DB] Failed to alter settings table to LONGTEXT:', err.message);
         });
       } else {
         console.log('[DB] Development mode — running sync({ alter: true })');
