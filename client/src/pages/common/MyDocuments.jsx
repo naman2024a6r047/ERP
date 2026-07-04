@@ -171,25 +171,37 @@ export default function MyDocuments() {
               />
             </div>
 
-            {selectedRequest.custom_fields && selectedRequest.custom_fields.length > 0 && (
-              <div className="space-y-4 pt-4 border-t border-slate-100 mt-4">
-                <h4 className="font-bold text-slate-700 text-sm">Additional Details</h4>
-                {selectedRequest.custom_fields.map((field, i) => (
-                  <div key={i}>
-                    <label className="block text-sm font-semibold text-slate-600 mb-1">
-                      {field.name} {field.required && <span className="text-red-500">*</span>}
-                    </label>
-                    <input 
-                      type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
-                      value={customData[field.name] || ''}
-                      onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
-                      required={field.required}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
+            {(() => {
+              let fields = [];
+              if (selectedRequest.custom_fields) {
+                if (typeof selectedRequest.custom_fields === 'string') {
+                  try { fields = JSON.parse(selectedRequest.custom_fields); } catch(e) {}
+                } else if (Array.isArray(selectedRequest.custom_fields)) {
+                  fields = selectedRequest.custom_fields;
+                }
+              }
+              if (!fields || fields.length === 0) return null;
+              
+              return (
+                <div className="space-y-4 pt-4 border-t border-slate-100 mt-4">
+                  <h4 className="font-bold text-slate-700 text-sm">Additional Details</h4>
+                  {fields.map((field, i) => (
+                    <div key={i}>
+                      <label className="block text-sm font-semibold text-slate-600 mb-1">
+                        {field.name} {field.required && <span className="text-red-500">*</span>}
+                      </label>
+                      <input 
+                        type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
+                        value={customData[field.name] || ''}
+                        onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
+                        required={field.required}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
 
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 mt-6">
               <button
