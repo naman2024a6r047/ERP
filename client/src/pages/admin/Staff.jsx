@@ -4,14 +4,14 @@ import Modal from '../../components/common/Modal';
 import DataTable from '../../components/common/DataTable';
 import SearchBar from '../../components/common/SearchBar';
 import Avatar from '../../components/common/Avatar';
-import TeacherForm from '../../components/forms/TeacherForm';
+import StaffForm from '../../components/forms/StaffForm';
 import { useAuth } from '../../context/AuthContext';
 import { can, isSuperAdmin } from '../../utils/roleUtils';
 import toast from 'react-hot-toast';
 
-export default function Teachers() {
+export default function Staff() {
   const { user }  = useAuth();
-  const [teachers, setTeachers]   = useState([]);
+  const [staff, setStaff]   = useState([]);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -26,8 +26,8 @@ export default function Teachers() {
   const load = (q = '') => {
     setLoading(true);
     API.get(`/teachers?search=${q}`)
-      .then(r => setTeachers(r.data))
-      .catch(() => toast.error('Failed to load teachers'))
+      .then(r => setStaff(r.data))
+      .catch(() => toast.error('Failed to load staff'))
       .finally(() => setLoading(false));
   };
 
@@ -48,10 +48,10 @@ export default function Teachers() {
 
       if (editing) {
         await API.put(`/teachers/${editing.id}`, payload);
-        toast.success('Teacher updated!');
+        toast.success('Staff updated!');
       } else {
         await API.post('/teachers', payload);
-        toast.success('Teacher added!');
+        toast.success('Staff added!');
       }
       setShowModal(false);
       load(search);
@@ -63,10 +63,10 @@ export default function Teachers() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Deactivate this teacher?')) return;
+    if (!window.confirm('Deactivate this staff member?')) return;
     try {
       await API.delete(`/teachers/${id}`);
-      toast.success('Teacher deactivated.');
+      toast.success('Staff deactivated.');
       load(search);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed.');
@@ -75,7 +75,7 @@ export default function Teachers() {
 
   const columns = [
     {
-      key: 'name', label: 'Teacher',
+      key: 'name', label: 'Staff',
       render: (val, row) => {
         const photoUrl = row.teacherUser?.profile_photo
           ? `${process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace('/api', '') : ''}${row.teacherUser.profile_photo}`
@@ -125,7 +125,7 @@ export default function Teachers() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3">
         <SearchBar
-          placeholder="Search teachers..."
+          placeholder="Search staff..."
           onChange={q => { setSearch(q); load(q); }}
           className="flex-1"
         />
@@ -135,16 +135,16 @@ export default function Teachers() {
             onClick={openAdd}
             className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors whitespace-nowrap"
           >
-            + Add Teacher
+            + Add Staff
           </button>
         )}
       </div>
 
       <DataTable
         columns={columns}
-        data={teachers}
+        data={staff}
         loading={loading}
-        emptyText="No teachers found."
+        emptyText="No staff found."
         actions={(row) => (
           <div className="flex gap-3">
             {/*  Only super admin gets Edit/Remove */}
@@ -164,9 +164,9 @@ export default function Teachers() {
         <Modal
           isOpen={showModal}
           onClose={() => setShowModal(false)}
-          title={editing ? 'Edit Teacher' : 'Add New Teacher'}
+          title={editing ? 'Edit Staff' : 'Add New Staff'}
         >
-          <TeacherForm
+          <StaffForm
             onSubmit={handleSubmit}
             loading={saving}
             defaultValues={editing ? {

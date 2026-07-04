@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { CLASSES, SUBJECTS } from '../../constants/roles';
 
-export default function TeacherForm({ onSubmit, defaultValues = {}, loading = false }) {
+export default function StaffForm({ onSubmit, defaultValues = {}, loading = false }) {
   const { register, handleSubmit, reset, formState: { errors } } = useForm({ defaultValues });
   useEffect(() => { reset(defaultValues); }, [JSON.stringify(defaultValues)]);
 
@@ -60,6 +60,26 @@ export default function TeacherForm({ onSubmit, defaultValues = {}, loading = fa
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={l}>Document Type</label>
+          <select {...register('document_type')} className={f}>
+            <option value="">Select Document</option>
+            <option value="Aadhaar Card">Aadhaar Card</option>
+            <option value="PAN Card">PAN Card</option>
+            <option value="Driving License">Driving License</option>
+            <option value="Passport">Passport</option>
+            <option value="Voter ID">Voter ID</option>
+            <option value="Employee ID">Employee ID</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label className={l}>Document Number</label>
+          <input {...register('document_number')} className={f} placeholder="Enter document number" />
+        </div>
+      </div>
+
       <div>
         <label className={l}>Assigned Classes</label>
         <div className="grid grid-cols-3 gap-2 mt-1">
@@ -75,7 +95,7 @@ export default function TeacherForm({ onSubmit, defaultValues = {}, loading = fa
 
       <button type="submit" disabled={loading}
         className="w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg text-sm transition-colors">
-        {loading ? 'Saving...' : (defaultValues?.id ? 'Update Teacher' : 'Add Teacher')}
+        {loading ? 'Saving...' : (defaultValues?.id ? 'Update Staff' : 'Add Staff')}
       </button>
     </form>
   );

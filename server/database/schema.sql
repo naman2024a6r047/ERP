@@ -74,6 +74,8 @@ CREATE TABLE teachers (
   join_date DATE,
   status ENUM('active','leave','inactive') DEFAULT 'active',
   assigned_classes TEXT,
+  document_type VARCHAR(50),
+  document_number VARCHAR(100),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

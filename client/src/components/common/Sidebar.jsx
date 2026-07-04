@@ -12,7 +12,7 @@ const navConfig = {
         { icon: 'student', label: 'Students', to: '/admin/students' },
         { icon: 'bulk-upload', label: 'Bulk Admission', to: '/admin/bulk-upload' },
         { icon: 'new-admission', label: 'Admissions & Approvals', to: '/admin/admissions' },
-        { icon: 'teacher', label: 'Teachers', to: '/admin/teachers' },
+        { icon: 'teacher', label: 'Staff', to: '/admin/teachers' },
         { icon: 'credentials', label: 'Credentials', to: '/admin/credentials' },
         { icon: 'attendance', label: 'Attendance', to: '/admin/attendance' },
         { icon: 'teacher-attendance', label: 'Staff Attendance', to: '/admin/teacher-attendance' },
