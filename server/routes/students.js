@@ -71,6 +71,10 @@ router.get('/', protect, hasPermission('VIEW_STUDENTS'), async (req, res) => {
         { parent_name:  { [Op.like]: `%${search}%` } },
         { parent_phone: { [Op.like]: `%${search}%` } },
       ];
+      // If search is a valid number, also search roll_number
+      if (!isNaN(search) && search.trim() !== '') {
+        where[Op.or].push({ roll_number: parseInt(search, 10) });
+      }
     }
 
     const { count, rows } = await Student.findAndCountAll({

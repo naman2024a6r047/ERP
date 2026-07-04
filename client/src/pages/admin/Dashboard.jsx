@@ -32,17 +32,27 @@ export default function Dashboard() {
   const [chartStats, setChartStats] = useState({ attendance: '0%', fees: '0%', teacherAttendance: '0%' });
   const navigate = useNavigate();
 
+  const [lowAttendance, setLowAttendance] = useState([]);
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
+  const [studentSearchResults, setStudentSearchResults] = useState([]);
+  const [selectedStudentAttendance, setSelectedStudentAttendance] = useState(null);
+  const [searchingStudent, setSearchingStudent] = useState(false);
+  const [showStudentResults, setShowStudentResults] = useState(false);
+  const searchTimer = React.useRef(null);
+
   useEffect(() => {
     Promise.all([
       API.get('/dashboard/admin').catch(err => { console.error('[Dashboard] admin API fail:', err); return { data: {} }; }),
-      API.get('/events').catch(() => ({ data: [] }))
+      API.get('/events').catch(() => ({ data: [] })),
+      API.get('/dashboard/low-attendance').catch(() => ({ data: { lowAttendance: [] } }))
     ])
-      .then(([dashRes, eventsRes]) => {
+      .then(([dashRes, eventsRes, lowAttRes]) => {
         const data = dashRes.data || {};
         setStudents(Array.isArray(data.recent_students) ? data.recent_students : []);
         setNotifs(Array.isArray(data.notifications) ? data.notifications : []);
         setStats(data.stats || {});
         setEvents(Array.isArray(eventsRes.data) ? eventsRes.data : []);
+        setLowAttendance(Array.isArray(lowAttRes.data.lowAttendance) ? lowAttRes.data.lowAttendance : []);
       })
       .catch((err) => {
         console.error('[Dashboard] Fatal load error:', err);
@@ -60,6 +70,38 @@ export default function Dashboard() {
       })
       .catch(() => {});
   }, [chartPeriod]);
+
+  const handleStudentSearch = (q) => {
+    setStudentSearchQuery(q);
+    if (!q.trim()) {
+      setStudentSearchResults([]);
+      setShowStudentResults(false);
+      return;
+    }
+    setShowStudentResults(true);
+    setSearchingStudent(true);
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      API.get(`/students?search=${encodeURIComponent(q)}&limit=5`)
+        .then(res => setStudentSearchResults(res.data.students || []))
+        .catch(err => console.error(err))
+        .finally(() => setSearchingStudent(false));
+    }, 500);
+  };
+
+  const fetchStudentAttendance = (student) => {
+    setShowStudentResults(false);
+    setSelectedStudentAttendance({ loading: true, student });
+    API.get(`/dashboard/student-attendance/${student.id}`)
+      .then(res => {
+        setSelectedStudentAttendance({ loading: false, data: res.data, student });
+      })
+      .catch(err => {
+        toast.error('Failed to fetch attendance for student');
+        setSelectedStudentAttendance(null);
+      });
+  };
+
 
   if (loading) return <LoadingSpinner />;
 
@@ -639,7 +681,136 @@ export default function Dashboard() {
 
       </div>
 
-      {/* 6. Quick Links Section */}
+      {/* 7. Student Attendance Search & Low Attendance Alerts */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        
+        {/* Low Attendance Alerts */}
+        <div className="xl:col-span-2 bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card flex flex-col h-96">
+          <div className="pb-4 border-b border-slate-100 flex items-center justify-between mb-4">
+            <h3 className="text-sm font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
+              <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              Low Attendance Alerts (&lt; 80%)
+            </h3>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{lowAttendance.length} Students</span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
+            {lowAttendance.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                <svg className="w-10 h-10 mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-xs font-bold">All students have good attendance!</p>
+              </div>
+            ) : (
+              lowAttendance.map((item, i) => (
+                <div key={i} className="flex items-center justify-between p-3.5 bg-red-50/50 border border-red-100 rounded-2xl">
+                  <div>
+                    <h4 className="text-sm font-extrabold text-slate-800">{item.student.first_name} {item.student.last_name}</h4>
+                    <p className="text-[11px] font-semibold text-slate-500 mt-1">
+                      Roll No: <span className="text-slate-700">{item.student.roll_number}</span> &bull; Class: <span className="text-slate-700">{item.student.class} - {item.student.section}</span>
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-black text-red-600">{item.percentage}%</div>
+                    <div className="text-[9px] font-bold text-red-400 uppercase tracking-wider">{item.present}/{item.total} Days</div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Student Attendance Search */}
+        <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card flex flex-col h-96 relative">
+          <div className="pb-4 border-b border-slate-100 mb-4">
+            <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Student Attendance Search</h3>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Search by Name or Roll No</p>
+          </div>
+
+          <div className="relative mb-4">
+            <input 
+              type="text" 
+              placeholder="E.g. John or 105..." 
+              value={studentSearchQuery}
+              onChange={(e) => handleStudentSearch(e.target.value)}
+              onFocus={() => { if (studentSearchQuery.trim()) setShowStudentResults(true); }}
+              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block pl-10 pr-3 py-3 font-semibold placeholder:font-normal placeholder:text-slate-400"
+            />
+            <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            {searchingStudent && (
+              <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                <div className="w-4 h-4 border-2 border-slate-200 border-t-blue-500 rounded-full animate-spin"></div>
+              </div>
+            )}
+
+            {/* Dropdown Results */}
+            {showStudentResults && studentSearchQuery.trim() !== '' && (
+              <div className="absolute z-20 w-full mt-2 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden max-h-48 overflow-y-auto">
+                {studentSearchResults.length > 0 ? (
+                  studentSearchResults.map(s => (
+                    <div 
+                      key={s.id} 
+                      onClick={() => fetchStudentAttendance(s)}
+                      className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0"
+                    >
+                      <div className="font-bold text-slate-800 text-xs">{s.first_name} {s.last_name}</div>
+                      <div className="text-[10px] text-slate-500 font-semibold mt-0.5">Roll: {s.roll_number} | Class: {s.class}-{s.section}</div>
+                    </div>
+                  ))
+                ) : (
+                  !searchingStudent && <div className="p-4 text-center text-xs text-slate-400 font-semibold">No students found.</div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1 flex flex-col justify-center">
+            {selectedStudentAttendance ? (
+              selectedStudentAttendance.loading ? (
+                <div className="flex justify-center"><LoadingSpinner /></div>
+              ) : (
+                <div className="space-y-4 animate-fadeIn">
+                  <div className="text-center pb-3 border-b border-slate-100">
+                    <h4 className="text-base font-black text-slate-800">{selectedStudentAttendance.student.first_name} {selectedStudentAttendance.student.last_name}</h4>
+                    <p className="text-[11px] font-bold text-slate-500 mt-1">Roll No: {selectedStudentAttendance.student.roll_number}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Monthly</div>
+                      <div className={`text-2xl font-black ${selectedStudentAttendance.data.monthly.percentage < 80 ? 'text-red-500' : 'text-emerald-500'}`}>
+                        {selectedStudentAttendance.data.monthly.percentage}%
+                      </div>
+                      <div className="text-[9px] font-bold text-slate-400 mt-1">{selectedStudentAttendance.data.monthly.present}/{selectedStudentAttendance.data.monthly.total} Days</div>
+                    </div>
+                    <div className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Academic Yr</div>
+                      <div className={`text-2xl font-black ${selectedStudentAttendance.data.yearly.percentage < 80 ? 'text-red-500' : 'text-emerald-500'}`}>
+                        {selectedStudentAttendance.data.yearly.percentage}%
+                      </div>
+                      <div className="text-[9px] font-bold text-slate-400 mt-1">{selectedStudentAttendance.data.yearly.present}/{selectedStudentAttendance.data.yearly.total} Days</div>
+                    </div>
+                  </div>
+                </div>
+              )
+            ) : (
+              <div className="text-center text-slate-400 space-y-2">
+                <svg className="w-12 h-12 mx-auto text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <p className="text-xs font-bold">Search and select a student<br/>to view their attendance.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>
+
+      {/* 8. Quick Links Section */}
       <div className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-card">
         <div className="pb-4 border-b border-slate-100 flex items-center gap-2.5 mb-5">
           <svg className="w-5 h-5 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>

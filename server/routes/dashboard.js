@@ -102,6 +102,94 @@ router.get('/admin', protect, authorize('admin', 'admin2'), cacheMiddleware(300)
   }
 });
 
+// GET /api/dashboard/low-attendance - Returns students with < 80% attendance
+router.get('/low-attendance', protect, authorize('admin', 'admin2'), async (req, res) => {
+  try {
+    const students = await Student.findAll({
+      where: { is_active: true, approval_status: 'approved' },
+      attributes: ['id', 'student_id', 'first_name', 'last_name', 'class', 'section', 'roll_number'],
+    });
+
+    // Fetch all attendance for the academic year
+    const records = await Attendance.findAll({
+      where: { status: { [Op.ne]: 'holiday' } }, // exclude holidays from total
+      attributes: ['student_id', 'status'],
+    });
+
+    const attendanceStats = {};
+    records.forEach(r => {
+      if (!attendanceStats[r.student_id]) {
+        attendanceStats[r.student_id] = { total: 0, presentAndLate: 0 };
+      }
+      attendanceStats[r.student_id].total++;
+      if (r.status === 'present' || r.status === 'late') {
+        attendanceStats[r.student_id].presentAndLate++;
+      }
+    });
+
+    const lowAttendanceStudents = students.map(s => {
+      const stats = attendanceStats[s.id];
+      if (!stats || stats.total === 0) {
+        return { student: s, percentage: 0, total: 0, present: 0 };
+      }
+      const percentage = Math.round((stats.presentAndLate / stats.total) * 100);
+      return { student: s, percentage, total: stats.total, present: stats.presentAndLate };
+    }).filter(s => s.percentage < 80 && s.total > 0); // only flag if there are actually records
+
+    lowAttendanceStudents.sort((a, b) => a.percentage - b.percentage);
+
+    res.json({ lowAttendance: lowAttendanceStudents });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/dashboard/student-attendance/:studentId - Monthly and Yearly stats
+router.get('/student-attendance/:studentId', protect, authorize('admin', 'admin2'), async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const student = await Student.findByPk(studentId);
+    if (!student) return res.status(404).json({ message: 'Student not found' });
+
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+
+    const records = await Attendance.findAll({
+      where: { student_id: studentId, status: { [Op.ne]: 'holiday' } },
+    });
+
+    let monthTotal = 0, monthPresent = 0;
+    let yearTotal = 0, yearPresent = 0;
+
+    records.forEach(r => {
+      yearTotal++;
+      if (r.status === 'present' || r.status === 'late') yearPresent++;
+
+      if (r.date >= startOfMonth && r.date <= endOfMonth) {
+        monthTotal++;
+        if (r.status === 'present' || r.status === 'late') monthPresent++;
+      }
+    });
+
+    res.json({
+      student,
+      monthly: {
+        total: monthTotal,
+        present: monthPresent,
+        percentage: monthTotal ? Math.round((monthPresent / monthTotal) * 100) : 0
+      },
+      yearly: {
+        total: yearTotal,
+        present: yearPresent,
+        percentage: yearTotal ? Math.round((yearPresent / yearTotal) * 100) : 0
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // GET /api/dashboard/chart - Retrieve aggregated line chart data for different periods
 router.get('/chart', protect, authorize('admin', 'admin2'), cacheMiddleware(300), async (req, res) => {
   try {
