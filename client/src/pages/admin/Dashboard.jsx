@@ -153,9 +153,11 @@ export default function Dashboard() {
   const pendingPct = feeTotal > 0 ? Math.round((feePending / feeTotal) * 100) : 0;
 
   // Donut chart collections
-  const feeDonutData = [
+  const feeDonutData = feeTotal > 0 ? [
     { name: 'Collected', value: feePct, color: '#22c55e' },
     { name: 'Pending', value: pendingPct, color: '#f59e0b' }
+  ] : [
+    { name: 'No Data', value: 1, color: '#e2e8f0' }
   ];
 
   const presentCount = stats.attendance_present || 0;
@@ -164,9 +166,11 @@ export default function Dashboard() {
   const presentPct   = markedCount > 0 ? Math.round((presentCount / markedCount) * 100) : 0;
   const absentPct    = markedCount > 0 ? Math.round((absentCount / markedCount) * 100) : 0;
 
-  const attDonutData = [
-    { name: 'Present', value: presentPct, color: '#22c55e' },
-    { name: 'Absent', value: absentPct, color: '#f59e0b' }
+  const attDonutData = markedCount > 0 ? [
+    { name: 'Present', value: presentCount, color: '#3b82f6' }, // blue-500
+    { name: 'Absent', value: absentCount, color: '#f59e0b' } // amber-500
+  ] : [
+    { name: 'No Data', value: 1, color: '#e2e8f0' } // grey-200
   ];
 
   return (
