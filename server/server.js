@@ -197,6 +197,11 @@ app.listen(port, host, () => {
       try {
         const { migratePendingStudents } = require('./utils/dbMigrator');
         await migratePendingStudents();
+
+        const { rejectOldPendingStudents } = require('./utils/cleanupTasks');
+        // Run once on boot, then every 24 hours
+        await rejectOldPendingStudents();
+        setInterval(rejectOldPendingStudents, 24 * 60 * 60 * 1000);
       } catch (migrationErr) {
         console.error('[DB] ❌ Automatic migration of pending students failed:', migrationErr.message);
       }
