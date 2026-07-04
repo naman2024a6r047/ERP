@@ -45,7 +45,7 @@ export default function SendMessageModal({ onClose }) {
       if (roleFilter) params.append('role', roleFilter);
       if (classFilter) params.append('class', classFilter);
       
-      const { data } = await API.get(`/users/search?${params.toString()}`);
+      const { data } = await API.get(`/notifications/users/search?${params.toString()}`);
       setUsers(data.users || []);
     } catch (err) {
       toast.error('Failed to load users');

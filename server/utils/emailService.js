@@ -1,8 +1,12 @@
 const nodemailer = require('nodemailer');
 
-const createTransporter = () => {
+let transporter = null;
+let isConfigured = false;
+
+const initTransporter = () => {
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-    return nodemailer.createTransport({
+    isConfigured = true;
+    transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT || 587,
       secure: process.env.SMTP_PORT == 465,
@@ -12,10 +16,7 @@ const createTransporter = () => {
       },
     });
   }
-  return null;
 };
-
-const transporter = createTransporter();
 
 /**
  * Sends an email to a single recipient or multiple BCC recipients.
@@ -25,9 +26,15 @@ const transporter = createTransporter();
  */
 const sendEmail = async (to, subject, text) => {
   try {
+    // Lazy init
+    if (!isConfigured) initTransporter();
+
     const isArray = Array.isArray(to);
     const bccList = isArray ? to.filter(Boolean).join(',') : '';
-    const toAddr = isArray ? process.env.SMTP_FROM || 'noreply@school-erp.com' : to;
+    
+    // Safer default: send to self if bulk BCC, to avoid spam filters or bounces
+    const fallbackTo = process.env.SMTP_FROM || process.env.SMTP_USER || 'noreply@school-erp.com';
+    const toAddr = isArray ? fallbackTo : to;
 
     if (!transporter) {
       console.log('=====================================================');
@@ -41,7 +48,7 @@ const sendEmail = async (to, subject, text) => {
     }
 
     const mailOptions = {
-      from: process.env.SMTP_FROM || '"School ERP" <noreply@school-erp.com>',
+      from: process.env.SMTP_FROM || process.env.SMTP_USER || '"School ERP" <noreply@school-erp.com>',
       to: toAddr,
       subject,
       text,
