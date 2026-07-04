@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import API from '../../utils/api';
 import AttendanceForm from '../../components/forms/AttendanceForm';
 import { CLASSES, SECTIONS } from '../../constants/roles';
@@ -51,7 +51,7 @@ export default function Attendance() {
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [selectedStudentAtt, setSelectedStudentAtt] = useState(null);
-  const searchTimer = React.useRef(null);
+  const searchTimer = useRef(null);
 
   const handleSearch = (q) => {
     setSearchQuery(q);
