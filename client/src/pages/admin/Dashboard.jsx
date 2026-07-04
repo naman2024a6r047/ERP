@@ -28,7 +28,7 @@ export default function Dashboard() {
   const [events, setEvents] = useState([]);
   const [chartPeriod, setChartPeriod] = useState('current_month');
   const [chartData, setChartData] = useState([]);
-  const [chartStats, setChartStats] = useState({ attendance: '0%', fees: '0%', exams: '0%' });
+  const [chartStats, setChartStats] = useState({ attendance: '0%', fees: '0%', teacherAttendance: '0%' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export default function Dashboard() {
     API.get(`/dashboard/chart?period=${chartPeriod}`)
       .then(({ data }) => {
         setChartData(data.data || []);
-        setChartStats(data.averages || { attendance: '0%', fees: '0%', exams: '0%' });
+        setChartStats(data.averages || { attendance: '0%', fees: '0%', teacherAttendance: '0%' });
       })
       .catch(() => toast.error('Failed to load overview chart data'));
   }, [chartPeriod]);
@@ -352,37 +352,44 @@ export default function Dashboard() {
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block" /> Fee Collection ({chartStats.fees})
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 block" /> Exam Performance ({chartStats.exams})
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 block" /> Teacher Attendance ({chartStats.teacherAttendance})
             </div>
           </div>
 
           {/* Recharts Area Chart */}
           <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="mainBlue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="mainGreen" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="mainPurple" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f8fafc" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
-                <Tooltip />
-                <Area type="monotone" dataKey="attendance" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#mainBlue)" dot={{ r: 4 }} />
-                <Area type="monotone" dataKey="fees" stroke="#22c55e" strokeWidth={2} fillOpacity={1} fill="url(#mainGreen)" dot={{ r: 4 }} />
-                <Area type="monotone" dataKey="exams" stroke="#8b5cf6" strokeWidth={2} fillOpacity={1} fill="url(#mainPurple)" dot={{ r: 4 }} />
-              </AreaChart>
-            </ResponsiveContainer>
+            {chartData && chartData.length >= 2 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="mainBlue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="mainGreen" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#22c55e" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="mainPurple" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f8fafc" vertical={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
+                  <Tooltip formatter={(value) => [`${value}%`]} />
+                  <Area type="monotone" dataKey="attendance" name="Attendance" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#mainBlue)" dot={{ r: 4 }} />
+                  <Area type="monotone" dataKey="fees" name="Fee Collection" stroke="#22c55e" strokeWidth={2} fillOpacity={1} fill="url(#mainGreen)" dot={{ r: 4 }} />
+                  <Area type="monotone" dataKey="teacherAttendance" name="Teacher Attendance" stroke="#8b5cf6" strokeWidth={2} fillOpacity={1} fill="url(#mainPurple)" dot={{ r: 4 }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                <svg className="w-8 h-8 text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                <p className="text-xs font-bold text-slate-400">Preparing the graph... Waiting for more data to generate trends.</p>
+              </div>
+            )}
           </div>
         </div>
 
