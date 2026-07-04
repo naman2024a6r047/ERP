@@ -243,6 +243,9 @@ const validateTeacherCreate = [
       }
       return true;
     }),
+  body('staff_type')
+    .optional({ checkFalsy: true })
+    .isIn(['Teacher', 'Principal', 'Vice Principal', 'Accountant', 'Fee Collector', 'Receptionist', 'Clerk', 'Librarian', 'Lab Assistant', 'Sports Teacher', 'Driver', 'Helper', 'Security Guard', 'Office Staff', 'Other']).withMessage('Invalid staff type selected.'),
   body('password')
     .optional({ checkFalsy: true })
     .isLength({ min: 6 }).withMessage('Password must be at least 6 characters.'),
@@ -294,6 +297,9 @@ const validateTeacherUpdate = [
       }
       return true;
     }),
+  body('staff_type')
+    .optional({ checkFalsy: true })
+    .isIn(['Teacher', 'Principal', 'Vice Principal', 'Accountant', 'Fee Collector', 'Receptionist', 'Clerk', 'Librarian', 'Lab Assistant', 'Sports Teacher', 'Driver', 'Helper', 'Security Guard', 'Office Staff', 'Other']).withMessage('Invalid staff type selected.'),
   validate,
 ];
 

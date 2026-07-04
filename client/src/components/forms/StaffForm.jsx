@@ -20,13 +20,36 @@ export default function StaffForm({ onSubmit, defaultValues = {}, loading = fals
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className={l}>Subject *</label>
-          <select {...register('subject', { required: 'Required' })} className={f}>
+          <label className={l}>Staff Type *</label>
+          <select {...register('staff_type', { required: 'Required' })} className={f}>
+            <option value="Teacher">Teacher</option>
+            <option value="Principal">Principal</option>
+            <option value="Vice Principal">Vice Principal</option>
+            <option value="Accountant">Accountant</option>
+            <option value="Fee Collector">Fee Collector</option>
+            <option value="Receptionist">Receptionist</option>
+            <option value="Clerk">Clerk</option>
+            <option value="Librarian">Librarian</option>
+            <option value="Lab Assistant">Lab Assistant</option>
+            <option value="Sports Teacher">Sports Teacher</option>
+            <option value="Driver">Driver</option>
+            <option value="Helper">Helper</option>
+            <option value="Security Guard">Security Guard</option>
+            <option value="Office Staff">Office Staff</option>
+            <option value="Other">Other</option>
+          </select>
+          {errors.staff_type && <p className={e}>{errors.staff_type.message}</p>}
+        </div>
+        <div>
+          <label className={l}>Subject (If Applicable)</label>
+          <select {...register('subject')} className={f}>
             <option value="">Select</option>
             {SUBJECTS.map(s => <option key={s}>{s}</option>)}
           </select>
-          {errors.subject && <p className={e}>{errors.subject.message}</p>}
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
         <div>
           <label className={l}>Qualification</label>
           <input {...register('qualification')} className={f} placeholder="M.Sc, B.Ed" />

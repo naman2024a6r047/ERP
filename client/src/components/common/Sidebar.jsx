@@ -16,6 +16,7 @@ const navConfig = {
         { icon: 'credentials', label: 'Credentials', to: '/admin/credentials' },
         { icon: 'attendance', label: 'Attendance', to: '/admin/attendance' },
         { icon: 'teacher-attendance', label: 'Staff Attendance', to: '/admin/teacher-attendance' },
+        { icon: 'notices', label: 'Leave Management', to: '/admin/leaves' },
       ],
     },
     {
@@ -75,6 +76,7 @@ const navConfig = {
         { icon: 'results', label: 'Enter Marks', to: '/teacher/marks' },
         { icon: 'results', label: 'Incharge Results', to: '/teacher/incharge-results' },
         { icon: 'teacher-attendance', label: 'My Attendance', to: '/teacher/my-attendance' },
+        { icon: 'notices', label: 'Leave Management', to: '/teacher/leaves' },
         { icon: 'documents', label: 'My Documents', to: '/teacher/my-documents' },
         { icon: 'profile', label: 'My Profile', to: '/teacher/profile' },
       ],

@@ -76,6 +76,7 @@ CREATE TABLE teachers (
   assigned_classes TEXT,
   document_type VARCHAR(50),
   document_number VARCHAR(100),
+  staff_type VARCHAR(50) DEFAULT 'Teacher',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -448,6 +449,10 @@ CREATE TABLE IF NOT EXISTS staff_leaves (
   reason TEXT NOT NULL,
   status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
   admin_remarks TEXT,
+  total_days DECIMAL(5,1),
+  attachment_url VARCHAR(255),
+  approved_by INT,
+  action_date DATETIME,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE

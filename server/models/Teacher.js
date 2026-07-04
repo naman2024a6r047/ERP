@@ -43,6 +43,10 @@ const Teacher = sequelize.define('Teacher', {
   },
   document_number: {
     type: DataTypes.STRING(100)
+  },
+  staff_type: {
+    type: DataTypes.STRING(50),
+    defaultValue: 'Teacher'
   }
 }, {
   tableName: 'teachers'

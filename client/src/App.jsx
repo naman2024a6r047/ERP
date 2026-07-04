@@ -22,6 +22,7 @@ import AdminTeacherAttendance from './pages/admin/TeacherAttendance';
 import Settings from './pages/admin/Settings';
 import DocumentRequests from './pages/admin/DocumentRequests';
 import StaffLeaveManagement from './pages/admin/StaffLeaveManagement';
+import AdminLeaveManagement from './pages/admin/LeaveManagement';
 
 import Admin2Layout from './pages/admin2/Admin2Layout';
 import Admin2Dashboard from './pages/admin2/Admin2Dashboard';
@@ -35,6 +36,7 @@ import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import MarkAttendance from './pages/teacher/MarkAttendance';
 import EnterMarks from './pages/teacher/EnterMarks';
 import TeacherOwnAttendance from './pages/teacher/TeacherOwnAttendance';
+import TeacherLeaveManagement from './pages/teacher/LeaveManagement';
 import InchargeResults from './pages/teacher/InchargeResults';
 
 import ParentLayout from './pages/parent/ParentLayout';
@@ -76,6 +78,7 @@ export default function App() {
             <Route path="students" element={<Students />} />
             <Route path="teachers" element={<Staff />} />
             <Route path="teacher-attendance" element={<AdminTeacherAttendance />} />
+            <Route path="leaves" element={<AdminLeaveManagement />} />
             <Route path="staff-attendance/:id/leaves" element={<StaffLeaveManagement />} />
             <Route path="attendance" element={<Attendance />} />
             <Route path="fees" element={<Fees />} />
@@ -128,6 +131,7 @@ export default function App() {
             <Route path="marks" element={<EnterMarks />} />
             <Route path="incharge-results" element={<InchargeResults />} />
             <Route path="my-attendance" element={<TeacherOwnAttendance />} />
+            <Route path="leaves" element={<TeacherLeaveManagement />} />
             <Route path="profile" element={<MyProfilePage />} />
             <Route path="notifications" element={<MyNotifications />} />
             <Route path="my-documents" element={<MyDocuments />} />

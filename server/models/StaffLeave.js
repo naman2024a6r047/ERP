@@ -34,6 +34,22 @@ const StaffLeave = sequelize.define('StaffLeave', {
   admin_remarks: {
     type: DataTypes.TEXT,
     allowNull: true
+  },
+  total_days: {
+    type: DataTypes.DECIMAL(5, 1),
+    allowNull: true
+  },
+  attachment_url: {
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
+  approved_by: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  action_date: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'staff_leaves',

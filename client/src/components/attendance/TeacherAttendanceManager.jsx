@@ -46,7 +46,7 @@ export default function TeacherAttendanceManager() {
       const [teachersRes, attendanceRes, leavesRes] = await Promise.all([
         API.get('/teachers'),
         API.get(`/teacher-attendance?month=${month}&year=${year}`),
-        API.get('/staff-leaves/pending')
+        API.get('/staff-leaves')
       ]);
 
       const teacherList = (teachersRes.data || []).filter((t) => t.status !== 'inactive');
@@ -57,6 +57,20 @@ export default function TeacherAttendanceManager() {
         nextMap[t.id] = 'present';
       });
 
+      const allLeaves = leavesRes.data || [];
+      const pendingLeavesData = allLeaves.filter(l => l.status === 'pending');
+      setPendingLeaves(pendingLeavesData);
+
+      allLeaves.filter(l => l.status === 'approved').forEach(l => {
+        const s = new Date(l.start_date);
+        const e = new Date(l.end_date);
+        const d = new Date(date);
+        s.setHours(0,0,0,0); e.setHours(0,0,0,0); d.setHours(0,0,0,0);
+        if (d >= s && d <= e) {
+          nextMap[l.teacher_id] = 'leave';
+        }
+      });
+
       attendanceRecords
         .filter((record) => formatDateInput(record.date) === date)
         .forEach((record) => {
@@ -65,7 +79,6 @@ export default function TeacherAttendanceManager() {
 
       setTeachers(teacherList);
       setRecords(attendanceRecords);
-      setPendingLeaves(leavesRes.data || []);
       setAttendanceMap(nextMap);
       setExpandedLeave(null);
     } catch (err) {
