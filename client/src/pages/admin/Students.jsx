@@ -16,15 +16,28 @@ export default function Students() {
   const [saving, setSaving]       = useState(false);
   const [credentials, setCredentials] = useState(null);
 
-  const load = (q = '') => {
+  const [filterClass, setFilterClass] = useState('');
+  const [filterSection, setFilterSection] = useState('');
+
+  const load = (q = '', c = filterClass, s = filterSection) => {
     setLoading(true);
-    API.get(`/students?search=${q}`)
+    let url = `/students?search=${q}`;
+    if (c) url += `&class=${c}`;
+    if (s) url += `&section=${s}`;
+    
+    API.get(url)
       .then(r => setStudents(r.data.students || []))
       .catch(() => toast.error('Failed to load students'))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
+
+  const handleFilterChange = (c, s) => {
+    setFilterClass(c);
+    setFilterSection(s);
+    load(search, c, s);
+  };
 
   const openAdd  = () => { setEditing(null); setShowModal(true); };
   const openEdit = (s) => { setEditing(s); setShowModal(true); };
@@ -41,7 +54,7 @@ export default function Students() {
         toast.success('Student added and credentials generated!');
       }
       setShowModal(false);
-      load(search);
+      load(search, filterClass, filterSection);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save.');
     } finally {
@@ -54,7 +67,7 @@ export default function Students() {
     try {
       await API.delete(`/students/${id}`);
       toast.success('Student deactivated.');
-      load(search);
+      load(search, filterClass, filterSection);
     } catch {
       toast.error('Failed.');
     }
@@ -64,9 +77,31 @@ export default function Students() {
     <div className="space-y-4">
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex gap-2 w-full sm:w-auto">
+          <select 
+            value={filterClass}
+            onChange={(e) => handleFilterChange(e.target.value, filterSection)}
+            className="flex-1 sm:w-32 bg-white border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block px-3 py-2.5"
+          >
+            <option value="">All Classes</option>
+            {[...Array(12)].map((_, i) => (
+              <option key={i+1} value={i+1}>Class {i+1}</option>
+            ))}
+          </select>
+          <select 
+            value={filterSection}
+            onChange={(e) => handleFilterChange(filterClass, e.target.value)}
+            className="flex-1 sm:w-28 bg-white border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block px-3 py-2.5"
+          >
+            <option value="">All Sections</option>
+            {['A','B','C','D','E'].map(s => (
+              <option key={s} value={s}>Sec {s}</option>
+            ))}
+          </select>
+        </div>
         <SearchBar
           placeholder="Search by name, ID or class..."
-          onChange={q => { setSearch(q); load(q); }}
+          onChange={q => { setSearch(q); load(q, filterClass, filterSection); }}
           className="flex-1"
         />
         <button
