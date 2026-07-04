@@ -22,6 +22,7 @@ const Setting           = require('./Setting');
 const Event             = require('./Event');
 const DocumentRequest    = require('./DocumentRequest');
 const DocumentSubmission = require('./DocumentSubmission');
+const StaffLeave         = require('./StaffLeave');
 
 // ── Associations ──────────────────────────────────────────────────────────────
 
@@ -100,6 +101,9 @@ Student.belongsTo(User, { foreignKey: 'approved_by', as: 'approver' });
 Teacher.hasMany(TeacherAttendance, { foreignKey: 'teacher_id', as: 'attendances' });
 TeacherAttendance.belongsTo(Teacher, { foreignKey: 'teacher_id', as: 'teacher' });
 
+Teacher.hasMany(StaffLeave, { foreignKey: 'teacher_id', as: 'leaves' });
+StaffLeave.belongsTo(Teacher, { foreignKey: 'teacher_id', as: 'teacher' });
+
 Teacher.hasMany(ClassIncharge, { foreignKey: 'teacher_id', as: 'inchargeAssignments' });
 ClassIncharge.belongsTo(Teacher, { foreignKey: 'teacher_id', as: 'teacher' });
 
@@ -159,5 +163,6 @@ module.exports = {
   Setting,
   Event,
   DocumentRequest,
-  DocumentSubmission
+  DocumentSubmission,
+  StaffLeave
 };
