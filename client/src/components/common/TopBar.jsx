@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import API from '../../utils/api';
 import toast from 'react-hot-toast';
+import SendMessageModal from '../forms/SendMessageModal';
 
 // Breadcrumbs helper mapping
 const routeBreadcrumbs = {
@@ -54,6 +55,7 @@ export default function TopBar({ title, onMenuClick }) {
   const [activeSession, setActiveSession] = useState(null);
   const [selectedSessionId, setSelectedSessionId] = useState('');
   const [loadingSessions, setLoadingSessions] = useState(true);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchSessionData = async () => {
@@ -194,11 +196,11 @@ export default function TopBar({ title, onMenuClick }) {
         {/* Dynamic Alerts Buttons */}
         <div className="flex items-center gap-2">
           
-          {/* Messages Button (Gmail Compose) */}
+          {/* Messages Button */}
           <button 
-            onClick={() => window.open('https://mail.google.com/mail/?view=cm&fs=1', '_blank')}
+            onClick={() => setIsMessageModalOpen(true)}
             className="p-2.5 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all relative"
-            title="Compose Email in Gmail"
+            title="Send Message"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -247,6 +249,10 @@ export default function TopBar({ title, onMenuClick }) {
         </div>
 
       </div>
+
+      {isMessageModalOpen && (
+        <SendMessageModal onClose={() => setIsMessageModalOpen(false)} />
+      )}
     </header>
   );
 }

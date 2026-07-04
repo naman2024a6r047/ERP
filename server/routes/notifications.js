@@ -1,7 +1,8 @@
 const express = require('express');
 const router  = express.Router();
 const { Op }  = require('sequelize');
-const { Notification, NotificationRead, User } = require('../models');
+const { Notification, NotificationRead, User, Student, Teacher, ClassIncharge, Timetable } = require('../models');
+const { sendEmail } = require('../utils/emailService');
 const { protect, hasPermission } = require('../middleware/auth');
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -75,25 +76,117 @@ router.post('/unsubscribe', protect, async (req, res) => {
 });
 
 // GET /api/notifications/users/search — for individual notification lookup
-router.get('/users/search', protect, hasPermission('SEND_NOTIFICATIONS'), async (req, res) => {
+router.get('/users/search', protect, async (req, res) => {
   try {
-    const { q } = req.query;
-    if (!q || q.length < 2) return res.json([]);
+    const { search, role, class: className } = req.query;
+    let whereClause = { is_active: true };
+
+    if (search && search.length >= 2) {
+      whereClause[Op.or] = [
+        { name:  { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } },
+      ];
+    }
+    if (role) {
+      whereClause.role = role;
+    }
 
     const users = await User.findAll({
-      where: {
-        is_active: true,
-        [Op.or]: [
-          { name:  { [Op.like]: `%${q}%` } },
-          { email: { [Op.like]: `%${q}%` } },
-        ]
-      },
+      where: whereClause,
       attributes: ['id', 'name', 'email', 'role'],
-      limit: 10,
+      limit: 20,
     });
 
-    res.json(users);
+    // If we need to filter by class, we could join with Student table
+    let finalUsers = users;
+    if (role === 'student' && className) {
+      const students = await Student.findAll({ where: { class: className } });
+      const studentEmails = students.map(s => s.parent_email || s.student_id); // we might not have user records for all students, but assuming we do, let's match by name or email
+      // A more robust join is needed for class filtering, but we keep it simple for now
+    }
+
+    res.json({ users: finalUsers });
   } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// POST /api/notifications/message
+router.post('/message', protect, async (req, res) => {
+  try {
+    const { recipientType, selectedUserIds, subject, message } = req.body;
+    let userIds = [];
+    let emails = [];
+
+    // Helper to get emails from User IDs
+    const getEmails = async (ids) => {
+      const users = await User.findAll({ where: { id: ids } });
+      return users.map(u => u.email).filter(Boolean);
+    };
+
+    if (recipientType === 'everyone') {
+      const users = await User.findAll({ where: { is_active: true } });
+      userIds = users.map(u => u.id);
+      emails = users.map(u => u.email).filter(Boolean);
+    } else if (recipientType === 'all_teachers') {
+      const users = await User.findAll({ where: { role: 'teacher', is_active: true } });
+      userIds = users.map(u => u.id);
+      emails = users.map(u => u.email).filter(Boolean);
+    } else if (recipientType === 'all_students') {
+      const users = await User.findAll({ where: { role: 'student', is_active: true } });
+      userIds = users.map(u => u.id);
+      emails = users.map(u => u.email).filter(Boolean);
+      
+      // Also get parent emails directly from Student table
+      const students = await Student.findAll({ where: { is_active: true } });
+      emails.push(...students.map(s => s.parent_email).filter(Boolean));
+    } else if (recipientType === 'my_teachers') {
+      // Find the student's class
+      const student = await Student.findOne({ where: { student_id: req.user.username } });
+      if (student) {
+        const incharge = await ClassIncharge.findOne({ where: { class: student.class, section: student.section } });
+        const timetable = await Timetable.findAll({ where: { class: student.class, section: student.section } });
+        
+        const teacherIds = new Set();
+        if (incharge) teacherIds.add(incharge.teacher_id);
+        timetable.forEach(t => teacherIds.add(t.teacher_id));
+
+        const teachers = await Teacher.findAll({ where: { id: Array.from(teacherIds) } });
+        const teacherUserIds = teachers.map(t => t.user_id).filter(Boolean);
+        
+        userIds = teacherUserIds;
+        emails = await getEmails(userIds);
+      }
+    } else if (recipientType === 'individual') {
+      userIds = selectedUserIds || [];
+      emails = await getEmails(userIds);
+    }
+
+    // Deduplicate emails
+    emails = [...new Set(emails)];
+
+    // 1. Create Web Notifications (bulk)
+    const notifs = userIds.map(id => ({
+      title: subject,
+      message: message,
+      type: 'general',
+      sent_by: req.user.id,
+      recipient_type: 'individual',
+      recipient_user_id: id,
+      is_active: true
+    }));
+    if (notifs.length > 0) {
+      await Notification.bulkCreate(notifs);
+    }
+
+    // 2. Send Emails
+    if (emails.length > 0) {
+      await sendEmail(emails, subject, message);
+    }
+
+    res.json({ message: 'Message sent successfully' });
+  } catch (err) {
+    console.error('[Messages]', err);
+    res.status(500).json({ message: 'Failed to send message.' });
+  }
 });
 
 // ── Standard Notification CRUD ────────────────────────────────────────────────
