@@ -205,7 +205,7 @@ router.get('/requests/:id/submissions', protect, hasPermission('MANAGE_DOCUMENTS
     const submissions = await DocumentSubmission.findAll({
       where: { request_id: req.params.id },
       include: [
-        { model: User, as: 'user', attributes: ['id', 'name', 'email', 'role', 'username'] }
+        { model: User, as: 'user', attributes: ['id', 'name', 'email', 'role'] }
       ],
       order: [['id', 'DESC']]
     });
