@@ -37,7 +37,7 @@ router.get('/requests', protect, async (req, res) => {
     if (req.user.role === 'admin') {
       // Admins see all
       const requests = await DocumentRequest.findAll({
-        order: [['created_at', 'DESC']],
+        order: [['id', 'DESC']],
         include: [{ model: User, as: 'creator', attributes: ['name'] }]
       });
       return res.json({ requests });
@@ -71,7 +71,7 @@ router.get('/requests', protect, async (req, res) => {
         status: 'active',
         [Op.or]: conditions
       },
-      order: [['created_at', 'DESC']],
+      order: [['id', 'DESC']],
       include: [
         { model: User, as: 'creator', attributes: ['name'] },
         // Also fetch user's own submission to check status
@@ -207,7 +207,7 @@ router.get('/requests/:id/submissions', protect, hasPermission('MANAGE_DOCUMENTS
       include: [
         { model: User, as: 'user', attributes: ['id', 'name', 'email', 'role', 'username'] }
       ],
-      order: [['created_at', 'DESC']]
+      order: [['id', 'DESC']]
     });
     res.json({ submissions });
   } catch (err) {
