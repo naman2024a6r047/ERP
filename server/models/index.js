@@ -20,6 +20,8 @@ const AuditLog          = require('./AuditLog');
 const PushSubscription  = require('./PushSubscription');
 const Setting           = require('./Setting');
 const Event             = require('./Event');
+const DocumentRequest    = require('./DocumentRequest');
+const DocumentSubmission = require('./DocumentSubmission');
 
 // ── Associations ──────────────────────────────────────────────────────────────
 
@@ -125,16 +127,37 @@ for (const modelName of Object.keys(sequelize.models)) {
   };
 }
 
+DocumentRequest.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
+User.hasMany(DocumentRequest, { foreignKey: 'created_by', as: 'createdRequests' });
+
+DocumentRequest.hasMany(DocumentSubmission, { foreignKey: 'request_id', as: 'submissions', onDelete: 'CASCADE' });
+DocumentSubmission.belongsTo(DocumentRequest, { foreignKey: 'request_id', as: 'request' });
+
+DocumentSubmission.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(DocumentSubmission, { foreignKey: 'user_id', as: 'submissions' });
+
 module.exports = {
   sequelize,
-  User, Student, Teacher, Session,
-  Attendance, Fee,
-  Result, ResultSubject,
-  Notification, NotificationRead,
-  Timetable, PromotionHistory,
-  AdmissionRequest, TeacherAttendance,
-  ClassIncharge, ClassFeeStructure,
-  AuditLog, PushSubscription,
+  User,
+  Student,
+  Teacher,
+  Session,
+  Attendance,
+  Fee,
+  Result,
+  ResultSubject,
+  Notification,
+  NotificationRead,
+  Timetable,
+  PromotionHistory,
+  AdmissionRequest,
+  TeacherAttendance,
+  ClassIncharge,
+  ClassFeeStructure,
+  AuditLog,
+  PushSubscription,
   Setting,
   Event,
+  DocumentRequest,
+  DocumentSubmission
 };

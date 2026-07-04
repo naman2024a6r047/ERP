@@ -20,6 +20,7 @@ import FeeStructure from './pages/admin/FeeStructure';
 import Events from './pages/admin/Events';
 import AdminTeacherAttendance from './pages/admin/TeacherAttendance';
 import Settings from './pages/admin/Settings';
+import DocumentRequests from './pages/admin/DocumentRequests';
 
 import Admin2Layout from './pages/admin2/Admin2Layout';
 import Admin2Dashboard from './pages/admin2/Admin2Dashboard';
@@ -44,6 +45,7 @@ import MyNotifications from './pages/parent/MyNotifications';
 
 import MyProfilePage from './pages/common/MyProfilePage';
 import BulkUploadStudents from './pages/common/BulkUploadStudents';
+import MyDocuments from './pages/common/MyDocuments';
 
 import FCLayout from './pages/feecollector/FCLayout';
 import FCDashboard from './pages/feecollector/FCDashboard';
@@ -86,6 +88,8 @@ export default function App() {
             <Route path="bulk-upload" element={<BulkUploadStudents />} />
             <Route path="admissions" element={<FCAdmissions />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="documents" element={<DocumentRequests />} />
+            <Route path="my-documents" element={<MyDocuments />} />
           </Route>
 
           <Route
@@ -105,7 +109,7 @@ export default function App() {
             <Route path="profile" element={<MyProfilePage />} />
             <Route path="bulk-upload" element={<BulkUploadStudents />} />
             <Route path="notifications" element={<MyNotifications />} />
-            <Route path="events" element={<Events />} />
+            <Route path="my-documents" element={<MyDocuments />} />
           </Route>
 
           <Route
@@ -123,6 +127,7 @@ export default function App() {
             <Route path="my-attendance" element={<TeacherOwnAttendance />} />
             <Route path="profile" element={<MyProfilePage />} />
             <Route path="notifications" element={<MyNotifications />} />
+            <Route path="my-documents" element={<MyDocuments />} />
           </Route>
 
           <Route
@@ -139,6 +144,7 @@ export default function App() {
             <Route path="report-card" element={<ReportCard />} />
             <Route path="fees" element={<FeeStatus />} />
             <Route path="notifications" element={<MyNotifications />} />
+            <Route path="my-documents" element={<MyDocuments />} />
           </Route>
 
           <Route
@@ -158,6 +164,7 @@ export default function App() {
             <Route path="profile" element={<MyProfilePage />} />
             <Route path="bulk-upload" element={<BulkUploadStudents />} />
             <Route path="notifications" element={<MyNotifications />} />
+            <Route path="my-documents" element={<MyDocuments />} />
           </Route>
         </Routes>
         </BrowserRouter>

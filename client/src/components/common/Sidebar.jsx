@@ -37,7 +37,8 @@ const navConfig = {
       section: 'COMMUNICATION',
       items: [
         { icon: 'notices', label: 'Notifications', to: '/admin/notifications' },
-        { icon: 'timetable', label: 'Upcoming Events', to: '/admin/events' }
+        { icon: 'timetable', label: 'Upcoming Events', to: '/admin/events' },
+        { icon: 'documents', label: 'Document Requests', to: '/admin/documents' },
       ],
     },
     {
@@ -60,7 +61,8 @@ const navConfig = {
         { icon: 'bulk-upload', label: 'Bulk Admission', to: '/admin2/bulk-upload' },
         { icon: 'teacher-attendance', label: 'Teacher Attendance', to: '/admin2/teachers' },
         { icon: 'profile', label: 'My Profile', to: '/admin2/profile' },
-        { icon: 'timetable', label: 'Upcoming Events', to: '/admin2/events' }
+        { icon: 'timetable', label: 'Upcoming Events', to: '/admin2/events' },
+        { icon: 'documents', label: 'My Documents', to: '/admin2/my-documents' }
       ],
     },
   ],
@@ -73,6 +75,7 @@ const navConfig = {
         { icon: 'results', label: 'Enter Marks', to: '/teacher/marks' },
         { icon: 'results', label: 'Incharge Results', to: '/teacher/incharge-results' },
         { icon: 'teacher-attendance', label: 'My Attendance', to: '/teacher/my-attendance' },
+        { icon: 'documents', label: 'My Documents', to: '/teacher/my-documents' },
         { icon: 'profile', label: 'My Profile', to: '/teacher/profile' },
       ],
     },
@@ -89,6 +92,7 @@ const navConfig = {
         { icon: 'notices', label: 'Notices', to: '/parent/notifications' },
         { icon: 'fees', label: 'Fees', to: '/parent/fees' },
         { icon: 'messages', label: 'Messages', to: '/parent/notifications' },
+        { icon: 'documents', label: 'My Documents', to: '/parent/my-documents' },
       ]
     }
   ],
@@ -104,6 +108,7 @@ const navConfig = {
         { icon: 'notices', label: 'Notices', to: '/parent/notifications' },
         { icon: 'fees', label: 'Fees', to: '/parent/fees' },
         { icon: 'messages', label: 'Messages', to: '/parent/notifications' },
+        { icon: 'documents', label: 'My Documents', to: '/parent/my-documents' },
       ]
     }
   ],
@@ -117,6 +122,7 @@ const navConfig = {
         { icon: 'credentials', label: 'Credentials', to: '/fc/credentials' },
         { icon: 'student', label: 'Admissions & Approvals', to: '/fc/admissions' },
         { icon: 'bulk-upload', label: 'Bulk Admission', to: '/fc/bulk-upload' },
+        { icon: 'documents', label: 'My Documents', to: '/fc/my-documents' },
         { icon: 'profile', label: 'My Profile', to: '/fc/profile' },
       ],
     },
@@ -131,6 +137,12 @@ const renderIcon = (iconName) => {
       return (
         <svg className={baseClass} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        </svg>
+      );
+    case 'documents':
+      return (
+        <svg className={baseClass} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       );
     case 'dashboard':
