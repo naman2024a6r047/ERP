@@ -34,7 +34,13 @@ export default function FCAdmissions() {
       : 'Approved by admin.';
     if (status === 'rejected' && !notes) return;
     try {
-      await API.put(`/fc/admission-requests/${id}`, { status, review_notes: notes });
+      const idStr = String(id);
+      if (idStr.startsWith('student-')) {
+        const studentId = idStr.replace('student-', '');
+        await API.put(`/students/${studentId}/approval`, { status, rejection_reason: notes });
+      } else {
+        await API.put(`/fc/admission-requests/${id}`, { status, review_notes: notes });
+      }
       toast.success(`Request ${status}!`);
       load();
     } catch (err) {
@@ -46,7 +52,7 @@ export default function FCAdmissions() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-gray-800">Admission Requests</h2>
+          <h2 className="text-lg font-bold text-gray-800">Admissions & Approvals</h2>
           <p className="text-gray-400 text-sm">{requests.length} total requests</p>
         </div>
         <select value={filter} onChange={e => setFilter(e.target.value)}

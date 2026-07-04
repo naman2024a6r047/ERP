@@ -9,7 +9,6 @@ import LoginPage from './pages/LoginPage';
 import AdminLayout from './pages/admin/AdminLayout';
 import Dashboard from './pages/admin/Dashboard';
 import Students from './pages/admin/Students';
-import StudentApprovals from './pages/admin/StudentApprovals';
 import Teachers from './pages/admin/Teachers';
 import Attendance from './pages/admin/Attendance';
 import Fees from './pages/admin/Fees';
@@ -72,7 +71,6 @@ export default function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="students" element={<Students />} />
-            <Route path="student-approvals" element={<StudentApprovals />} />
             <Route path="teachers" element={<Teachers />} />
             <Route path="teacher-attendance" element={<AdminTeacherAttendance />} />
             <Route path="attendance" element={<Attendance />} />
