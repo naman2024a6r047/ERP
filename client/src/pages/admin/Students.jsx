@@ -13,7 +13,9 @@ export default function Students() {
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [editing, setEditing]     = useState(null);
+  const [viewing, setViewing]     = useState(null);
   const [saving, setSaving]       = useState(false);
   const [credentials, setCredentials] = useState(null);
 
@@ -162,6 +164,12 @@ export default function Students() {
                     <td className="py-3 px-4 whitespace-nowrap">
                       <div className="flex gap-3">
                         <button
+                          onClick={() => { setViewing(s); setShowViewModal(true); }}
+                          className="text-xs text-indigo-500 hover:text-indigo-700 font-medium"
+                        >
+                          Review
+                        </button>
+                        <button
                           onClick={() => openEdit(s)}
                           className="text-xs text-blue-500 hover:text-blue-700 font-medium"
                         >
@@ -200,6 +208,68 @@ export default function Students() {
           loading={saving}
           defaultValues={editing || {}}
         />
+      </Modal>
+
+      <Modal
+        isOpen={showViewModal}
+        onClose={() => { setShowViewModal(false); setViewing(null); }}
+        title="Student Details"
+      >
+        {viewing && (
+          <div className="space-y-4 text-sm text-gray-700">
+            <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
+              <Avatar name={`${viewing.first_name} ${viewing.last_name}`} size="lg" />
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">{viewing.first_name} {viewing.last_name}</h3>
+                <p className="text-gray-500 font-mono text-xs">{viewing.student_id}</p>
+                <span className={`mt-1 inline-block text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${viewing.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                  {viewing.is_active ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Class</p>
+                <p className="font-semibold">{viewing.class} - {viewing.section}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Roll No.</p>
+                <p className="font-semibold">{viewing.roll_number || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Gender</p>
+                <p className="font-semibold">{viewing.gender || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Date of Birth</p>
+                <p className="font-semibold">{viewing.date_of_birth ? new Date(viewing.date_of_birth).toLocaleDateString() : 'N/A'}</p>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-100 pt-4 mt-2">
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Parent Information</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Name</p>
+                  <p className="font-semibold">{viewing.parent_name || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Phone</p>
+                  <p className="font-semibold">{viewing.parent_phone || 'N/A'}</p>
+                </div>
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Email</p>
+                  <p className="font-semibold">{viewing.parent_email || 'N/A'}</p>
+                </div>
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Address</p>
+                  <p className="font-semibold">{viewing.parent_address || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

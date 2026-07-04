@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import API from '../../utils/api';
 import { formatDate } from '../../utils/helpers';
 import { useAuth } from '../../context/AuthContext';
+import Modal from '../../components/common/Modal';
+import Avatar from '../../components/common/Avatar';
 import toast from 'react-hot-toast';
 
 const statusColor = {
@@ -16,6 +18,8 @@ export default function FCAdmissions() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [filter, setFilter]     = useState('');
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewing, setViewing] = useState(null);
 
   const load = () => {
     setLoading(true);
@@ -94,24 +98,30 @@ export default function FCAdmissions() {
                       </span>
                     </td>
                     <td className="py-3 px-4 whitespace-nowrap">
-                      {r.status === 'pending' && (user?.role === 'admin' || user?.role === 'admin2') && (
-                        <div className="flex gap-2">
-                          <button onClick={() => handleAction(r.id, 'approved')}
-                            className="text-xs bg-green-500 text-white px-2.5 py-1 rounded-lg hover:bg-green-600">
-                            Approve
-                          </button>
-                          <button onClick={() => handleAction(r.id, 'rejected')}
-                            className="text-xs bg-red-500 text-white px-2.5 py-1 rounded-lg hover:bg-red-600">
-                            Reject
-                          </button>
-                        </div>
-                      )}
-                      {r.status === 'approved' && (
-                        <span className="text-xs text-green-600 font-medium">✓ Student Created</span>
-                      )}
-                      {(r.status === 'rejected') && (
-                        <span className="text-xs text-red-500" title={r.review_notes}>Rejected</span>
-                      )}
+                      <div className="flex items-center gap-3">
+                        <button onClick={() => { setViewing(r); setShowViewModal(true); }}
+                          className="text-xs text-indigo-500 hover:text-indigo-700 font-medium">
+                          Review
+                        </button>
+                        {r.status === 'pending' && (user?.role === 'admin' || user?.role === 'admin2') && (
+                          <div className="flex gap-2">
+                            <button onClick={() => handleAction(r.id, 'approved')}
+                              className="text-xs bg-green-500 text-white px-2.5 py-1 rounded-lg hover:bg-green-600">
+                              Approve
+                            </button>
+                            <button onClick={() => handleAction(r.id, 'rejected')}
+                              className="text-xs bg-red-500 text-white px-2.5 py-1 rounded-lg hover:bg-red-600">
+                              Reject
+                            </button>
+                          </div>
+                        )}
+                        {r.status === 'approved' && (
+                          <span className="text-xs text-green-600 font-medium">✓ Created</span>
+                        )}
+                        {(r.status === 'rejected') && (
+                          <span className="text-xs text-red-500" title={r.review_notes}>Rejected</span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -120,6 +130,81 @@ export default function FCAdmissions() {
           </div>
         )}
       </div>
+
+      <Modal
+        isOpen={showViewModal}
+        onClose={() => { setShowViewModal(false); setViewing(null); }}
+        title="Admission Request Details"
+      >
+        {viewing && (
+          <div className="space-y-4 text-sm text-gray-700">
+            <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
+              <Avatar name={`${viewing.first_name} ${viewing.last_name}`} size="lg" />
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">{viewing.first_name} {viewing.last_name}</h3>
+                <p className="text-gray-500 font-mono text-xs">{formatDate(viewing.created_at || viewing.createdAt)}</p>
+                <span className={`mt-1 inline-block text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${statusColor[viewing.status] || 'bg-gray-100 text-gray-600'}`}>
+                  {viewing.status.replace('_', ' ')}
+                </span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Applying For</p>
+                <p className="font-semibold">{viewing.applying_class}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Previous School</p>
+                <p className="font-semibold">{viewing.previous_school || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Gender</p>
+                <p className="font-semibold">{viewing.gender || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Date of Birth</p>
+                <p className="font-semibold">{viewing.date_of_birth ? new Date(viewing.date_of_birth).toLocaleDateString() : 'N/A'}</p>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-100 pt-4 mt-2">
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Parent Information</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Name</p>
+                  <p className="font-semibold">{viewing.parent_name || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Phone</p>
+                  <p className="font-semibold">{viewing.parent_phone || 'N/A'}</p>
+                </div>
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Email</p>
+                  <p className="font-semibold">{viewing.parent_email || 'N/A'}</p>
+                </div>
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Address</p>
+                  <p className="font-semibold">{viewing.parent_address || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+
+            {viewing.review_notes && (
+              <div className="border-t border-gray-100 pt-4 mt-2">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Review Notes</h4>
+                <p className="text-sm italic text-gray-600">{viewing.review_notes}</p>
+              </div>
+            )}
+            {viewing.remarks && (
+              <div className="border-t border-gray-100 pt-4 mt-2">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Remarks (On Submission)</h4>
+                <p className="text-sm italic text-gray-600">{viewing.remarks}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
