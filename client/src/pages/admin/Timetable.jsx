@@ -64,7 +64,11 @@ export default function Timetable() {
   // Build grid: day → period → slot
   const grid = {};
   DAYS.forEach(d => { grid[d] = {}; });
-  timetable.forEach(slot => { grid[slot.day][slot.period_number] = slot; });
+  timetable.forEach(slot => {
+    if (slot.day && grid[slot.day]) {
+      grid[slot.day][slot.period_number] = slot;
+    }
+  });
 
   const handleCellClick = (day, periodNum) => {
     const existing = grid[day][periodNum];
@@ -197,7 +201,7 @@ export default function Timetable() {
                               <div>{subj}</div>
                               {slot?.teacher && (
                                 <div className="text-[10px] opacity-70 mt-0.5">
-                                  {slot.teacher.name?.split(' ').slice(-1)[0]}
+                                  {slot.teacher.name ? slot.teacher.name.split(' ').slice(-1)[0] : ''}
                                 </div>
                               )}
                             </div>

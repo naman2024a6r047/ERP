@@ -5,6 +5,15 @@ const { Attendance, Student } = require('../models');
 const { protect, hasPermission, authorize } = require('../middleware/auth');
 const { getTeacherAllowedClasses } = require('../utils/teacherAllowedClasses');
 
+const formatDateRange = (year, month) => {
+  const y = parseInt(year, 10);
+  const m = parseInt(month, 10);
+  const start = `${y}-${String(m).padStart(2, '0')}-01`;
+  const lastDay = new Date(y, m, 0).getDate();
+  const end = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+  return { start, end };
+};
+
 // POST /api/attendance/bulk
 // ✅ admin, admin2, teacher
 router.post('/bulk', protect, hasPermission('MANAGE_STUDENT_ATTENDANCE'), async (req, res) => {
@@ -79,8 +88,7 @@ router.get('/student/:studentId', protect, async (req, res) => {
     const where = { student_id: req.params.studentId };
 
     if (month && year) {
-      const start = new Date(year, month - 1, 1);
-      const end   = new Date(year, month, 0);
+      const { start, end } = formatDateRange(year, month);
       where.date  = { [Op.between]: [start, end] };
     }
 
@@ -153,8 +161,7 @@ router.get('/report/monthly', protect, hasPermission('MANAGE_STUDENT_ATTENDANCE'
       }
     }
 
-    const start    = new Date(year, month - 1, 1);
-    const end      = new Date(year, month, 0);
+    const { start, end } = formatDateRange(year, month);
 
     const students = await Student.findAll({
       where: { class: cls, ...(section ? { section } : {}), is_active: true },

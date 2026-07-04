@@ -54,7 +54,7 @@ export default function ParentDashboard() {
     if (studentClass && studentSection) {
       setLoadingTimetable(true);
       API.get(`/timetable?class=${studentClass}&section=${studentSection}`)
-        .then(r => setTimetableData(r.data || []))
+        .then(r => setTimetableData(Array.isArray(r.data) ? r.data : []))
         .catch(err => console.error('Failed to load student timetable', err))
         .finally(() => setLoadingTimetable(false));
     }
@@ -83,7 +83,11 @@ export default function ParentDashboard() {
   // Build weekly timetable grid day → period → slot
   const fullGrid = {};
   DAYS.forEach(d => { fullGrid[d] = {}; });
-  timetableData.forEach(slot => { fullGrid[slot.day][slot.period_number] = slot; });
+  timetableData.forEach(slot => {
+    if (slot.day && fullGrid[slot.day]) {
+      fullGrid[slot.day][slot.period_number] = slot;
+    }
+  });
 
   // Integration states
   const [fees, setFees] = useState([]);
@@ -98,14 +102,14 @@ export default function ParentDashboard() {
 
     Promise.all([
       API.get(`/fees/student/${studentId}`).catch(() => ({ data: [] })),
-      API.get(`/attendance/student/${studentId}`).catch(() => ({ data: [] })),
+      API.get(`/attendance/student/${studentId}`).catch(() => ({ data: { records: [] } })),
       API.get(`/results/student/${studentId}`).catch(() => ({ data: [] })),
       API.get(`/notifications`).catch(() => ({ data: [] }))
     ]).then(([feesRes, attRes, resRes, notifRes]) => {
-      setFees(feesRes.data || []);
-      setAttendance(attRes.data || []);
-      setResults(resRes.data || []);
-      setNotifications(notifRes.data || []);
+      setFees(Array.isArray(feesRes.data) ? feesRes.data : []);
+      setAttendance(attRes.data?.records || (Array.isArray(attRes.data) ? attRes.data : []));
+      setResults(Array.isArray(resRes.data) ? resRes.data : []);
+      setNotifications(Array.isArray(notifRes.data) ? notifRes.data : []);
       setDashboardLoading(false);
     });
   }, [user?.linkedStudent?.id]);
@@ -660,7 +664,7 @@ export default function ParentDashboard() {
                             <div>{subj}</div>
                             {slot?.teacher && (
                               <div className="text-[9px] opacity-75 mt-0.5">
-                                {slot.teacher.name?.split(' ').slice(-1)[0]}
+                                {slot.teacher.name ? slot.teacher.name.split(' ').slice(-1)[0] : ''}
                               </div>
                             )}
                           </div>

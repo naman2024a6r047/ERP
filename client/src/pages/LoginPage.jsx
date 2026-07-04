@@ -74,7 +74,7 @@ export default function LoginPage() {
           
           {/* Top subtle highlight bar depending on the active tab */}
           <div className={`absolute top-0 left-0 right-0 h-[3px] transition-all duration-500 ${
-            portal === 'student' ? 'bg-gradient-to-r from-blue-600 to-cyan-500' : 'bg-gradient-to-r from-indigo-600 to-purple-500'
+            portal === 'student' ? 'bg-gradient-to-r from-blue-600 to-blue-400' : 'bg-gradient-to-r from-indigo-600 to-indigo-400'
           }`} />
 
           {/* Portal Switcher Tabs */}
