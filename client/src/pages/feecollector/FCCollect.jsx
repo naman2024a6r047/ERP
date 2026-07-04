@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import API from '../../utils/api';
+import toast from 'react-hot-toast';
 import Modal from '../../components/common/Modal';
+import { CLASSES } from '../../constants/roles';
 import Receipt from '../../components/Receipt';
 import FeeForm from '../../components/forms/FeeForm';
 import MultiMonthFeeForm from '../../components/forms/MultiMonthFeeForm';
 import { generateFeeReceipt } from '../../utils/pdfGenerator';
 import { formatCurrency, feeStatusColor } from '../../utils/helpers';
 import { useSettings } from '../../context/SettingsContext';
-import toast from 'react-hot-toast';
 
 export default function FCCollect() {
   const { settings } = useSettings() || {};
@@ -24,10 +25,7 @@ export default function FCCollect() {
   const [receiptModal, setReceiptModal] = useState(null);
   const [multiModal, setMultiModal] = useState(null);
 
-  const classes = useMemo(
-    () => ['Playgroup', 'Nursery', 'LKG', 'UKG', 'day care', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'],
-    []
-  );
+  const classes = useMemo(() => CLASSES, []);
   const sections = ['A', 'B', 'C'];
 
   useEffect(() => {

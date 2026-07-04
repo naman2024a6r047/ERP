@@ -5,6 +5,7 @@ import SearchBar from '../../components/common/SearchBar';
 import Avatar from '../../components/common/Avatar';
 import StudentForm from '../../components/forms/StudentForm';
 import { feeStatusColor } from '../../utils/helpers';
+import { CLASSES, SECTIONS } from '../../constants/roles';
 import toast from 'react-hot-toast';
 
 export default function Students() {
@@ -84,8 +85,8 @@ export default function Students() {
             className="flex-1 sm:w-32 bg-white border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block px-3 py-2.5"
           >
             <option value="">All Classes</option>
-            {[...Array(12)].map((_, i) => (
-              <option key={i+1} value={i+1}>Class {i+1}</option>
+            {CLASSES.map(c => (
+              <option key={c} value={c}>{c}</option>
             ))}
           </select>
           <select 
@@ -94,7 +95,7 @@ export default function Students() {
             className="flex-1 sm:w-28 bg-white border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block px-3 py-2.5"
           >
             <option value="">All Sections</option>
-            {['A','B','C','D','E'].map(s => (
+            {SECTIONS.map(s => (
               <option key={s} value={s}>Sec {s}</option>
             ))}
           </select>
