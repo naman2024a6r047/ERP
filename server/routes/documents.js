@@ -212,7 +212,7 @@ router.get('/requests/:id/submissions', protect, hasPermission('MANAGE_DOCUMENTS
     res.json({ submissions });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Failed to fetch submissions' });
+    res.status(500).json({ message: `Failed to fetch submissions: ${err.message}` });
   }
 });
 

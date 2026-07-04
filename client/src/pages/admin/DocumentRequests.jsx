@@ -72,7 +72,7 @@ export default function DocumentRequests() {
       const res = await API.get(`/documents/requests/${request.id}/submissions`);
       setSubmissions(res.data.submissions || []);
     } catch (err) {
-      toast.error('Failed to load submissions');
+      toast.error(err.response?.data?.message || 'Failed to load submissions');
     } finally {
       setLoadingSubmissions(false);
     }
