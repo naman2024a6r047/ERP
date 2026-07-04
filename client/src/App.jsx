@@ -21,6 +21,7 @@ import Events from './pages/admin/Events';
 import AdminTeacherAttendance from './pages/admin/TeacherAttendance';
 import Settings from './pages/admin/Settings';
 import DocumentRequests from './pages/admin/DocumentRequests';
+import StaffLeaveManagement from './pages/admin/StaffLeaveManagement';
 
 import Admin2Layout from './pages/admin2/Admin2Layout';
 import Admin2Dashboard from './pages/admin2/Admin2Dashboard';
@@ -75,6 +76,7 @@ export default function App() {
             <Route path="students" element={<Students />} />
             <Route path="teachers" element={<Teachers />} />
             <Route path="teacher-attendance" element={<AdminTeacherAttendance />} />
+            <Route path="staff-attendance/:id/leaves" element={<StaffLeaveManagement />} />
             <Route path="attendance" element={<Attendance />} />
             <Route path="fees" element={<Fees />} />
             <Route path="fee-structure" element={<FeeStructure />} />
@@ -104,6 +106,7 @@ export default function App() {
             <Route path="results" element={<ResultApprovals />} />
             <Route path="incharge" element={<ClassInchargeManager />} />
             <Route path="teachers" element={<Admin2TeacherAttendance />} />
+            <Route path="staff-attendance/:id/leaves" element={<StaffLeaveManagement />} />
             <Route path="admissions" element={<FCAdmissions />} />
             <Route path="credentials" element={<CredentialManagement />} />
             <Route path="profile" element={<MyProfilePage />} />

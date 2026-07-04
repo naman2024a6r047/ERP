@@ -436,3 +436,18 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
 
 CREATE INDEX idx_push_user ON push_subscriptions(user_id);
 
+
+CREATE TABLE IF NOT EXISTS staff_leaves (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  teacher_id INT NOT NULL,
+  leave_type VARCHAR(50) NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  reason TEXT NOT NULL,
+  status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+  admin_remarks TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE
+);
+

@@ -104,6 +104,7 @@ app.use('/api/timetable', require('./routes/timetable'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/fc', require('./routes/feeCollector'));
 app.use('/api/teacher-attendance', require('./routes/teacherAttendance'));
+app.use('/api/staff-leaves', require('./routes/staffLeaves'));
 app.use('/api/class-incharge', require('./routes/classIncharge'));
 app.use('/api/class-fees', require('./routes/classFees'));
 app.use('/api/credentials', require('./routes/credentials'));

@@ -15,7 +15,7 @@ const navConfig = {
         { icon: 'teacher', label: 'Teachers', to: '/admin/teachers' },
         { icon: 'credentials', label: 'Credentials', to: '/admin/credentials' },
         { icon: 'attendance', label: 'Attendance', to: '/admin/attendance' },
-        { icon: 'teacher-attendance', label: 'Teacher Attendance', to: '/admin/teacher-attendance' },
+        { icon: 'teacher-attendance', label: 'Staff Attendance', to: '/admin/teacher-attendance' },
       ],
     },
     {
@@ -59,7 +59,7 @@ const navConfig = {
         { icon: 'credentials', label: 'Credentials', to: '/admin2/credentials' },
         { icon: 'student', label: 'Admissions & Approvals', to: '/admin2/admissions' },
         { icon: 'bulk-upload', label: 'Bulk Admission', to: '/admin2/bulk-upload' },
-        { icon: 'teacher-attendance', label: 'Teacher Attendance', to: '/admin2/teachers' },
+        { icon: 'teacher-attendance', label: 'Staff Attendance', to: '/admin2/teachers' },
         { icon: 'profile', label: 'My Profile', to: '/admin2/profile' },
         { icon: 'timetable', label: 'Upcoming Events', to: '/admin2/events' },
         { icon: 'documents', label: 'My Documents', to: '/admin2/my-documents' }
