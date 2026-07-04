@@ -4,6 +4,7 @@ const { Op }   = require('sequelize');
 const crypto   = require('crypto');
 const { Fee, Student, User, ClassFeeStructure, sequelize } = require('../models');
 const { protect, hasPermission, isSuperAdmin }             = require('../middleware/auth');
+const { cacheMiddleware } = require('../utils/cache');
 const { validateFeeStructureCreate, validateFeeStructureUpdate, validateFeeCollect } = require('../middleware/validator');
 const {
   getStudentsWithFeeStatus,
@@ -167,7 +168,7 @@ router.get('/', protect, hasPermission('MANAGE_FEES'), async (req, res) => {
 });
 
 // GET /api/fees/student/:studentId — (H2 fix) improved IDOR check
-router.get('/student/:studentId', protect, async (req, res) => {
+router.get('/student/:studentId', protect, cacheMiddleware(300), async (req, res) => {
   try {
     if (req.user.role === 'parent' || req.user.role === 'student') {
       // (H2 fix) — use linkedStudent.id which is reliably populated by protect middleware

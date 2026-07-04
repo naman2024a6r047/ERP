@@ -69,6 +69,12 @@ const Student = sequelize.define('Student', {
   },
 }, {
   tableName: 'students',
+  indexes: [
+    { fields: ['is_active'] },
+    { fields: ['approval_status'] },
+    { fields: ['class', 'section'] },
+    { fields: ['roll_number'] }
+  ],
   getterMethods: {
     full_name() { return `${this.first_name} ${this.last_name}`; }
   }

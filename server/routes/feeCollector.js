@@ -4,6 +4,7 @@ const { Op }  = require('sequelize');
 const crypto = require('crypto');
 const { Student, Fee, User, Notification, AdmissionRequest, Session, ClassFeeStructure, sequelize } = require('../models');
 const { protect, authorize }        = require('../middleware/auth');
+const { cacheMiddleware } = require('../utils/cache');
 const { buildReceiptData, getOrCreateFeeRecord, getFeeStructureForClass, MONTHS, createAdmissionFee } = require('../services/feeService');
 const { makeStudentId, makeStudentEmail, makeTemporaryPassword } = require('../utils/credentialGenerator');
 
@@ -287,7 +288,7 @@ router.post('/collect-multiple-months', protect, authorize(...FC_ROLES), async (
 });
 
 // GET /api/fc/summary
-router.get('/summary', protect, authorize(...FC_ROLES), async (req, res) => {
+router.get('/summary', protect, authorize(...FC_ROLES), cacheMiddleware(300), async (req, res) => {
   try {
     const { year = new Date().getFullYear() } = req.query;
 

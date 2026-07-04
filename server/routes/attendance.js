@@ -3,6 +3,7 @@ const router  = express.Router();
 const { Op }  = require('sequelize');
 const { Attendance, Student } = require('../models');
 const { protect, hasPermission, authorize } = require('../middleware/auth');
+const { cacheMiddleware } = require('../utils/cache');
 const { getTeacherAllowedClasses } = require('../utils/teacherAllowedClasses');
 
 const formatDateRange = (year, month) => {
@@ -57,7 +58,8 @@ router.post('/bulk', protect, hasPermission('MANAGE_STUDENT_ATTENDANCE'), async 
 
 // GET /api/attendance/student/:studentId
 // (H1 fix) — now uses hasPermission('VIEW_STUDENTS') for staff, plus IDOR check for parent/student
-router.get('/student/:studentId', protect, async (req, res) => {
+// ✅ parent, student, admin, admin2
+router.get('/student/:studentId', protect, cacheMiddleware(300), async (req, res) => {
   try {
     // Parent/student can only see their own child/self
     if (req.user.role === 'parent' || req.user.role === 'student') {

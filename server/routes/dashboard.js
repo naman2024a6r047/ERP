@@ -2,12 +2,13 @@ const express = require('express');
 const { Op, fn, col } = require('sequelize');
 const { Student, Teacher, Fee, Attendance, AdmissionRequest, Notification, ClassIncharge, Timetable, Event, Result } = require('../models');
 const { protect, authorize } = require('../middleware/auth');
+const { cacheMiddleware } = require('../utils/cache');
 const { MONTHS } = require('../services/feeService');
 const { getTeacherAllowedClasses } = require('../utils/teacherAllowedClasses');
 
 const router = express.Router();
 
-router.get('/admin', protect, authorize('admin', 'admin2'), async (req, res) => {
+router.get('/admin', protect, authorize('admin', 'admin2'), cacheMiddleware(300), async (req, res) => {
   try {
     const today = new Date().toISOString().split('T')[0];
     const year = new Date().getFullYear();
@@ -102,7 +103,7 @@ router.get('/admin', protect, authorize('admin', 'admin2'), async (req, res) => 
 });
 
 // GET /api/dashboard/chart - Retrieve aggregated line chart data for different periods
-router.get('/chart', protect, authorize('admin', 'admin2'), async (req, res) => {
+router.get('/chart', protect, authorize('admin', 'admin2'), cacheMiddleware(300), async (req, res) => {
   try {
     const { period = 'current_month' } = req.query;
 
@@ -276,7 +277,7 @@ router.get('/chart', protect, authorize('admin', 'admin2'), async (req, res) => 
 });
 
 // GET /api/dashboard/teacher - Retrieve real-time dashboard statistics for teachers
-router.get('/teacher', protect, authorize('teacher'), async (req, res) => {
+router.get('/teacher', protect, authorize('teacher'), cacheMiddleware(300), async (req, res) => {
   try {
     const teacher = await Teacher.findByPk(req.user.linked_teacher_id);
     if (!teacher) {

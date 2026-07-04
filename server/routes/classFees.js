@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { ClassFeeStructure, User, Student, Fee } = require('../models');
 const { protect, hasPermission } = require('../middleware/auth');
+const { cacheMiddleware, clearCache } = require('../utils/cache');
 
 const ensureAdminModifier = (req, res) => {
   if (req.user?.role !== 'admin') {
@@ -37,7 +38,7 @@ const propagateClassFees = async (cls, monthly_fee, admission_fee) => {
 };
 
 // GET /api/class-fees
-router.get('/', protect, hasPermission('MANAGE_FEES'), async (req, res) => {
+router.get('/', protect, hasPermission('MANAGE_FEES'), cacheMiddleware(3600), async (req, res) => {
   try {
     const structures = await ClassFeeStructure.findAll({
       where: { is_active: true },

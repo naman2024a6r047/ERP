@@ -12,6 +12,7 @@ const {
 } = require('../models');
 const { protect, authorize, hasPermission } = require('../middleware/auth');
 const { validateResultCreate, validateResultInchargeReview } = require('../middleware/validator');
+const { cacheMiddleware } = require('../utils/cache');
 const { getTeacherAllowedClasses } = require('../utils/teacherAllowedClasses');
 
 const calcGrade = (pct) =>
@@ -26,7 +27,7 @@ const teacherCanEnter = async (teacherRecord, cls, section, subject) => {
 };
 
 // GET /api/results/student/:studentId
-router.get('/student/:studentId', protect, async (req, res) => {
+router.get('/student/:studentId', protect, cacheMiddleware(300), async (req, res) => {
   try {
     const studentId = parseInt(req.params.studentId, 10);
 

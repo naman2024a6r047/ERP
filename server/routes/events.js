@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { Event, User } = require('../models');
 const { protect, isAdmin } = require('../middleware/auth');
+const { cacheMiddleware } = require('../utils/cache');
 
 // GET /api/events - View all active events
-router.get('/', protect, async (req, res) => {
+router.get('/', protect, cacheMiddleware(3600), async (req, res) => {
   try {
     const events = await Event.findAll({
       where: { is_active: true },

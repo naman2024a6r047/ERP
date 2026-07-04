@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Timetable, Teacher } = require('../models');
 const { protect, authorize, hasPermission } = require('../middleware/auth');
+const { cacheMiddleware } = require('../utils/cache');
 
 // (C3 fix) — whitelisted fields for timetable
 const TIMETABLE_FIELDS = ['class', 'section', 'day', 'period_number', 'subject', 'teacher_id', 'start_time', 'end_time'];
@@ -16,7 +17,7 @@ const pick = (obj, keys) => {
 
 // GET /api/timetable?class=Class 8&section=A
 // (H8 fix) — now uses VIEW_TIMETABLE permission instead of just protect
-router.get('/', protect, hasPermission('VIEW_TIMETABLE'), async (req, res) => {
+router.get('/', protect, cacheMiddleware(1800), hasPermission('VIEW_TIMETABLE'), async (req, res) => {
   try {
     const { class: cls, section, teacher_id } = req.query;
     const where = {};
