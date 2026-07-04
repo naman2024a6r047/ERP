@@ -160,11 +160,11 @@ export default function MyDocuments() {
 
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">
-                Upload File <span className="text-xs text-slate-400 font-normal ml-1">({selectedRequest.document_type.toUpperCase()})</span>
+                Upload File <span className="text-xs text-slate-400 font-normal ml-1">({(selectedRequest.document_type || 'any').toUpperCase()})</span>
               </label>
               <input 
                 type="file" 
-                accept={selectedRequest.document_type === 'pdf' ? '.pdf' : selectedRequest.document_type === 'image' ? 'image/*' : '*/*'}
+                accept={(selectedRequest.document_type || 'any') === 'pdf' ? '.pdf' : (selectedRequest.document_type || 'any') === 'image' ? 'image/*' : '*/*'}
                 onChange={(e) => setFile(e.target.files[0])}
                 className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
                 required

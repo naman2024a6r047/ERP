@@ -185,46 +185,60 @@ export default function DocumentRequests() {
               <div className="py-8 text-center text-slate-500">No submissions yet.</div>
             ) : (
               <div className="space-y-4 pb-4">
-                {submissions.map(sub => (
-                  <div key={sub.id} className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-4">
-                      <div>
-                        <div className="font-bold text-slate-800">{sub.user?.name}</div>
-                        <div className="text-xs text-slate-500 capitalize">{sub.user?.role} • {sub.user?.email || sub.user?.username}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs font-bold px-2 py-1 rounded-md uppercase ${
-                          sub.status === 'approved' ? 'bg-green-100 text-green-700' :
-                          sub.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                          'bg-yellow-100 text-yellow-700'
-                        }`}>
-                          {sub.status}
-                        </span>
-                        <a 
-                          href={sub.file_url} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-md text-xs font-bold transition-colors"
-                        >
-                          View File
-                        </a>
-                      </div>
-                    </div>
-                    
-                    {/* Custom Data Answers */}
-                    {Object.keys(sub.custom_data || {}).length > 0 && (
-                      <div className="bg-white border border-slate-100 rounded-lg p-3 mb-4">
-                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Form Data</h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
-                          {Object.entries(sub.custom_data).map(([key, val]) => (
-                            <div key={key}>
-                              <span className="text-xs font-semibold text-slate-700 block">{key}:</span>
-                              <span className="text-sm text-slate-600">{val || '-'}</span>
-                            </div>
-                          ))}
+                {submissions.map(sub => {
+                  let customDataObj = {};
+                  if (sub.custom_data) {
+                    if (typeof sub.custom_data === 'string') {
+                      try {
+                        customDataObj = JSON.parse(sub.custom_data);
+                      } catch (e) {
+                        customDataObj = {};
+                      }
+                    } else if (typeof sub.custom_data === 'object') {
+                      customDataObj = sub.custom_data;
+                    }
+                  }
+
+                  return (
+                    <div key={sub.id} className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-4">
+                        <div>
+                          <div className="font-bold text-slate-800">{sub.user?.name}</div>
+                          <div className="text-xs text-slate-500 capitalize">{sub.user?.role} • {sub.user?.email || sub.user?.username}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs font-bold px-2 py-1 rounded-md uppercase ${
+                            sub.status === 'approved' ? 'bg-green-100 text-green-700' :
+                            sub.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {sub.status}
+                          </span>
+                          <a 
+                            href={sub.file_url} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-md text-xs font-bold transition-colors"
+                          >
+                            View File
+                          </a>
                         </div>
                       </div>
-                    )}
+                      
+                      {/* Custom Data Answers */}
+                      {Object.keys(customDataObj || {}).length > 0 && (
+                        <div className="bg-white border border-slate-100 rounded-lg p-3 mb-4">
+                          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Form Data</h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                            {Object.entries(customDataObj).map(([key, val]) => (
+                              <div key={key}>
+                                <span className="text-xs font-semibold text-slate-700 block">{key}:</span>
+                                <span className="text-sm text-slate-600">{val || '-'}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                     {/* Action Panel */}
                     <div className="flex gap-2 mt-4 pt-4 border-t border-slate-200">
@@ -253,7 +267,8 @@ export default function DocumentRequests() {
                       )}
                     </div>
                   </div>
-                ))}
+                );
+              })}
               </div>
             )}
           </div>

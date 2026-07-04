@@ -189,6 +189,20 @@ app.listen(port, host, () => {
         await sequelize.query('ALTER TABLE `settings` MODIFY COLUMN `value` LONGTEXT;').catch(err => {
           console.error('[DB] Failed to alter settings table to LONGTEXT:', err.message);
         });
+
+        // Migration check: If tables were created with camelCase timestamps, drop them once to recreate with snake_case
+        try {
+          const [results] = await sequelize.query("SHOW COLUMNS FROM `document_submissions` LIKE 'createdAt'");
+          if (results && results.length > 0) {
+            console.log('[DB] Found outdated camelCase columns. Dropping tables to recreate with correct snake_case timestamps...');
+            await sequelize.query("DROP TABLE IF EXISTS `document_submissions`");
+            await sequelize.query("DROP TABLE IF EXISTS `document_requests`");
+            await sequelize.query("DROP TABLE IF EXISTS `events`");
+          }
+        } catch (e) {
+          // If table doesn't exist yet, it will throw an error, which is fine
+        }
+
         // Auto-create any new tables that were added after initial deployment
         const newTableQueries = [
           `CREATE TABLE IF NOT EXISTS \`events\` (
@@ -199,8 +213,8 @@ app.listen(port, host, () => {
             \`location\` VARCHAR(150),
             \`is_active\` TINYINT(1) DEFAULT 1,
             \`created_by\` INTEGER,
-            \`createdAt\` DATETIME DEFAULT CURRENT_TIMESTAMP,
-            \`updatedAt\` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            \`created_at\` DATETIME DEFAULT CURRENT_TIMESTAMP,
+            \`updated_at\` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
           ) ENGINE=InnoDB;`,
           `CREATE TABLE IF NOT EXISTS \`document_requests\` (
             \`id\` INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -213,8 +227,8 @@ app.listen(port, host, () => {
             \`created_by\` INTEGER NOT NULL,
             \`deadline\` DATETIME,
             \`status\` ENUM('active','closed') DEFAULT 'active',
-            \`createdAt\` DATETIME DEFAULT CURRENT_TIMESTAMP,
-            \`updatedAt\` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            \`created_at\` DATETIME DEFAULT CURRENT_TIMESTAMP,
+            \`updated_at\` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
           ) ENGINE=InnoDB;`,
           `CREATE TABLE IF NOT EXISTS \`document_submissions\` (
             \`id\` INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -224,8 +238,8 @@ app.listen(port, host, () => {
             \`custom_data\` JSON,
             \`status\` ENUM('pending','approved','rejected') DEFAULT 'pending',
             \`feedback\` TEXT,
-            \`createdAt\` DATETIME DEFAULT CURRENT_TIMESTAMP,
-            \`updatedAt\` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            \`created_at\` DATETIME DEFAULT CURRENT_TIMESTAMP,
+            \`updated_at\` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
           ) ENGINE=InnoDB;`
         ];
         for (const sql of newTableQueries) {
