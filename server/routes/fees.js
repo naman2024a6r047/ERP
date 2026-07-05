@@ -116,6 +116,9 @@ router.get('/overview', protect, hasPermission('MANAGE_FEES'), async (req, res) 
       fee_status,
     } = req.query;
 
+    // Auto-generate missing fee records for the requested month/year JIT
+    await generateMonthlyFees(month, String(year));
+
     let data = await getStudentsWithFeeStatus(month, String(year), { class: cls, section });
 
     // Filter by fee_status if provided
@@ -177,6 +180,15 @@ router.get('/student/:studentId', protect, cacheMiddleware(300), async (req, res
         return res.status(403).json({ message: 'Access denied.' });
       }
     }
+
+    // Auto-generate missing fee record for the current month JIT
+    const student = await Student.findByPk(req.params.studentId);
+    if (student && student.is_active && student.approval_status === 'approved') {
+      const currentMonth = MONTHS[new Date().getMonth()];
+      const currentYear = String(new Date().getFullYear());
+      await getOrCreateFeeRecord(student, currentMonth, currentYear, 'monthly');
+    }
+
     const fees = await Fee.findAll({
       where:  { student_id: req.params.studentId },
       order:  [['year', 'DESC'], ['month', 'ASC']],

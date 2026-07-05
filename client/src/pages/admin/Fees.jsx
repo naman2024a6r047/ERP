@@ -34,7 +34,6 @@ export default function Fees() {
   const [students, setStudents]   = useState([]);
   const [summary, setSummary]     = useState({});
   const [loading, setLoading]     = useState(true);
-  const [generating, setGenerating] = useState(false);
   const [collectModal, setCollect] = useState(null);
   const [multiModal, setMultiModal] = useState(null);
   const [collecting, setCollecting] = useState(false);
@@ -58,16 +57,7 @@ export default function Fees() {
 
   useEffect(() => { load(); }, [load]);
 
-  const generateFees = async () => {
-    setGenerating(true);
-    try {
-      const r = await API.post('/fees/generate', { month, year });
-      toast.success(`Generated: ${r.data.created} new records, ${r.data.skipped} skipped.`);
-      load();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Generation failed.');
-    } finally { setGenerating(false); }
-  };
+
 
   const handleCollect = async (data) => {
     setCollecting(true);
@@ -118,15 +108,6 @@ export default function Fees() {
           <p className="text-gray-400 text-sm mt-0.5">
             All students appear here — including newly added ones
           </p>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={generateFees}
-            disabled={generating}
-            className="border border-blue-200 text-blue-600 hover:bg-blue-50 text-sm font-medium px-4 py-2 rounded-xl transition-colors disabled:opacity-60"
-          >
-            {generating ? 'Generating...' : ' Generate Fees'}
-          </button>
         </div>
       </div>
 
