@@ -208,8 +208,8 @@ const validateTeacherCreate = [
     .notEmpty().withMessage('Teacher name is required.')
     .isLength({ max: 100 }).withMessage('Name cannot exceed 100 characters.'),
   body('subject')
+    .optional({ checkFalsy: true })
     .trim()
-    .notEmpty().withMessage('Subject is required.')
     .isLength({ max: 80 }).withMessage('Subject cannot exceed 80 characters.'),
   body('phone')
     .optional({ checkFalsy: true })
@@ -261,9 +261,8 @@ const validateTeacherUpdate = [
     .notEmpty().withMessage('Teacher name cannot be empty.')
     .isLength({ max: 100 }).withMessage('Name cannot exceed 100 characters.'),
   body('subject')
-    .optional()
+    .optional({ checkFalsy: true })
     .trim()
-    .notEmpty().withMessage('Subject cannot be empty.')
     .isLength({ max: 80 }).withMessage('Subject cannot exceed 80 characters.'),
   body('phone')
     .optional({ checkFalsy: true })
