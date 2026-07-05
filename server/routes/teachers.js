@@ -48,6 +48,7 @@ router.get('/', protect, hasPermission('VIEW_TEACHERS'), async (req, res) => {
 
     res.json(teachers);
   } catch (err) {
+    console.error('[teachers][GET /] Error:', err.message);
     res.status(500).json({ message: err.message });
   }
 });

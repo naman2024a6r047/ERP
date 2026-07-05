@@ -17,7 +17,7 @@ const Teacher = sequelize.define('Teacher', {
   },
   subject: {
     type: DataTypes.STRING(80),
-    allowNull: false
+    allowNull: true
   },
   phone: {
     type: DataTypes.STRING(15)
