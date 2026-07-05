@@ -61,6 +61,7 @@ const navConfig = {
         { icon: 'student', label: 'Admissions & Approvals', to: '/admin2/admissions' },
         { icon: 'bulk-upload', label: 'Bulk Admission', to: '/admin2/bulk-upload' },
         { icon: 'teacher-attendance', label: 'Staff Attendance', to: '/admin2/teachers' },
+        { icon: 'timetable', label: 'Timetable', to: '/admin2/timetable' },
         { icon: 'profile', label: 'My Profile', to: '/admin2/profile' },
         { icon: 'timetable', label: 'Upcoming Events', to: '/admin2/events' },
         { icon: 'documents', label: 'My Documents', to: '/admin2/my-documents' }

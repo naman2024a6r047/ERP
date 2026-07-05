@@ -114,6 +114,7 @@ export default function App() {
             <Route path="credentials" element={<CredentialManagement />} />
             <Route path="profile" element={<MyProfilePage />} />
             <Route path="bulk-upload" element={<BulkUploadStudents />} />
+            <Route path="timetable" element={<Timetable />} />
             <Route path="notifications" element={<MyNotifications />} />
             <Route path="my-documents" element={<MyDocuments />} />
           </Route>
