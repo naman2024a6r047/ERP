@@ -17,6 +17,8 @@ export default function Staff() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing]     = useState(null);
   const [saving, setSaving]       = useState(false);
+  const [viewing, setViewing]     = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
 
   //  Both admin and admin2 can view teachers
   const canView    = can(user, 'VIEW_TEACHERS');
@@ -35,6 +37,7 @@ export default function Staff() {
 
   const openAdd  = () => { setEditing(null); setShowModal(true); };
   const openEdit = (t) => { setEditing(t); setShowModal(true); };
+  const openView = (t) => { setViewing(t); setShowViewModal(true); };
 
   const handleSubmit = async (data) => {
     setSaving(true);
@@ -151,14 +154,13 @@ export default function Staff() {
         emptyText="No staff found."
         actions={(row) => (
           <div className="flex gap-3">
+            <button onClick={() => openView(row)} className="text-xs text-blue-500 hover:text-blue-700 font-medium">View</button>
             {/*  Only super admin gets Edit/Remove */}
-            {canManage ? (
+            {canManage && (
               <>
                 <button onClick={() => openEdit(row)} className="text-xs text-blue-500 hover:text-blue-700 font-medium">Edit</button>
                 <button onClick={() => handleDelete(row.id)} className="text-xs text-red-400 hover:text-red-600 font-medium">Remove</button>
               </>
-            ) : (
-              <span className="text-xs text-gray-400">View only</span>
             )}
           </div>
         )}
@@ -180,6 +182,62 @@ export default function Staff() {
           />
         </Modal>
       )}
+
+      {/* View Staff Details Modal */}
+      <Modal
+        isOpen={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        title="Staff Details"
+      >
+        {viewing && (
+          <div className="space-y-4">
+             <div className="flex items-center gap-4 mb-4 pb-4 border-b border-gray-100">
+               <Avatar name={viewing.name} size="lg" src={viewing.teacherUser?.profile_photo ? `${process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace('/api', '') : ''}${viewing.teacherUser.profile_photo}` : undefined} />
+               <div>
+                 <h3 className="text-lg font-bold text-gray-800">{viewing.name}</h3>
+                 <p className="text-sm text-gray-500">{viewing.staff_type || 'Teacher'} &bull; {viewing.teacher_id}</p>
+               </div>
+             </div>
+             
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+               <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                 <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Subject</span>
+                 <p className="font-semibold text-gray-800">{viewing.subject || 'N/A'}</p>
+               </div>
+               <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                 <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Email</span>
+                 <p className="font-semibold text-gray-800">{viewing.email || 'N/A'}</p>
+               </div>
+               <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                 <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Phone</span>
+                 <p className="font-semibold text-gray-800">{viewing.phone || 'N/A'}</p>
+               </div>
+               <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                 <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Qualification</span>
+                 <p className="font-semibold text-gray-800">{viewing.qualification || 'N/A'}</p>
+               </div>
+               <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                 <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Join Date</span>
+                 <p className="font-semibold text-gray-800">{viewing.join_date ? new Date(viewing.join_date).toLocaleDateString() : 'N/A'}</p>
+               </div>
+               <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                 <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Status</span>
+                 <p className="font-semibold text-gray-800 capitalize">{viewing.status}</p>
+               </div>
+               <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                 <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Document</span>
+                 <p className="font-semibold text-gray-800">
+                    {viewing.document_type ? `${viewing.document_type} (${viewing.document_number || 'N/A'})` : 'N/A'}
+                 </p>
+               </div>
+               <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                 <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Assigned Classes</span>
+                 <p className="font-semibold text-gray-800">{viewing.assigned_classes || 'N/A'}</p>
+               </div>
+             </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
