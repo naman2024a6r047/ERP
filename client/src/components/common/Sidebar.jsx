@@ -322,7 +322,9 @@ export default function Sidebar({ isOpen, onClose }) {
           {nav.map((section) => (
             <div key={section.section} className="space-y-1.5">
               <p className="px-3 pb-1 text-[9px] font-bold uppercase tracking-widest text-slate-500">
-                {section.section}
+                {section.section === 'TEACHER PANEL' && user?.linkedTeacher?.staff_type
+                  ? `${user.linkedTeacher.staff_type.toUpperCase()} PANEL`
+                  : section.section}
               </p>
               {section.items.map((item) => (
                 <NavLink
@@ -393,7 +395,7 @@ export default function Sidebar({ isOpen, onClose }) {
             </div>
             <div className="min-w-0">
               <div className="truncate text-xs font-bold text-slate-100">{user?.name}</div>
-              <div className="text-[9px] font-semibold tracking-wider uppercase text-slate-500 mt-0.5">{user?.role?.replace('_', ' ')}</div>
+              <div className="text-[9px] font-semibold tracking-wider uppercase text-slate-500 mt-0.5">{user?.linkedTeacher?.staff_type || user?.role?.replace('_', ' ')}</div>
             </div>
           </div>
           <button

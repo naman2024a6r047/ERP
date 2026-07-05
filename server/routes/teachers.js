@@ -107,12 +107,20 @@ router.post('/', protect, authorize('admin', 'admin2'), validateTeacherCreate, a
       }
     }
 
+    // Determine role based on staff type
+    let userRole = 'teacher';
+    if (safeData.staff_type === 'Fee Collector') {
+      userRole = 'fee_collector';
+    } else if (safeData.staff_type === 'Principal' || safeData.staff_type === 'Vice Principal') {
+      userRole = 'admin2';
+    }
+
     // Automatically create a corresponding User login record
     await User.create({
       name: teacher.name,
       email: userEmail,
       password: userPassword,
-      role: 'teacher',
+      role: userRole,
       linked_teacher_id: teacher.id,
       is_active: true,
       phone: teacher.phone,
@@ -171,6 +179,18 @@ router.put('/:id', protect, authorize('admin', 'admin2'), validateTeacherUpdate,
       if (safeData.email !== undefined) userUpdates.email = safeData.email;
       if (safeData.status === 'inactive') userUpdates.is_active = false;
       if (safeData.status === 'active' || safeData.status === 'leave') userUpdates.is_active = true;
+      
+      // Update role if staff type changed
+      if (safeData.staff_type) {
+        if (safeData.staff_type === 'Fee Collector') {
+          userUpdates.role = 'fee_collector';
+        } else if (safeData.staff_type === 'Principal' || safeData.staff_type === 'Vice Principal') {
+          userUpdates.role = 'admin2';
+        } else {
+          userUpdates.role = 'teacher';
+        }
+      }
+
       await userToUpdate.update(userUpdates, { transaction: txn });
     }
 
