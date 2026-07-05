@@ -59,7 +59,11 @@ export default function Staff() {
       setShowModal(false);
       load(search);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to save.');
+      let errMsg = err.response?.data?.message || 'Failed to save.';
+      if (err.response?.data?.errors && err.response.data.errors.length > 0) {
+        errMsg = err.response.data.errors[0].msg;
+      }
+      toast.error(errMsg);
     } finally {
       setSaving(false);
     }
