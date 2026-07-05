@@ -4,15 +4,15 @@ let transporter = null;
 let isConfigured = false;
 
 const initTransporter = () => {
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+  if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
     isConfigured = true;
     transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT || 587,
-      secure: process.env.SMTP_PORT == 465,
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT || 587,
+      secure: process.env.EMAIL_PORT == 465,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
   }
@@ -33,7 +33,7 @@ const sendEmail = async (to, subject, text) => {
     const bccList = isArray ? to.filter(Boolean).join(',') : '';
     
     // Safer default: send to self if bulk BCC, to avoid spam filters or bounces
-    const fallbackTo = process.env.SMTP_FROM || process.env.SMTP_USER || 'noreply@school-erp.com';
+    const fallbackTo = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'noreply@school-erp.com';
     const toAddr = isArray ? fallbackTo : to;
 
     if (!transporter) {
@@ -48,7 +48,7 @@ const sendEmail = async (to, subject, text) => {
     }
 
     const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.SMTP_USER || '"School ERP" <noreply@school-erp.com>',
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER || '"School ERP" <noreply@school-erp.com>',
       to: toAddr,
       subject,
       text,

@@ -5,6 +5,7 @@ const { Teacher, User } = require('../models');
 const { protect, authorize, hasPermission, isSuperAdmin } = require('../middleware/auth');
 const { makeTeacherId, makeTemporaryPassword } = require('../utils/credentialGenerator');
 const { validateTeacherCreate, validateTeacherUpdate } = require('../middleware/validator');
+const { sendEmail } = require('../utils/emailService');
 
 // (C3 fix) — whitelisted fields for teacher operations
 const TEACHER_CREATE_FIELDS = ['name', 'subject', 'phone', 'status', 'assigned_classes', 'qualification', 'experience', 'date_of_joining', 'email', 'password', 'document_type', 'document_number', 'staff_type'];
@@ -127,6 +128,11 @@ router.post('/', protect, authorize('admin', 'admin2'), validateTeacherCreate, a
       },
       message: 'Teacher created and login credentials generated.',
     });
+
+    // Send email asynchronously
+    const emailBody = `Hello ${teacher.name},\n\nYour staff account has been successfully created.\n\nUsername: ${userEmail}\nPassword: ${userPassword}\n\nPlease log in and change your password as soon as possible.\n\nBest Regards,\nSchool Admin`;
+    sendEmail(userEmail, 'Welcome to School ERP - Login Credentials', emailBody);
+
   } catch (err) {
     console.error('[teachers][POST /]', err);
     await txn.rollback();
