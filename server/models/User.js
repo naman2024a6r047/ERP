@@ -36,14 +36,16 @@ const User = sequelize.define('User', {
 });
 
 User.prototype.comparePassword = async function (candidate) {
-  // If the password in the DB is a plain text password (e.g. manually edited),
-  // we can check if it matches exactly, and if so, return true.
+  // Enterprise Password Migration (Auto-Upgrade):
+  // If the DB contains a plaintext password (e.g. from manual DB edits or legacy systems),
+  // we verify it, immediately upgrade it to a secure bcrypt hash, and save it back to the DB.
   if (!this.password.startsWith('$2a$') && !this.password.startsWith('$2b$') && !this.password.startsWith('$2y$')) {
     if (this.password === candidate) {
-      // It matches plaintext. We should really re-hash it here, but saving inside
-      // a model method is tricky. We'll just return true and let the user login.
-      // (The system will hash it next time they update their profile).
-      return true;
+      // 1. Hash the password securely
+      this.password = await bcrypt.hash(candidate, 12);
+      // 2. Save it back to the database instantly (bypassing hooks to prevent double-hashing)
+      await this.save({ hooks: false });
+      return true; // Login succeeds, and DB is now secure!
     }
     return false;
   }
