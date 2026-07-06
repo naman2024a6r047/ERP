@@ -6,8 +6,11 @@ const ClassFeeStructure = sequelize.define('ClassFeeStructure', {
   class: {
     type: DataTypes.STRING(20),
     allowNull: false,
-    unique: true,
     validate: { notEmpty: true }
+  },
+  session_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
   },
   monthly_fee: {
     type: DataTypes.DECIMAL(10, 2),
@@ -35,6 +38,23 @@ const ClassFeeStructure = sequelize.define('ClassFeeStructure', {
     defaultValue: 0,
     validate: { min: 0 }
   },
+  monthly_due_date: {
+    type: DataTypes.INTEGER,
+    defaultValue: 10,
+    validate: { min: 1, max: 31 }
+  },
+  annual_due_date: {
+    type: DataTypes.DATEONLY,
+    allowNull: true
+  },
+  is_published: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  is_locked: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
   is_active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
@@ -43,6 +63,11 @@ const ClassFeeStructure = sequelize.define('ClassFeeStructure', {
     type: DataTypes.INTEGER,
     allowNull: true
   }
-}, { tableName: 'class_fee_structures' });
+}, { 
+  tableName: 'class_fee_structures',
+  indexes: [
+    { unique: true, fields: ['class', 'session_id'] }
+  ]
+});
 
 module.exports = ClassFeeStructure;

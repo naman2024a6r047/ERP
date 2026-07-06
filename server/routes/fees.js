@@ -2,7 +2,7 @@ const express  = require('express');
 const router   = express.Router();
 const { Op }   = require('sequelize');
 const crypto   = require('crypto');
-const { Fee, Student, User, ClassFeeStructure, sequelize } = require('../models');
+const { Fee, Student, User, ClassFeeStructure, Notification, sequelize } = require('../models');
 const { protect, hasPermission, isSuperAdmin }             = require('../middleware/auth');
 const { cacheMiddleware } = require('../utils/cache');
 const { validateFeeStructureCreate, validateFeeStructureUpdate, validateFeeCollect } = require('../middleware/validator');
@@ -45,30 +45,33 @@ router.get('/structure', protect, hasPermission('MANAGE_FEES'), async (req, res)
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// GET /api/fees/structure/:class — get one class structure
-router.get('/structure/:class', protect, hasPermission('MANAGE_FEES'), async (req, res) => {
+// GET /api/fees/structure/:class/:session — get one class structure
+router.get('/structure/:class/:session', protect, hasPermission('MANAGE_FEES'), async (req, res) => {
   try {
-    const structure = await getFeeStructureForClass(req.params.class);
+    const structure = await getFeeStructureForClass(req.params.class, req.params.session);
     res.json(structure);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
 // POST /api/fees/structure — create or update class fee structure
-router.post('/structure', protect, isSuperAdmin, validateFeeStructureCreate, async (req, res) => {
+router.post('/structure', protect, isSuperAdmin, async (req, res) => {
   try {
-    const { class: cls } = req.body;
+    const { class: cls, session_id } = req.body;
 
-    if (!cls) return res.status(400).json({ message: 'Class is required.' });
+    if (!cls || !session_id) return res.status(400).json({ message: 'Class and session_id are required.' });
 
     const safeFees = pick(req.body, FEE_STRUCTURE_FIELDS);
 
     const [structure, created] = await ClassFeeStructure.upsert({
       class:         cls,
+      session_id:    session_id,
       monthly_fee:   parseFloat(safeFees.monthly_fee   || 0),
       admission_fee: parseFloat(safeFees.admission_fee || 0),
       annual_fee:    parseFloat(safeFees.annual_fee    || 0),
       promotion_fee: parseFloat(safeFees.promotion_fee || 0),
       exam_fee:      parseFloat(safeFees.exam_fee      || 0),
+      monthly_due_date: parseInt(safeFees.monthly_due_date || 10),
+      annual_due_date:  safeFees.annual_due_date || null,
       updated_by:    req.user.id,
       is_active:     true,
     });
@@ -80,20 +83,80 @@ router.post('/structure', protect, isSuperAdmin, validateFeeStructureCreate, asy
   } catch (err) { res.status(400).json({ message: err.message }); }
 });
 
-// PUT /api/fees/structure/:id — (C3 fix) whitelisted fields
-router.put('/structure/:id', protect, isSuperAdmin, validateFeeStructureUpdate, async (req, res) => {
+// PUT /api/fees/structure/:id
+router.put('/structure/:id', protect, isSuperAdmin, async (req, res) => {
   try {
+    const structure = await ClassFeeStructure.findByPk(req.params.id);
+    if (!structure) return res.status(404).json({ message: 'Structure not found.' });
+    if (structure.is_locked) return res.status(400).json({ message: 'Cannot edit a locked structure.' });
+
     const safeFees = pick(req.body, FEE_STRUCTURE_FIELDS);
-    // Parse each fee field
     const updateData = { updated_by: req.user.id };
-    for (const key of FEE_STRUCTURE_FIELDS) {
+    
+    for (const key of ['monthly_fee', 'admission_fee', 'annual_fee', 'promotion_fee', 'exam_fee']) {
       if (safeFees[key] !== undefined) updateData[key] = parseFloat(safeFees[key]);
     }
+    if (safeFees.monthly_due_date !== undefined) updateData.monthly_due_date = parseInt(safeFees.monthly_due_date);
+    if (safeFees.annual_due_date !== undefined) updateData.annual_due_date = safeFees.annual_due_date;
 
-    await ClassFeeStructure.update(updateData, { where: { id: req.params.id } });
-    const updated = await ClassFeeStructure.findByPk(req.params.id);
-    res.json(updated);
+    await structure.update(updateData);
+    res.json(structure);
   } catch (err) { res.status(400).json({ message: err.message }); }
+});
+
+// POST /api/fees/structure/:id/publish
+router.post('/structure/:id/publish', protect, isSuperAdmin, async (req, res) => {
+  const txn = await sequelize.transaction();
+  try {
+    const structure = await ClassFeeStructure.findByPk(req.params.id, { transaction: txn });
+    if (!structure) { await txn.rollback(); return res.status(404).json({ message: 'Structure not found.' }); }
+    if (structure.is_locked) { await txn.rollback(); return res.status(400).json({ message: 'Already published and locked.' }); }
+
+    // Lock it
+    await structure.update({ is_published: true, is_locked: true, updated_by: req.user.id }, { transaction: txn });
+
+    // Fetch all active students for this class and session
+    const students = await Student.findAll({
+      where: { class: structure.class, session_id: structure.session_id, is_active: true, approval_status: 'approved' },
+      transaction: txn
+    });
+
+    const currentYear = new Date().getFullYear();
+    const currentMonth = MONTHS[new Date().getMonth()];
+
+    for (const student of students) {
+      // 1. Generate Session / Annual Fee
+      if (structure.annual_fee > 0) {
+        await getOrCreateFeeRecord(student, currentMonth, currentYear, 'annual', txn);
+      }
+      
+      // 2. Generate Admission Fee (only if never charged before)
+      if (structure.admission_fee > 0) {
+        const hasPaidAdmission = await Fee.findOne({
+          where: { student_id: student.id, fee_type: 'admission' },
+          transaction: txn
+        });
+        if (!hasPaidAdmission) {
+          await getOrCreateFeeRecord(student, currentMonth, currentYear, 'admission', txn);
+        }
+      }
+    }
+
+    // Dispatch Notification
+    const notif = await Notification.create({
+      title: `Fee Structure Published for ${structure.class}`,
+      message: `The annual fee structure for ${structure.class} has been published and locked. Please check your fees.`,
+      type: 'info',
+      target_roles: ['parent', 'student'],
+      target_classes: [structure.class],
+      sent_by: req.user.id
+    }, { transaction: txn });
+    await txn.commit();
+    res.json({ message: `Structure locked. Generated fees for ${students.length} students.`, structure });
+  } catch (err) {
+    await txn.rollback();
+    res.status(500).json({ message: err.message });
+  }
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

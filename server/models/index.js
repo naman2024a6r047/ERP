@@ -98,6 +98,9 @@ Student.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 User.hasMany(Student, { foreignKey: 'approved_by', as: 'approvedStudents' });
 Student.belongsTo(User, { foreignKey: 'approved_by', as: 'approver' });
 
+Session.hasMany(ClassFeeStructure, { foreignKey: 'session_id', as: 'feeStructures' });
+ClassFeeStructure.belongsTo(Session, { foreignKey: 'session_id', as: 'session' });
+
 Teacher.hasMany(TeacherAttendance, { foreignKey: 'teacher_id', as: 'attendances' });
 TeacherAttendance.belongsTo(Teacher, { foreignKey: 'teacher_id', as: 'teacher' });
 

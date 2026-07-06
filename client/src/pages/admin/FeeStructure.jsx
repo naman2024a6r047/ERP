@@ -19,6 +19,7 @@ export default function FeeStructure() {
   const canEdit   = isSuperAdmin(user);
 
   const [structures, setStructures] = useState([]);
+  const [sessions, setSessions]     = useState([]);
   const [loading, setLoading]       = useState(true);
   const [editing, setEditing]       = useState(null);
   const [formData, setFormData]     = useState({});
@@ -26,9 +27,15 @@ export default function FeeStructure() {
 
   const load = () => {
     setLoading(true);
-    API.get('/fees/structure')
-      .then(r => setStructures(r.data || []))
-      .catch(() => toast.error('Failed to load fee structure'))
+    Promise.all([
+      API.get('/fees/structure'),
+      API.get('/session')
+    ])
+      .then(([feeRes, sessionRes]) => {
+        setStructures(feeRes.data || []);
+        setSessions(sessionRes.data || []);
+      })
+      .catch(() => toast.error('Failed to load data'))
       .finally(() => setLoading(false));
   };
 
@@ -36,27 +43,57 @@ export default function FeeStructure() {
 
   const startEdit = (structure) => {
     setEditing(structure);
-    const fd = { class: structure.class };
+    const fd = { 
+      class: structure.class, 
+      session_id: structure.session_id,
+      monthly_due_date: structure.monthly_due_date || 10,
+      annual_due_date: structure.annual_due_date || ''
+    };
     FEE_FIELDS.forEach(f => { fd[f.key] = parseFloat(structure[f.key] || 0); });
     setFormData(fd);
   };
 
   const startNew = () => {
     setEditing({ _new: true });
-    const fd = { class: CLASSES[0] };
+    const fd = { 
+      class: CLASSES[0],
+      session_id: sessions.find(s => s.is_active)?.id || (sessions[0]?.id || ''),
+      monthly_due_date: 10,
+      annual_due_date: ''
+    };
     FEE_FIELDS.forEach(f => { fd[f.key] = 0; });
     setFormData(fd);
   };
 
   const handleSave = async () => {
+    if (!formData.session_id) return toast.error('Please select an academic session.');
     setSaving(true);
     try {
-      await API.post('/fees/structure', formData);
-      toast.success(`Fee structure for ${formData.class} saved!`);
+      if (editing && !editing._new) {
+        await API.put(`/fees/structure/${editing.id}`, formData);
+        toast.success(`Fee structure updated!`);
+      } else {
+        await API.post('/fees/structure', formData);
+        toast.success(`Fee structure saved!`);
+      }
       setEditing(null);
       load();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save.');
+    } finally { setSaving(false); }
+  };
+
+  const handlePublish = async () => {
+    if (!editing || editing._new) return;
+    if (!window.confirm('Are you sure you want to PUBLISH and LOCK this fee structure? This will auto-generate fees and cannot be undone!')) return;
+    setSaving(true);
+    try {
+      const r = await API.post(`/fees/structure/${editing.id}/publish`);
+      toast.success(r.data.message || 'Published successfully!');
+      setEditing(null);
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to publish.');
     } finally { setSaving(false); }
   };
 
@@ -101,17 +138,25 @@ export default function FeeStructure() {
             <div key={s.id} className="bg-white rounded-xl border border-gray-200 p-4">
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <h3 className="font-bold text-gray-800">{s.class}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-gray-800">{s.class}</h3>
+                    {s.is_locked ? (
+                      <span className="text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Locked 🔒</span>
+                    ) : (
+                      <span className="text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">Draft 📝</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5">Session: {sessions.find(ses => ses.id === s.session_id)?.name || s.session_id}</p>
                   <p className="text-xs text-gray-400 mt-0.5">Annual total: {formatCurrency(totalAnnual(s))}</p>
                 </div>
-                {canEdit && (
+                <div className="flex flex-col gap-1 items-end">
                   <button
                     onClick={() => startEdit(s)}
-                    className="text-xs text-blue-500 hover:text-blue-700 font-medium"
+                    className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-medium"
                   >
-                    Edit
+                    View / Edit
                   </button>
-                )}
+                </div>
               </div>
               <div className="space-y-2">
                 {FEE_FIELDS.map(field => (
@@ -139,18 +184,59 @@ export default function FeeStructure() {
               <button onClick={() => setEditing(null)} className="text-gray-400 hover:text-gray-600">✕</button>
             </div>
             <div className="p-5 space-y-4">
-              {editing._new && (
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Class</label>
-                  <select
-                    value={formData.class}
-                    onChange={e => setFormData(p => ({ ...p, class: e.target.value }))}
-                    className={f}
-                  >
-                    {CLASSES.map(c => <option key={c}>{c}</option>)}
-                  </select>
+              {editing._new ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1.5">Class</label>
+                    <select
+                      value={formData.class}
+                      onChange={e => setFormData(p => ({ ...p, class: e.target.value }))}
+                      className={f}
+                    >
+                      {CLASSES.map(c => <option key={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1.5">Session</label>
+                    <select
+                      value={formData.session_id}
+                      onChange={e => setFormData(p => ({ ...p, session_id: e.target.value }))}
+                      className={f}
+                    >
+                      <option value="">-- Select Session --</option>
+                      {sessions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-600">
+                  <span className="font-semibold text-gray-800">{editing.class}</span> — Session: {sessions.find(s => s.id === editing.session_id)?.name}
                 </div>
               )}
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Monthly Due Date</label>
+                  <input
+                    type="number" min="1" max="31"
+                    value={formData.monthly_due_date}
+                    onChange={e => setFormData(p => ({ ...p, monthly_due_date: e.target.value }))}
+                    disabled={editing?.is_locked}
+                    className={f}
+                    placeholder="e.g. 10"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Annual Due Date</label>
+                  <input
+                    type="date"
+                    value={formData.annual_due_date || ''}
+                    onChange={e => setFormData(p => ({ ...p, annual_due_date: e.target.value }))}
+                    disabled={editing?.is_locked}
+                    className={f}
+                  />
+                </div>
+              </div>
               {FEE_FIELDS.map(field => (
                 <div key={field.key}>
                   <label className="block text-xs font-medium text-gray-500 mb-1.5">
@@ -161,7 +247,8 @@ export default function FeeStructure() {
                     min={0}
                     value={formData[field.key] ?? 0}
                     onChange={e => setFormData(p => ({ ...p, [field.key]: parseFloat(e.target.value) || 0 }))}
-                    className={f}
+                    disabled={editing?.is_locked}
+                    className={f + (editing?.is_locked ? " bg-gray-50 text-gray-500" : "")}
                   />
                 </div>
               ))}
@@ -178,14 +265,24 @@ export default function FeeStructure() {
                 </p>
               </div>
 
-              <div className="flex gap-2">
-                <button onClick={handleSave} disabled={saving}
-                  className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:opacity-60 text-white font-semibold py-2.5 rounded-xl text-sm">
-                  {saving ? 'Saving...' : 'Save Structure'}
-                </button>
+              <div className="flex flex-col gap-2">
+                {!editing?.is_locked && canEdit && (
+                  <div className="flex gap-2">
+                    <button onClick={handleSave} disabled={saving}
+                      className="flex-1 bg-white border border-blue-500 text-blue-600 hover:bg-blue-50 disabled:opacity-60 font-semibold py-2.5 rounded-xl text-sm">
+                      {saving ? 'Saving...' : 'Save Draft'}
+                    </button>
+                    {!editing._new && (
+                      <button onClick={handlePublish} disabled={saving}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-xl text-sm shadow-md">
+                        {saving ? 'Publishing...' : 'Publish & Lock 🔒'}
+                      </button>
+                    )}
+                  </div>
+                )}
                 <button onClick={() => setEditing(null)}
-                  className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm hover:bg-gray-50">
-                  Cancel
+                  className="w-full border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm hover:bg-gray-50 mt-1">
+                  Close
                 </button>
               </div>
             </div>

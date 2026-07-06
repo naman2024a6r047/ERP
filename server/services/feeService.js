@@ -11,10 +11,11 @@ const MONTHS = [
  * Falls back to a sensible default if no structure configured.
  * (Q2 fix) — logs a warning when fallback defaults are used.
  */
-const getFeeStructureForClass = async (className) => {
-  const structure = await ClassFeeStructure.findOne({
-    where: { class: className, is_active: true }
-  });
+const getFeeStructureForClass = async (className, sessionId) => {
+  const where = { class: className, is_active: true };
+  if (sessionId) where.session_id = sessionId;
+  
+  const structure = await ClassFeeStructure.findOne({ where });
 
   if (!structure) {
     console.warn(`[FEE WARNING] No fee structure configured for "${className}". Using hardcoded defaults. Please set up fee structure in admin panel.`);
@@ -63,7 +64,7 @@ const getOrCreateFeeRecord = async (student, month, year, feeType = 'monthly', t
   }
 
   // Get the fee amount from class structure
-  const structure = await getFeeStructureForClass(student.class);
+  const structure = await getFeeStructureForClass(student.class, student.session_id);
 
   const amountMap = {
     monthly:     parseFloat(structure.monthly_fee   || 0),
@@ -76,6 +77,21 @@ const getOrCreateFeeRecord = async (student, month, year, feeType = 'monthly', t
 
   const totalAmount = amountMap[feeType] || parseFloat(structure.monthly_fee || 2500);
 
+  // Calculate Due Date
+  let dueDate = null;
+  if (feeType === 'monthly') {
+    const monthIndex = MONTHS.indexOf(month);
+    if (monthIndex !== -1) {
+      const dd = String(structure.monthly_due_date || 10).padStart(2, '0');
+      const mm = String(monthIndex + 1).padStart(2, '0');
+      dueDate = `${year}-${mm}-${dd}`;
+    }
+  } else {
+    if (structure.annual_due_date) {
+      dueDate = structure.annual_due_date;
+    }
+  }
+
   const record = await Fee.create({
     student_id:    student.id,
     month,
@@ -84,6 +100,7 @@ const getOrCreateFeeRecord = async (student, month, year, feeType = 'monthly', t
     total_amount:  totalAmount,
     paid_amount:   0,
     status:        'unpaid',
+    due_date:      dueDate,
     session_id:    student.session_id,
     fee_breakdown: { [feeType]: totalAmount },
   }, options);
