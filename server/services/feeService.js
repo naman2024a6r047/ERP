@@ -114,7 +114,7 @@ const getOrCreateFeeRecord = async (student, month, year, feeType = 'monthly', t
  */
 const assignPublishedFeeStructure = async (student, txn = null, isPromotion = false) => {
   const options = txn ? { transaction: txn } : {};
-  if (!student.session_id || !student.class) return false;
+  if (!student.session_id || !student.class || student.approval_status !== 'approved') return false;
 
   const structure = await ClassFeeStructure.findOne({
     where: { class: student.class, session_id: student.session_id, is_active: true, is_published: true },

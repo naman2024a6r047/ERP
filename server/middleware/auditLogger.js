@@ -4,11 +4,21 @@ const { AuditLog } = require('../models');
  * Sanitizer helper to redact passwords and secrets from audit payloads.
  */
 const sanitizePayload = (body) => {
-  if (!body) return null;
+  if (!body || typeof body !== 'object') return body;
+  
+  if (Array.isArray(body)) {
+    return body.map(item => sanitizePayload(item));
+  }
+
   const copy = { ...body };
   const sensitiveKeys = ['password', 'currentPassword', 'newPassword', 'token'];
-  for (const key of sensitiveKeys) {
-    if (key in copy) copy[key] = '[REDACTED]';
+  
+  for (const key in copy) {
+    if (sensitiveKeys.includes(key)) {
+      copy[key] = '[REDACTED]';
+    } else if (typeof copy[key] === 'object' && copy[key] !== null) {
+      copy[key] = sanitizePayload(copy[key]);
+    }
   }
   return copy;
 };

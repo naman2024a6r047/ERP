@@ -25,15 +25,10 @@ export function AuthProvider({ children }) {
 
   // Restore session on mount
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      API.get('/auth/me')
-        .then(res => setUser(res.data))
-        .catch(() => localStorage.removeItem('token'))
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    API.get('/auth/me')
+      .then(res => setUser(res.data))
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
   }, []);
 
   // Subscribe to push notifications when user changes
@@ -140,14 +135,17 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const { data } = await API.post('/auth/login', { email, password });
-    localStorage.setItem('token', data.token);
     setUser(data.user);
     return data.user;
   };
 
   const logout = async () => {
-    await unsubscribeUser();
-    localStorage.removeItem('token');
+    try {
+      await unsubscribeUser();
+      await API.post('/auth/logout');
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
     setUser(null);
   };
 

@@ -98,7 +98,6 @@ export default function MyProfilePage() {
     setPwSaving(true);
     try {
       const { data } = await API.put('/auth/change-password', pwForm);
-      if (data.token) localStorage.setItem('token', data.token);
       toast.success('Password changed successfully.');
       setShowPwModal(false);
       setPwForm({ currentPassword: '', newPassword: '' });

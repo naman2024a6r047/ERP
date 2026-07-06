@@ -113,8 +113,8 @@ export default function App() {
             <Route path="admissions" element={<FCAdmissions />} />
             <Route path="credentials" element={<CredentialManagement />} />
             <Route path="profile" element={<MyProfilePage />} />
-            <Route path="bulk-upload" element={<BulkUploadStudents />} />
             <Route path="timetable" element={<Timetable />} />
+            <Route path="bulk-upload" element={<BulkUploadStudents />} />
             <Route path="notifications" element={<MyNotifications />} />
             <Route path="my-documents" element={<MyDocuments />} />
           </Route>

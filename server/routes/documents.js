@@ -26,8 +26,13 @@ const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
-    // Basic file filter, can be enhanced based on request document_type
-    cb(null, true);
+    // Strict MIME-type validation to prevent RCE
+    const allowedMimes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only PDF, JPG, and PNG are allowed.'), false);
+    }
   }
 });
 

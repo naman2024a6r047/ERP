@@ -5,6 +5,8 @@ const { Attendance, Student } = require('../models');
 const { protect, hasPermission, authorize } = require('../middleware/auth');
 const { cacheMiddleware } = require('../utils/cache');
 const { getTeacherAllowedClasses } = require('../utils/teacherAllowedClasses');
+const { attendanceLimiter } = require('../middleware/rateLimiters');
+const { validateAttendanceBulk } = require('../middleware/validator');
 
 const formatDateRange = (year, month) => {
   const y = parseInt(year, 10);
@@ -17,7 +19,7 @@ const formatDateRange = (year, month) => {
 
 // POST /api/attendance/bulk
 // ✅ admin, admin2, teacher
-router.post('/bulk', protect, hasPermission('MANAGE_STUDENT_ATTENDANCE'), async (req, res) => {
+router.post('/bulk', attendanceLimiter, protect, hasPermission('MANAGE_STUDENT_ATTENDANCE'), validateAttendanceBulk, async (req, res) => {
   try {
     const { class: cls, section, date, records, session_id } = req.body;
 
@@ -29,6 +31,18 @@ router.post('/bulk', protect, hasPermission('MANAGE_STUDENT_ATTENDANCE'), async 
       const allowedClasses = await getTeacherAllowedClasses(req.user.linked_teacher_id);
       if (!allowedClasses.includes(cls)) {
         return res.status(403).json({ message: 'Access denied. You can only mark attendance for your assigned classes.' });
+      }
+    }
+
+    // (Phase 3 fix) — Attendance Locking (7 days)
+    if (req.user.role !== 'admin') {
+      const attendanceDate = new Date(date);
+      const today = new Date();
+      const diffTime = Math.abs(today - attendanceDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays > 7) {
+        return res.status(403).json({ message: 'Access denied. You cannot modify attendance records older than 7 days.' });
       }
     }
 

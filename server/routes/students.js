@@ -8,6 +8,7 @@ const { protect, hasPermission, isSuperAdmin, authorize } = require('../middlewa
 const { createAdmissionFee } = require('../services/feeService');
 const { makeStudentId, makeStudentEmail, makeTemporaryPassword } = require('../utils/credentialGenerator');
 const { validateStudentCreate, validateStudentUpdate, validateStudentApproval } = require('../middleware/validator');
+const { profileUpdateLimiter } = require('../middleware/rateLimiters');
 
 // ── Allowed fields whitelists (C3/C4 fix) ─────────────────────────────────────
 const STUDENT_CREATE_FIELDS = [
@@ -260,7 +261,19 @@ router.post('/', protect, authorize('admin', 'admin2', 'fee_collector'), validat
 const multer = require('multer');
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 } // 10 MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedMimes = [
+      'text/csv',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only CSV and Excel files are allowed.'), false);
+    }
+  }
 }).single('file');
 
 router.post('/bulk-upload', protect, authorize('admin', 'admin2', 'fee_collector'), (req, res) => {
@@ -499,7 +512,7 @@ router.post('/bulk-upload', protect, authorize('admin', 'admin2', 'fee_collector
 });
 
 // PUT /api/students/:id — (C3 fix) only whitelisted fields
-router.put('/:id', protect, hasPermission('MANAGE_STUDENTS'), validateStudentUpdate, async (req, res) => {
+router.put('/:id', profileUpdateLimiter, protect, hasPermission('MANAGE_STUDENTS'), validateStudentUpdate, async (req, res) => {
   try {
     const safeData = pick(req.body, STUDENT_UPDATE_FIELDS);
     const [updated] = await Student.update(safeData, { where: { id: req.params.id } });

@@ -41,22 +41,22 @@ User.belongsTo(Student, { foreignKey: 'linked_student_id', as: 'linkedStudent' }
 Teacher.hasOne(User,   { foreignKey: 'linked_teacher_id', as: 'teacherUser' });
 User.belongsTo(Teacher,{ foreignKey: 'linked_teacher_id', as: 'linkedTeacher' });
 
-Student.hasMany(Attendance, { foreignKey: 'student_id', as: 'attendanceRecords' });
+Student.hasMany(Attendance, { foreignKey: 'student_id', as: 'attendanceRecords', onDelete: 'CASCADE' });
 Attendance.belongsTo(Student, { foreignKey: 'student_id', as: 'student' });
 
 User.hasMany(Attendance, { foreignKey: 'marked_by', as: 'markedAttendances' });
 Attendance.belongsTo(User, { foreignKey: 'marked_by', as: 'markedByUser' });
 
-Student.hasMany(Fee, { foreignKey: 'student_id', as: 'fees' });
+Student.hasMany(Fee, { foreignKey: 'student_id', as: 'fees', onDelete: 'CASCADE' });
 Fee.belongsTo(Student, { foreignKey: 'student_id', as: 'student' });
 
 User.hasMany(Fee, { foreignKey: 'collected_by', as: 'collectedFees' });
 Fee.belongsTo(User, { foreignKey: 'collected_by', as: 'collectedByUser' });
 
-Student.hasMany(Result, { foreignKey: 'student_id', as: 'results' });
+Student.hasMany(Result, { foreignKey: 'student_id', as: 'results', onDelete: 'CASCADE' });
 Result.belongsTo(Student, { foreignKey: 'student_id', as: 'student' });
 
-Result.hasMany(ResultSubject, { foreignKey: 'result_id', as: 'subjects' });
+Result.hasMany(ResultSubject, { foreignKey: 'result_id', as: 'subjects', onDelete: 'CASCADE' });
 ResultSubject.belongsTo(Result, { foreignKey: 'result_id', as: 'result' });
 
 User.hasMany(Result, { foreignKey: 'entered_by',           as: 'enteredResults' });
@@ -85,7 +85,7 @@ Notification.belongsTo(User, {
 Teacher.hasMany(Timetable, { foreignKey: 'teacher_id', as: 'timetableSlots' });
 Timetable.belongsTo(Teacher, { foreignKey: 'teacher_id', as: 'teacher' });
 
-Student.hasMany(PromotionHistory, { foreignKey: 'student_id', as: 'promotionHistory' });
+Student.hasMany(PromotionHistory, { foreignKey: 'student_id', as: 'promotionHistory', onDelete: 'CASCADE' });
 PromotionHistory.belongsTo(Student, { foreignKey: 'student_id', as: 'student' });
 
 User.hasMany(AdmissionRequest, { foreignKey: 'submitted_by', as: 'submittedAdmissions' });

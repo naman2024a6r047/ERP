@@ -4,6 +4,8 @@ const compression = require('compression');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
+const hpp = require('hpp');
 
 // ── Load environment variables FIRST — before any other module reads process.env
 require('dotenv').config({ path: path.join(__dirname, '.env') });
@@ -32,8 +34,10 @@ process.on('uncaughtException', (err) => {
 app.set('trust proxy', 1);
 
 // ── Security Headers (L5) ─────────────────────────────────────────────────────
-// Configure Helmet to allow service worker registration for push notifications.
-// Default helmet() sets worker-src 'none' which blocks SW registration entirely.
+// Disable x-powered-by header
+app.disable('x-powered-by');
+
+// Configure Helmet
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -48,6 +52,11 @@ app.use(helmet({
     },
   },
   crossOriginEmbedderPolicy: false,
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
 }));
 
 // ── Global Rate Limiter ────────────────────────────────────────────────────────
@@ -79,6 +88,8 @@ app.use(cors({
 // ── Body Parsers with size limits (M9) ─────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
+app.use(hpp()); // Protect against HTTP Parameter Pollution
 app.use(compression());
 
 // ── Global Audit Logger (A2) ──────────────────────────────────────────────────
@@ -92,6 +103,9 @@ app.use(express.static(clientBuildPath));
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
 // ── API Routes ────────────────────────────────────────────────────────────────
+const csrfProtection = require('./middleware/csrf');
+app.use('/api', csrfProtection);
+
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/students', require('./routes/students'));
 app.use('/api/teachers', require('./routes/teachers'));

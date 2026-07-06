@@ -6,6 +6,7 @@ const { Fee, Student, User, ClassFeeStructure, Notification, AuditLog, sequelize
 const { protect, hasPermission, isSuperAdmin }             = require('../middleware/auth');
 const { cacheMiddleware } = require('../utils/cache');
 const { validateFeeStructureCreate, validateFeeStructureUpdate, validateFeeCollect } = require('../middleware/validator');
+const { feeCollectionLimiter } = require('../middleware/rateLimiters');
 const {
   getStudentsWithFeeStatus,
   getOrCreateFeeRecord,
@@ -282,7 +283,7 @@ router.get('/student/:studentId', protect, cacheMiddleware(300), async (req, res
  * (H3 fix) — overpayment protection added
  * (M6 fix) — UUID-based receipt numbers
  */
-router.post('/collect', protect, hasPermission('COLLECT_FEES'), validateFeeCollect, async (req, res) => {
+router.post('/collect', feeCollectionLimiter, protect, hasPermission('COLLECT_FEES'), validateFeeCollect, async (req, res) => {
   const txn = await sequelize.transaction();
   try {
     const {
@@ -309,6 +310,7 @@ router.post('/collect', protect, hasPermission('COLLECT_FEES'), validateFeeColle
       fee = await Fee.findByPk(fee_id, {
         include: [{ model: Student, as: 'student' }],
         transaction: txn,
+        lock: txn.LOCK.UPDATE, // Phase 3: Prevent race conditions
       });
       if (!fee) { await txn.rollback(); return res.status(404).json({ message: 'Fee record not found.' }); }
     } else {
@@ -324,6 +326,7 @@ router.post('/collect', protect, hasPermission('COLLECT_FEES'), validateFeeColle
       fee = await Fee.findByPk(record.id, {
         include: [{ model: Student, as: 'student' }],
         transaction: txn,
+        lock: txn.LOCK.UPDATE, // Phase 3: Prevent race conditions
       });
     }
 
@@ -386,14 +389,13 @@ router.post('/collect', protect, hasPermission('COLLECT_FEES'), validateFeeColle
     res.status(500).json({ message: err.message });
   }
 });
-
 /**
  * POST /api/fees/collect-multiple-months
  * Collect fees for multiple months at once (e.g. paying Jan + Feb together).
  * (H3 fix) — overpayment protection added
  * (M6 fix) — UUID-based receipt numbers
  */
-router.post('/collect-multiple-months', protect, hasPermission('COLLECT_FEES'), async (req, res) => {
+router.post('/collect-multiple-months', feeCollectionLimiter, protect, hasPermission('COLLECT_FEES'), async (req, res) => {
   const txn = await sequelize.transaction();
   try {
     const { student_id, months, year, payment_mode, remarks } = req.body;
@@ -418,14 +420,20 @@ router.post('/collect-multiple-months', protect, hasPermission('COLLECT_FEES'), 
         student, entry.month, parseInt(year), 'monthly', txn
       );
 
-      const newPaid = parseFloat(record.paid_amount) + parseFloat(entry.amount);
-      const totalAmount = parseFloat(record.total_amount);
+      // (Phase 3 fix) — Lock the record to prevent race conditions during bulk payment
+      const lockedRecord = await Fee.findByPk(record.id, {
+        transaction: txn,
+        lock: txn.LOCK.UPDATE
+      });
+
+      const newPaid = parseFloat(lockedRecord.paid_amount) + parseFloat(entry.amount);
+      const totalAmount = parseFloat(lockedRecord.total_amount) + parseFloat(lockedRecord.late_fee_amount || 0);
 
       // (H3 fix) — overpayment check per month
       if (newPaid > totalAmount) {
         await txn.rollback();
         return res.status(400).json({
-          message: `Overpayment not allowed for ${entry.month}. Max payable: ₹${(totalAmount - parseFloat(record.paid_amount)).toFixed(2)}.`,
+          message: `Overpayment not allowed for ${entry.month}. Max payable: ₹${(totalAmount - parseFloat(lockedRecord.paid_amount)).toFixed(2)}.`,
         });
       }
 
@@ -434,7 +442,7 @@ router.post('/collect-multiple-months', protect, hasPermission('COLLECT_FEES'), 
 
       const uniqueReceiptNumber = `${baseReceiptNumber}-${i + 1}`;
 
-      await record.update({
+      await lockedRecord.update({
         paid_amount:    newPaid,
         payment_mode,
         remarks,

@@ -21,6 +21,8 @@ const User = sequelize.define('User', {
   profile_photo:      { type: DataTypes.STRING(255) },
   // (M5 fix) — track password change time for token invalidation
   password_changed_at: { type: DataTypes.DATE, allowNull: true },
+  login_attempts:     { type: DataTypes.INTEGER, defaultValue: 0 },
+  lock_until:         { type: DataTypes.DATE, allowNull: true },
 }, {
   tableName: 'users',
   hooks: {

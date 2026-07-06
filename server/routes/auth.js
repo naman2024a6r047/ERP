@@ -58,12 +58,32 @@ router.post('/login', loginLimiter, validateLogin, async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
+    // (S1 fix) — Check if account is locked
+    if (user.lock_until && user.lock_until > Date.now()) {
+      return res.status(403).json({ message: 'Account is temporarily locked due to multiple failed login attempts. Please try again later.' });
+    }
+
     const isMatch = await user.comparePassword(password);
     console.log(`[LOGIN] Password verification result for "${email}": ${isMatch}`);
 
     if (!isMatch) {
       console.log(`[LOGIN] ❌ Fail: Incorrect password for "${email}"`);
+      
+      // Increment login attempts
+      user.login_attempts += 1;
+      if (user.login_attempts >= 5) {
+        user.lock_until = new Date(Date.now() + 15 * 60 * 1000); // Lock for 15 minutes
+      }
+      await user.save();
+      
       return res.status(401).json({ message: 'Invalid email or password.' });
+    }
+
+    // Reset login attempts on successful login
+    if (user.login_attempts > 0 || user.lock_until) {
+      user.login_attempts = 0;
+      user.lock_until = null;
+      await user.save();
     }
 
     if (user.role === 'student' && user.linkedStudent?.approval_status !== 'approved') {
@@ -72,8 +92,26 @@ router.post('/login', loginLimiter, validateLogin, async (req, res) => {
 
     const token = signToken(user.id);
 
+    // Set JWT in HttpOnly cookie
+    const cookieOptions = {
+      expires: new Date(Date.now() + parseInt(process.env.JWT_COOKIE_EXPIRE || 30) * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    };
+    res.cookie('jwt', token, cookieOptions);
+
+    // Set CSRF token cookie (Not HttpOnly, so JS can read it and send it in header)
+    const csrfToken = require('uuid').v4();
+    res.cookie('csrf-token', csrfToken, {
+      expires: cookieOptions.expires,
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    });
+
     res.json({
-      token,
+      token, // Kept for backward compatibility during migration, frontend will stop using it
       user: {
         id: user.id,
         name: user.name,
@@ -88,6 +126,23 @@ router.post('/login', loginLimiter, validateLogin, async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: 'Login failed. Please try again.' });
   }
+});
+
+// POST /api/auth/logout
+router.post('/logout', (req, res) => {
+  res.cookie('jwt', 'none', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+  });
+  res.cookie('csrf-token', 'none', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+  });
+  res.status(200).json({ success: true, message: 'User logged out successfully' });
 });
 
 // GET /api/auth/me
@@ -160,8 +215,26 @@ router.put('/change-password', protect, authorize(...PASSWORD_CHANGE_ROLES), val
 
     // Issue a new token so the user stays logged in
     const token = signToken(user.id);
+    
+    // Set JWT in HttpOnly cookie
+    const cookieOptions = {
+      expires: new Date(Date.now() + parseInt(process.env.JWT_COOKIE_EXPIRE || 30) * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    };
+    res.cookie('jwt', token, cookieOptions);
 
-    res.json({ message: 'Password changed successfully.', token });
+    // Set CSRF token cookie (Not HttpOnly, so JS can read it and send it in header)
+    const csrfToken = require('uuid').v4();
+    res.cookie('csrf-token', csrfToken, {
+      expires: cookieOptions.expires,
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    });
+
+    res.json({ message: 'Password changed successfully.' });
   } catch (err) {
     res.status(500).json({ message: 'Password change failed. Please try again.' });
   }

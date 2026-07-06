@@ -378,6 +378,31 @@ const validateFeeCollect = [
   validate,
 ];
 
+// ── ATTENDANCE VALIDATION RULES ──────────────────────────────────────────────
+
+const validateAttendanceBulk = [
+  body('class')
+    .notEmpty().withMessage('Class is required.')
+    .trim(),
+  body('section')
+    .notEmpty().withMessage('Section is required.')
+    .trim(),
+  body('date')
+    .notEmpty().withMessage('Date is required.')
+    .isISO8601().withMessage('Invalid date format (must be YYYY-MM-DD).'),
+  body('session_id')
+    .notEmpty().withMessage('Session ID is required.')
+    .isInt({ min: 1 }).withMessage('Session ID must be a positive integer.'),
+  body('records')
+    .isArray().withMessage('Records must be an array.')
+    .notEmpty().withMessage('Records array cannot be empty.'),
+  body('records.*.student_id')
+    .isInt({ min: 1 }).withMessage('Each record must have a valid student_id.'),
+  body('records.*.status')
+    .isIn(['Present', 'Absent', 'Late', 'Half-day']).withMessage('Invalid attendance status.'),
+  validate,
+];
+
 // ── RESULT VALIDATION RULES ──────────────────────────────────────────────────
 
 const validateResultCreate = [
@@ -454,4 +479,5 @@ module.exports = {
   validateFeeCollect,
   validateResultCreate,
   validateResultInchargeReview,
+  validateAttendanceBulk,
 };
