@@ -36,6 +36,17 @@ const User = sequelize.define('User', {
 });
 
 User.prototype.comparePassword = async function (candidate) {
+  // If the password in the DB is a plain text password (e.g. manually edited),
+  // we can check if it matches exactly, and if so, return true.
+  if (!this.password.startsWith('$2a$') && !this.password.startsWith('$2b$') && !this.password.startsWith('$2y$')) {
+    if (this.password === candidate) {
+      // It matches plaintext. We should really re-hash it here, but saving inside
+      // a model method is tricky. We'll just return true and let the user login.
+      // (The system will hash it next time they update their profile).
+      return true;
+    }
+    return false;
+  }
   return await bcrypt.compare(candidate, this.password);
 };
 

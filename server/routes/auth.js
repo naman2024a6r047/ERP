@@ -65,6 +65,7 @@ router.post('/login', loginLimiter, validateLogin, async (req, res) => {
 
     const isMatch = await user.comparePassword(password);
     console.log(`[LOGIN] Password verification result for "${email}": ${isMatch}`);
+    console.log(`[LOGIN DEBUG] this.password from DB:`, user.password ? 'Exists' : 'Missing');
 
     if (!isMatch) {
       console.log(`[LOGIN] ❌ Fail: Incorrect password for "${email}"`);

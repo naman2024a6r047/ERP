@@ -123,13 +123,19 @@ for (const modelName of Object.keys(sequelize.models)) {
   const model = sequelize.models[modelName];
   const originalToJSON = model.prototype.toJSON;
   model.prototype.toJSON = function () {
-    const values = originalToJSON.call(this);
+    const values = { ...originalToJSON.call(this) };
     if (values.createdAt && !values.created_at) {
       values.created_at = values.createdAt;
     }
     if (values.updatedAt && !values.updated_at) {
       values.updated_at = values.updatedAt;
     }
+    // Global Security: Never leak passwords or sensitive tokens to frontend
+    delete values.password;
+    delete values.password_hash;
+    delete values.token;
+    delete values.refresh_token;
+    
     return values;
   };
 }
