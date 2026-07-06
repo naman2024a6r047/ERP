@@ -18,9 +18,10 @@ const Fee = sequelize.define('Fee', {
   due_date:     DataTypes.DATEONLY,
   paid_date:    DataTypes.DATEONLY,
   status: {
-    type: DataTypes.ENUM('paid', 'unpaid', 'partial', 'waived', 'not_generated'),
+    type: DataTypes.ENUM('paid', 'unpaid', 'partial', 'waived', 'not_generated', 'overdue'),
     defaultValue: 'unpaid'
   },
+  late_fee_amount: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0.00 },
   payment_mode: DataTypes.ENUM('cash', 'online', 'cheque', 'dd', 'upi'),
   receipt_number: { type: DataTypes.STRING(30), unique: true },
   collected_by:   DataTypes.INTEGER,

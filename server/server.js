@@ -254,13 +254,16 @@ app.listen(port, host, () => {
     .then(async () => {
       console.log('[DB] ✅ Database tables verified and synced');
       try {
-        const { migratePendingStudents } = require('./utils/dbMigrator');
+        const { migratePendingStudents, migrateFeeColumns } = require('./utils/dbMigrator');
         await migratePendingStudents();
+        await migrateFeeColumns();
 
-        const { rejectOldPendingStudents } = require('./utils/cleanupTasks');
+        const { rejectOldPendingStudents, calculateOverdueFees } = require('./utils/cleanupTasks');
         // Run once on boot, then every 24 hours
         await rejectOldPendingStudents();
+        await calculateOverdueFees();
         setInterval(rejectOldPendingStudents, 24 * 60 * 60 * 1000);
+        setInterval(calculateOverdueFees, 24 * 60 * 60 * 1000);
       } catch (migrationErr) {
         console.error('[DB] ❌ Automatic migration of pending students failed:', migrationErr.message);
       }

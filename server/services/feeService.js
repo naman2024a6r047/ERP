@@ -109,6 +109,48 @@ const getOrCreateFeeRecord = async (student, month, year, feeType = 'monthly', t
 };
 
 /**
+ * Assign a published fee structure to a student dynamically (e.g., late admission, promotion).
+ * Evaluates rules for new vs existing students.
+ */
+const assignPublishedFeeStructure = async (student, txn = null, isPromotion = false) => {
+  const options = txn ? { transaction: txn } : {};
+  if (!student.session_id || !student.class) return false;
+
+  const structure = await ClassFeeStructure.findOne({
+    where: { class: student.class, session_id: student.session_id, is_active: true, is_published: true },
+    ...options
+  });
+
+  if (!structure) return false; // No published structure to assign
+
+  const currentYear = new Date().getFullYear();
+  const currentMonth = MONTHS[new Date().getMonth()];
+
+  // 1. Session / Annual Fee
+  if (structure.annual_fee > 0) {
+    await getOrCreateFeeRecord(student, currentMonth, currentYear, 'annual', txn);
+  }
+
+  // 2. Admission Fee (ONLY if never charged before)
+  if (structure.admission_fee > 0) {
+    const hasPaidAdmission = await Fee.findOne({
+      where: { student_id: student.id, fee_type: 'admission' },
+      ...options
+    });
+    if (!hasPaidAdmission) {
+      await getOrCreateFeeRecord(student, currentMonth, currentYear, 'admission', txn);
+    }
+  }
+
+  // 3. Promotion Fee (If called during promotion)
+  if (isPromotion && structure.promotion_fee > 0) {
+    await getOrCreateFeeRecord(student, currentMonth, currentYear, 'promotion', txn);
+  }
+  
+  return true;
+};
+
+/**
  * Get all active students WITH their fee status for a given month/year.
  * Students without fee records show as "not_generated".
  * This ensures newly created students always appear.
@@ -343,5 +385,6 @@ module.exports = {
   buildReceiptData,
   createAdmissionFee,
   createPromotionFee,
+  assignPublishedFeeStructure,
   MONTHS,
 };

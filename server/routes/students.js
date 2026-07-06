@@ -145,10 +145,10 @@ router.put('/:id/approval', protect, authorize('admin'), validateStudentApproval
     );
 
     if (status === 'approved') {
-      const { getOrCreateFeeRecord, MONTHS } = require('../services/feeService');
+      const { getOrCreateFeeRecord, assignPublishedFeeStructure, MONTHS } = require('../services/feeService');
       const now = new Date();
       await getOrCreateFeeRecord(student, MONTHS[now.getMonth()], now.getFullYear(), 'monthly', txn);
-      await createAdmissionFee(student, 0, txn);
+      await assignPublishedFeeStructure(student, txn);
     }
 
     await txn.commit();
@@ -225,13 +225,15 @@ router.post('/', protect, authorize('admin', 'admin2', 'fee_collector'), validat
     }, { transaction: txn });
 
     if (isApproved) {
-      // Auto-generate current month fee record
-      const { getOrCreateFeeRecord, MONTHS } = require('../services/feeService');
+      // Auto-generate current month fee record and assign published fee structure
+      const { getOrCreateFeeRecord, assignPublishedFeeStructure, MONTHS } = require('../services/feeService');
       const now   = new Date();
       const month = MONTHS[now.getMonth()];
       const year  = now.getFullYear();
       await getOrCreateFeeRecord(student, month, year, 'monthly', txn);
-      await createAdmissionFee(student, 0, txn);
+      
+      // Assign annual/admission fees if a locked structure exists for this session
+      await assignPublishedFeeStructure(student, txn);
     }
 
     await txn.commit();
@@ -441,12 +443,12 @@ router.post('/bulk-upload', protect, authorize('admin', 'admin2', 'fee_collector
 
           // Fees if approved
           if (isApproved) {
-            const { getOrCreateFeeRecord, MONTHS } = require('../services/feeService');
+            const { getOrCreateFeeRecord, assignPublishedFeeStructure, MONTHS } = require('../services/feeService');
             const now = new Date();
             const month = MONTHS[now.getMonth()];
             const year = now.getFullYear();
             await getOrCreateFeeRecord(student, month, year, 'monthly', txn);
-            await createAdmissionFee(student, 0, txn);
+            await assignPublishedFeeStructure(student, txn);
           }
 
           results.push({

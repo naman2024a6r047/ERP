@@ -2,7 +2,7 @@ const express  = require('express');
 const router   = express.Router();
 const { Op }   = require('sequelize');
 const crypto   = require('crypto');
-const { Fee, Student, User, ClassFeeStructure, Notification, sequelize } = require('../models');
+const { Fee, Student, User, ClassFeeStructure, Notification, AuditLog, sequelize } = require('../models');
 const { protect, hasPermission, isSuperAdmin }             = require('../middleware/auth');
 const { cacheMiddleware } = require('../utils/cache');
 const { validateFeeStructureCreate, validateFeeStructureUpdate, validateFeeCollect } = require('../middleware/validator');
@@ -151,6 +151,16 @@ router.post('/structure/:id/publish', protect, isSuperAdmin, async (req, res) =>
       target_classes: [structure.class],
       sent_by: req.user.id
     }, { transaction: txn });
+
+    await AuditLog.create({
+      user_id: req.user.id,
+      action: 'publish_fee_structure',
+      target_type: 'ClassFeeStructure',
+      target_id: structure.id,
+      details: { class: structure.class, session_id: structure.session_id, students_affected: students.length },
+      ip_address: req.ip
+    }, { transaction: txn });
+
     await txn.commit();
     res.json({ message: `Structure locked. Generated fees for ${students.length} students.`, structure });
   } catch (err) {
@@ -319,7 +329,7 @@ router.post('/collect', protect, hasPermission('COLLECT_FEES'), validateFeeColle
 
     // (H3 fix) — overpayment protection
     const newPaid = parseFloat(fee.paid_amount) + parseFloat(amount);
-    const totalAmount = parseFloat(fee.total_amount);
+    const totalAmount = parseFloat(fee.total_amount) + parseFloat(fee.late_fee_amount || 0);
 
     if (newPaid > totalAmount) {
       await txn.rollback();
@@ -345,6 +355,15 @@ router.post('/collect', protect, hasPermission('COLLECT_FEES'), validateFeeColle
       paid_date:      new Date().toISOString().split('T')[0],
       status,
       receipt_number: receiptNumber,
+    }, { transaction: txn });
+
+    await AuditLog.create({
+      user_id: req.user.id,
+      action: 'collect_fee',
+      target_type: 'Fee',
+      target_id: fee.id,
+      details: { amount, payment_mode, receipt_number: receiptNumber, student_id: fee.student_id },
+      ip_address: req.ip
     }, { transaction: txn });
 
     await txn.commit();

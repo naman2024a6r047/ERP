@@ -47,6 +47,11 @@ const ClassFeeStructure = sequelize.define('ClassFeeStructure', {
     type: DataTypes.DATEONLY,
     allowNull: true
   },
+  late_fee_per_day: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0,
+    validate: { min: 0 }
+  },
   is_published: {
     type: DataTypes.BOOLEAN,
     defaultValue: false

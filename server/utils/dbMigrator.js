@@ -94,4 +94,45 @@ async function migratePendingStudents() {
   }
 }
 
-module.exports = { migratePendingStudents };
+async function migrateFeeColumns() {
+  try {
+    const qi = sequelize.getQueryInterface();
+    const classFeeDesc = await qi.describeTable('class_fee_structures');
+    
+    // Add late_fee_per_day
+    if (!classFeeDesc.late_fee_per_day) {
+      console.log('[MIGRATOR] Adding late_fee_per_day to class_fee_structures');
+      await qi.addColumn('class_fee_structures', 'late_fee_per_day', {
+        type: require('sequelize').DataTypes.DECIMAL(10, 2),
+        defaultValue: 0,
+      });
+    }
+
+    const feesDesc = await qi.describeTable('fees');
+    
+    // Add late_fee_amount
+    if (!feesDesc.late_fee_amount) {
+      console.log('[MIGRATOR] Adding late_fee_amount to fees');
+      await qi.addColumn('fees', 'late_fee_amount', {
+        type: require('sequelize').DataTypes.DECIMAL(10, 2),
+        defaultValue: 0,
+      });
+    }
+
+    // Update ENUM for status in fees
+    // MySQL requires raw query to update ENUM values
+    if (feesDesc.status) {
+      console.log('[MIGRATOR] Updating status ENUM in fees to include overdue');
+      await sequelize.query(`
+        ALTER TABLE fees 
+        MODIFY COLUMN status ENUM('paid', 'unpaid', 'partial', 'waived', 'not_generated', 'overdue') DEFAULT 'unpaid';
+      `);
+    }
+
+    console.log('[MIGRATOR] ✅ Fee columns migration completed successfully.');
+  } catch (err) {
+    console.error('[MIGRATOR] ❌ Fee columns migration failed:', err.message);
+  }
+}
+
+module.exports = { migratePendingStudents, migrateFeeColumns };

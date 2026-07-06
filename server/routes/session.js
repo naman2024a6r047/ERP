@@ -141,9 +141,13 @@ router.post('/promote', protect, isSuperAdmin, async (req, res) => {
           { where: { class: fromClass, session_id: from_session_id, is_active: true }, transaction: txn }
         );
 
-        // Create promotion fee for each student
+        // Create promotion fee and assign annual fees if structure is published
+        const { assignPublishedFeeStructure } = require('../services/feeService');
         for (const student of students) {
-          await createPromotionFee(student, toClass, to_session_id, txn);
+          // student object doesn't have the updated class and session_id yet in JS memory
+          student.class = toClass;
+          student.session_id = to_session_id;
+          await assignPublishedFeeStructure(student, txn, true);
         }
       }
 
