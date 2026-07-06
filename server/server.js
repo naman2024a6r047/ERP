@@ -193,6 +193,20 @@ app.listen(port, host, () => {
       dbStatus.error = null;
       dbStatus.checkedAt = new Date().toISOString();
 
+      // 🚨 ONE-TIME AUTO-RECOVERY: Reset Admin password to 'admin123'
+      try {
+        const { User } = require('./models');
+        const bcrypt = require('bcryptjs');
+        const admin = await User.findOne({ where: { role: 'admin' } });
+        if (admin) {
+          admin.password = await bcrypt.hash('admin123', 12);
+          await admin.save({ hooks: false });
+          console.log('🛡️ [SECURITY RECOVERY] Admin password successfully reset to: admin123');
+        }
+      } catch (err) {
+        console.error('Failed to run recovery script:', err.message);
+      }
+
       // ── Schema sync strategy ────────────────────────────────────────────
       // PRODUCTION  → sync() with NO alter and NO force. Tables must already
       //               exist (created via schema.sql or migrations).
