@@ -193,33 +193,7 @@ app.listen(port, host, () => {
       dbStatus.error = null;
       dbStatus.checkedAt = new Date().toISOString();
 
-      // 🚨 ONE-TIME AUTO-RECOVERY: Reset or Create Admin password to 'admin123'
-      try {
-        const { User } = require('./models');
-        const bcrypt = require('bcryptjs');
-        const adminEmail = 'admin@school.com';
-        let admin = await User.findOne({ where: { role: 'admin' } });
-        
-        const newHash = await bcrypt.hash('admin123', 12);
-        
-        if (admin) {
-          admin.password = newHash;
-          admin.email = adminEmail; // Force standard email
-          await admin.save({ hooks: false });
-          console.log('🛡️ [SECURITY RECOVERY] Admin password successfully reset to: admin123');
-        } else {
-          admin = await User.create({
-            name: 'Admin',
-            email: adminEmail,
-            password: 'admin123', // hooks will hash it
-            role: 'admin',
-            is_active: true
-          });
-          console.log('🛡️ [SECURITY RECOVERY] Admin user successfully recreated!');
-        }
-      } catch (err) {
-        console.error('Failed to run recovery script:', err.message);
-      }
+
 
       // ── Schema sync strategy ────────────────────────────────────────────
       // PRODUCTION  → sync() with NO alter and NO force. Tables must already
