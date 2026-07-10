@@ -44,8 +44,9 @@ const protect = async (req, res, next) => {
     // by comparing the token iat with user's updated_at
     if (decoded.iat) {
       const tokenIssuedAt = new Date(decoded.iat * 1000);
-      const userUpdatedAt = new Date(req.user.updated_at);
-      if (userUpdatedAt > tokenIssuedAt) {
+      const rawUpdatedAt = req.user.updatedAt || req.user.updated_at;
+      const userUpdatedAt = rawUpdatedAt ? new Date(rawUpdatedAt) : null;
+      if (userUpdatedAt && userUpdatedAt > tokenIssuedAt) {
         // If user record was updated after token was issued,
         // and password was changed, this token should be invalid.
         // We check password_changed_at if available

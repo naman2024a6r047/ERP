@@ -9,8 +9,9 @@ const csrfProtection = (req, res, next) => {
   }
 
   // Exclude login and register routes from CSRF
-  const excludedRoutes = ['/api/auth/login', '/api/auth/register'];
-  if (excludedRoutes.includes(req.originalUrl)) {
+  const excludedPaths = ['/api/auth/login', '/api/auth/register'];
+  const reqPath = req.originalUrl.split('?')[0].replace(/\/+$/, '');
+  if (excludedPaths.includes(reqPath)) {
     return next();
   }
 

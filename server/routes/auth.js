@@ -9,6 +9,17 @@ const { validateLogin, validateRegister, validateChangePassword } = require('../
 // (M7 fix) — all roles including student and parent can change their own password
 const PASSWORD_CHANGE_ROLES = ['admin', 'admin2', 'teacher', 'fee_collector', 'student', 'parent'];
 
+// Detect if the deployment uses HTTPS (from CLIENT_URL or NODE_ENV)
+const isSecure = process.env.NODE_ENV === 'production'
+  || (process.env.CLIENT_URL || '').startsWith('https');
+
+const buildCookieOptions = () => ({
+  expires: new Date(Date.now() + parseInt(process.env.JWT_COOKIE_EXPIRE || 30) * 24 * 60 * 60 * 1000),
+  httpOnly: true,
+  secure: isSecure,
+  sameSite: isSecure ? 'none' : 'lax'
+});
+
 // (L1 fix) — rate limit login to prevent brute force
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -28,7 +39,7 @@ const registerLimiter = rateLimit({
 });
 
 const signToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE });
+  jwt.sign({ id }, process.env.JWT_SECRET || 'fallback-secret-change-me', { expiresIn: process.env.JWT_EXPIRE || '7d' });
 
 // POST /api/auth/login
 router.post('/login', loginLimiter, validateLogin, async (req, res) => {
@@ -39,22 +50,26 @@ router.post('/login', loginLimiter, validateLogin, async (req, res) => {
       return res.status(400).json({ message: 'Please provide email and password.' });
     }
 
-    const user = await User.findOne({
-      where: { email },
-      include: [
-        { model: Student, as: 'linkedStudent', attributes: ['id', 'first_name', 'last_name', 'class', 'section', 'approval_status'] },
-        { model: Teacher, as: 'linkedTeacher', attributes: ['id', 'name', 'subject', 'assigned_classes', 'staff_type'] }
-      ]
-    });
+    // Try with full includes first, fall back to basic query if columns are missing
+    let user;
+    try {
+      user = await User.findOne({
+        where: { email },
+        include: [
+          { model: Student, as: 'linkedStudent', attributes: ['id', 'first_name', 'last_name', 'class', 'section', 'approval_status'] },
+          { model: Teacher, as: 'linkedTeacher', attributes: ['id', 'name', 'subject', 'assigned_classes', 'staff_type'] }
+        ]
+      });
+    } catch (includeErr) {
+      console.warn('[LOGIN] Include query failed, retrying without includes:', includeErr.message);
+      user = await User.findOne({ where: { email } });
+    }
 
-    console.log(`[LOGIN] Attempt for email: "${email}"`);
     if (!user) {
-      console.log(`[LOGIN] ❌ Fail: No user found in DB for email "${email}"`);
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
     if (!user.is_active) {
-      console.log(`[LOGIN] ❌ Fail: User exists but is inactive/deactivated: "${email}"`);
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
@@ -64,27 +79,32 @@ router.post('/login', loginLimiter, validateLogin, async (req, res) => {
     }
 
     const isMatch = await user.comparePassword(password);
-    console.log(`[LOGIN] Password verification result for "${email}": ${isMatch}`);
-    console.log(`[LOGIN DEBUG] this.password from DB:`, user.password ? 'Exists' : 'Missing');
 
     if (!isMatch) {
-      console.log(`[LOGIN] ❌ Fail: Incorrect password for "${email}"`);
       
-      // Increment login attempts
-      user.login_attempts += 1;
-      if (user.login_attempts >= 5) {
-        user.lock_until = new Date(Date.now() + 15 * 60 * 1000); // Lock for 15 minutes
+      // Increment login attempts (safe even if column doesn't exist yet)
+      try {
+        user.login_attempts = (user.login_attempts || 0) + 1;
+        if (user.login_attempts >= 5) {
+          user.lock_until = new Date(Date.now() + 15 * 60 * 1000); // Lock for 15 minutes
+        }
+        await user.save();
+      } catch (saveErr) {
+        console.warn('[LOGIN] Could not update login_attempts:', saveErr.message);
       }
-      await user.save();
       
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
     // Reset login attempts on successful login
-    if (user.login_attempts > 0 || user.lock_until) {
-      user.login_attempts = 0;
-      user.lock_until = null;
-      await user.save();
+    try {
+      if ((user.login_attempts || 0) > 0 || user.lock_until) {
+        user.login_attempts = 0;
+        user.lock_until = null;
+        await user.save();
+      }
+    } catch (saveErr) {
+      console.warn('[LOGIN] Could not reset login_attempts:', saveErr.message);
     }
 
     if (user.role === 'student' && user.linkedStudent?.approval_status !== 'approved') {
@@ -94,21 +114,14 @@ router.post('/login', loginLimiter, validateLogin, async (req, res) => {
     const token = signToken(user.id);
 
     // Set JWT in HttpOnly cookie
-    const cookieOptions = {
-      expires: new Date(Date.now() + parseInt(process.env.JWT_COOKIE_EXPIRE || 30) * 24 * 60 * 60 * 1000),
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-    };
+    const cookieOptions = buildCookieOptions();
     res.cookie('jwt', token, cookieOptions);
 
     // Set CSRF token cookie (Not HttpOnly, so JS can read it and send it in header)
     const csrfToken = require('uuid').v4();
     res.cookie('csrf-token', csrfToken, {
-      expires: cookieOptions.expires,
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+      ...cookieOptions,
+      httpOnly: false
     });
 
     res.json({
@@ -120,28 +133,30 @@ router.post('/login', loginLimiter, validateLogin, async (req, res) => {
         role: user.role,
         phone: user.phone,
         profile_photo: user.profile_photo,
-        linkedStudent: user.linkedStudent,
-        linkedTeacher: user.linkedTeacher
+        linkedStudent: user.linkedStudent || null,
+        linkedTeacher: user.linkedTeacher || null
       }
     });
   } catch (err) {
-    res.status(500).json({ message: 'Login failed. Please try again.' });
+    console.error('[LOGIN CRASH]', err.message, err.stack);
+    res.status(500).json({ message: 'Login failed: ' + err.message });
   }
 });
 
 // POST /api/auth/logout
 router.post('/logout', (req, res) => {
+  const logoutExpiry = new Date(Date.now() + 10 * 1000);
   res.cookie('jwt', 'none', {
-    expires: new Date(Date.now() + 10 * 1000),
+    expires: logoutExpiry,
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    secure: isSecure,
+    sameSite: isSecure ? 'none' : 'lax'
   });
   res.cookie('csrf-token', 'none', {
-    expires: new Date(Date.now() + 10 * 1000),
+    expires: logoutExpiry,
     httpOnly: false,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    secure: isSecure,
+    sameSite: isSecure ? 'none' : 'lax'
   });
   res.status(200).json({ success: true, message: 'User logged out successfully' });
 });
@@ -218,21 +233,14 @@ router.put('/change-password', protect, authorize(...PASSWORD_CHANGE_ROLES), val
     const token = signToken(user.id);
     
     // Set JWT in HttpOnly cookie
-    const cookieOptions = {
-      expires: new Date(Date.now() + parseInt(process.env.JWT_COOKIE_EXPIRE || 30) * 24 * 60 * 60 * 1000),
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-    };
+    const cookieOptions = buildCookieOptions();
     res.cookie('jwt', token, cookieOptions);
 
     // Set CSRF token cookie (Not HttpOnly, so JS can read it and send it in header)
     const csrfToken = require('uuid').v4();
     res.cookie('csrf-token', csrfToken, {
-      expires: cookieOptions.expires,
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+      ...cookieOptions,
+      httpOnly: false
     });
 
     res.json({ message: 'Password changed successfully.' });

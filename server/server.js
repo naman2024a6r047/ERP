@@ -262,6 +262,40 @@ app.listen(port, host, () => {
           try { await sequelize.query(sql); } catch (e) { console.error('[DB] Table creation warning:', e.message); }
         }
         console.log('[DB] ✅ New tables checked / created');
+
+        // ── Add missing columns that models expect but production may lack ───
+        const alterQueries = [
+          // Login security columns on users table
+          `ALTER TABLE \`users\` ADD COLUMN \`login_attempts\` INT DEFAULT 0;`,
+          `ALTER TABLE \`users\` ADD COLUMN \`lock_until\` DATETIME NULL;`,
+          `ALTER TABLE \`users\` ADD COLUMN \`password_changed_at\` DATETIME NULL;`,
+          `ALTER TABLE \`users\` ADD COLUMN \`profile_photo\` VARCHAR(255) NULL;`,
+          `ALTER TABLE \`users\` ADD COLUMN \`phone\` VARCHAR(15) NULL;`,
+          // Teacher staff_type column
+          `ALTER TABLE \`teachers\` ADD COLUMN \`staff_type\` VARCHAR(50) DEFAULT 'Teacher';`,
+          `ALTER TABLE \`teachers\` ADD COLUMN \`document_type\` VARCHAR(50) NULL;`,
+          `ALTER TABLE \`teachers\` ADD COLUMN \`document_number\` VARCHAR(100) NULL;`,
+          `ALTER TABLE \`teachers\` ADD COLUMN \`teacher_id\` VARCHAR(20) NULL;`,
+          // Student columns that may be missing
+          `ALTER TABLE \`students\` ADD COLUMN \`student_status\` ENUM('active','inactive','alumni','transferred','suspended') DEFAULT 'active';`,
+          `ALTER TABLE \`students\` ADD COLUMN \`source\` ENUM('admin_created','admission_approved') DEFAULT 'admin_created';`,
+          `ALTER TABLE \`students\` ADD COLUMN \`admission_request_id\` INT NULL;`,
+          `ALTER TABLE \`students\` ADD COLUMN \`created_by\` INT NULL;`,
+          `ALTER TABLE \`students\` ADD COLUMN \`approval_status\` ENUM('pending','approved','rejected') DEFAULT 'approved';`,
+          `ALTER TABLE \`students\` ADD COLUMN \`approved_by\` INT NULL;`,
+          `ALTER TABLE \`students\` ADD COLUMN \`approved_at\` DATETIME NULL;`,
+          `ALTER TABLE \`students\` ADD COLUMN \`rejection_reason\` TEXT NULL;`,
+          `ALTER TABLE \`students\` ADD COLUMN \`student_id\` VARCHAR(20) NULL;`,
+        ];
+        for (const sql of alterQueries) {
+          try { await sequelize.query(sql); } catch (e) {
+            // ER_DUP_FIELDNAME (1060) = column already exists — safe to ignore
+            if (!e.message.includes('Duplicate column name') && !e.message.includes('ER_DUP_FIELDNAME')) {
+              console.error('[DB] ALTER warning:', e.message);
+            }
+          }
+        }
+        console.log('[DB] ✅ Column migrations checked');
       } else {
         console.log('[DB] Development mode — running sync({ alter: true })');
         return sequelize.sync({ alter: true });
