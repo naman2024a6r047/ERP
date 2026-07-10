@@ -20,9 +20,7 @@ const validate = (req, res, next) => {
 const validateLogin = [
   body('email')
     .trim()
-    .notEmpty().withMessage('Email is required.')
-    .isEmail().withMessage('Please enter a valid email address.')
-    .normalizeEmail({ gmail_remove_dots: false }),
+    .notEmpty().withMessage('Email or User ID is required.'),
   body('password')
     .notEmpty().withMessage('Password is required.'),
   validate,
