@@ -118,7 +118,7 @@ router.post('/login', loginLimiter, validateLogin, async (req, res) => {
     res.cookie('jwt', token, cookieOptions);
 
     // Set CSRF token cookie (Not HttpOnly, so JS can read it and send it in header)
-    const csrfToken = require('uuid').v4();
+    const csrfToken = require('crypto').randomUUID();
     res.cookie('csrf-token', csrfToken, {
       ...cookieOptions,
       httpOnly: false
@@ -237,7 +237,7 @@ router.put('/change-password', protect, authorize(...PASSWORD_CHANGE_ROLES), val
     res.cookie('jwt', token, cookieOptions);
 
     // Set CSRF token cookie (Not HttpOnly, so JS can read it and send it in header)
-    const csrfToken = require('uuid').v4();
+    const csrfToken = require('crypto').randomUUID();
     res.cookie('csrf-token', csrfToken, {
       ...cookieOptions,
       httpOnly: false
